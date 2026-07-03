@@ -4,6 +4,7 @@ import type {
   AdministrationSnapshot,
   CargoInput,
   IdentidadeAuth,
+  MetaEficienciaInput,
   NivelAcessoPosto,
   PostoInput,
   PrioridadeInput,
@@ -68,6 +69,8 @@ export interface AdministrationService {
   removePriority(id: string, actorId: string): Promise<void>;
   saveOccurrenceType(id: string | null, input: TipoOcorrenciaInput, actorId: string): Promise<void>;
   removeOccurrenceType(id: string, actorId: string): Promise<void>;
+  saveEfficiencyTarget(id: string | null, input: MetaEficienciaInput, actorId: string): Promise<void>;
+  removeEfficiencyTarget(id: string, actorId: string): Promise<void>;
 }
 
 export function createAdministrationService(
@@ -104,7 +107,7 @@ export function createAdministrationService(
 
   return {
     async load() {
-      const [usuarios, postos, vinculos, cargos, prioridades, tipos] = await Promise.all([
+      const [usuarios, postos, vinculos, cargos, prioridades, tipos, metas] = await Promise.all([
         client
           .from("usuarios")
           .select("id, auth_user_id, nome, email, perfil, cargo_funcao_id, ativo")
@@ -134,6 +137,11 @@ export function createAdministrationService(
           .select("id, nome, descricao, ativo")
           .is("deleted_at", null)
           .order("nome"),
+        client
+          .from("metas_eficiencia")
+          .select("id, posto_id, tipo_atividade_normalizado, meta_percentual, vigencia_inicio, vigencia_fim, ativo")
+          .is("deleted_at", null)
+          .order("vigencia_inicio", { ascending: false }),
       ]);
 
       return {
@@ -143,6 +151,7 @@ export function createAdministrationService(
         cargos: ensure(cargos),
         prioridades: ensure(prioridades),
         tiposOcorrencia: ensure(tipos),
+        metasEficiencia: ensure(metas),
       } as AdministrationSnapshot;
     },
 
@@ -251,6 +260,14 @@ export function createAdministrationService(
 
     removeOccurrenceType(id, actorId) {
       return softDelete("tipos_ocorrencia", id, actorId);
+    },
+
+    async saveEfficiencyTarget(id, input, actorId) {
+      await insertOrUpdate("metas_eficiencia", id, { ...input }, actorId);
+    },
+
+    removeEfficiencyTarget(id, actorId) {
+      return softDelete("metas_eficiencia", id, actorId);
     },
   };
 }

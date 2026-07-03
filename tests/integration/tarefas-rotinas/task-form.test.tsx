@@ -11,7 +11,7 @@ describe("TaskForm", () => {
       <TaskForm
         viewer={{ usuarioId: "operator-1", perfil: "operador", postoIds: ["posto-1"] }}
         postos={[{ id: "posto-1", nome: "Posto 1" }]}
-        prioridades={[]}
+        prioridades={[{ id: "priority-1", nome: "Alta", nivel: 1, cor: "#f00" }]}
         cargos={[]}
         usuarios={[
           { id: "operator-1", nome: "Operador Um", perfil: "operador" },
@@ -25,6 +25,10 @@ describe("TaskForm", () => {
     expect(screen.queryByRole("listbox", { name: /responsáveis/i })).not.toBeInTheDocument();
     expect(screen.getByText("Operador Um")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Título *"), "Minha tarefa");
+    await user.type(screen.getByLabelText("Descrição *"), "Executar conferência");
+    await user.selectOptions(screen.getByLabelText("Posto"), "posto-1");
+    await user.selectOptions(screen.getByLabelText("Prioridade *"), "priority-1");
+    await user.type(screen.getByLabelText("Prazo *"), "2026-07-04");
     await user.click(screen.getByRole("button", { name: "Criar tarefa" }));
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({

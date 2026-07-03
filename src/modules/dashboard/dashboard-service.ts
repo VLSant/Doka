@@ -1,10 +1,17 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "../../lib/supabase";
+import {
+  montarAlertas,
+  resumirPorPosto,
+  somarProdutividade,
+} from "./dashboard-state";
 import type {
   DashboardData,
   DashboardError,
   DashboardFilters,
   DashboardPosto,
+  MetaEficiencia,
+  ProdutividadeLinha,
 } from "./types";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -65,6 +72,8 @@ export function createDashboardService(
       const filters = validateDashboardFilters(rawFilters);
       const fimExclusivo = nextIsoDate(filters.fim);
       const hoje = todayInBahia();
+      const inicioSemana = addDays(filters.fim, -6);
+      const inicioConsulta = filters.inicio < inicioSemana ? filters.inicio : inicioSemana;
 
       let assistenciasTotal = client
         .from("mms_assistencias")
@@ -110,6 +119,12 @@ export function createDashboardService(
         .gte("created_at", `${filters.inicio}T00:00:00-03:00`)
         .lt("created_at", `${fimExclusivo}T00:00:00-03:00`)
         .lt("data_retorno", hoje);
+      let ocorrenciasReaparecemHoje = client
+        .from("ocorrencias")
+        .select("id", { count: "exact", head: true })
+        .is("deleted_at", null)
+        .in("status", ["aberta", "em_acompanhamento", "aguardando_retorno", "reaberta"])
+        .eq("data_retorno", hoje);
       let tarefasPendentes = client
         .from("tarefas")
         .select("id", { count: "exact", head: true })
@@ -140,6 +155,18 @@ export function createDashboardService(
         .eq("status", "pendente")
         .gte("data_lancamento", filters.inicio)
         .lte("data_lancamento", filters.fim);
+      let produtividade = client
+        .from("view_produtividade_mms")
+        .select("*")
+        .gte("data_atividade", inicioConsulta)
+        .lte("data_atividade", filters.fim);
+      let metas = client
+        .from("metas_eficiencia")
+        .select("posto_id, tipo_atividade_normalizado, meta_percentual")
+        .eq("ativo", true)
+        .is("deleted_at", null)
+        .lte("vigencia_inicio", filters.fim)
+        .or(`vigencia_fim.is.null,vigencia_fim.gte.${filters.inicio}`);
 
       if (filters.postoId) {
         assistenciasTotal = assistenciasTotal.eq("posto_id", filters.postoId);
@@ -148,6 +175,7 @@ export function createDashboardService(
         assistenciasRemovidas = assistenciasRemovidas.eq("posto_id", filters.postoId);
         ocorrenciasAbertas = ocorrenciasAbertas.eq("posto_id", filters.postoId);
         ocorrenciasAtrasadas = ocorrenciasAtrasadas.eq("posto_id", filters.postoId);
+        ocorrenciasReaparecemHoje = ocorrenciasReaparecemHoje.eq("posto_id", filters.postoId);
         tarefasPendentes = tarefasPendentes.eq("posto_id", filters.postoId);
         tarefasAtrasadas = tarefasAtrasadas.eq("posto_id", filters.postoId);
         tarefasAguardandoValidacao = tarefasAguardandoValidacao.eq(
@@ -155,34 +183,65 @@ export function createDashboardService(
           filters.postoId,
         );
         lancamentosPendentes = lancamentosPendentes.eq("posto_id", filters.postoId);
+        produtividade = produtividade.eq("posto_id", filters.postoId);
+        metas = metas.eq("posto_id", filters.postoId);
       }
 
-      const results = await Promise.all([
-        assistenciasTotal,
-        assistenciasExecutadas,
-        assistenciasPendentes,
-        assistenciasRemovidas,
-        ocorrenciasAbertas,
-        ocorrenciasAtrasadas,
-        tarefasPendentes,
-        tarefasAtrasadas,
-        tarefasAguardandoValidacao,
-        lancamentosPendentes,
+      const [countResults, produtividadeResult, metasResult] = await Promise.all([
+        Promise.all([
+          assistenciasTotal,
+          assistenciasExecutadas,
+          assistenciasPendentes,
+          assistenciasRemovidas,
+          ocorrenciasAbertas,
+          ocorrenciasAtrasadas,
+          ocorrenciasReaparecemHoje,
+          tarefasPendentes,
+          tarefasAtrasadas,
+          tarefasAguardandoValidacao,
+          lancamentosPendentes,
+        ]),
+        produtividade,
+        metas,
       ]);
 
+      if (produtividadeResult.error) throw mapDashboardError(produtividadeResult.error);
+      if (metasResult.error) throw mapDashboardError(metasResult.error);
+
+      const linhas = (produtividadeResult.data ?? []) as ProdutividadeLinha[];
+      const linhasPeriodo = linhas.filter(
+        (linha) => linha.data_atividade >= filters.inicio && linha.data_atividade <= filters.fim,
+      );
+      const linhasDia = linhas.filter((linha) => linha.data_atividade === filters.fim);
+      const linhasSemana = linhas.filter(
+        (linha) => linha.data_atividade >= inicioSemana && linha.data_atividade <= filters.fim,
+      );
+      const metasVigentes = (metasResult.data ?? []) as MetaEficiencia[];
+      const porPosto = resumirPorPosto(linhasPeriodo, metasVigentes);
+
+      const counters = {
+        assistenciasTotal: countOrThrow(countResults[0]),
+        assistenciasExecutadas: countOrThrow(countResults[1]),
+        assistenciasPendentes: countOrThrow(countResults[2]),
+        assistenciasRemovidas: countOrThrow(countResults[3]),
+        ocorrenciasAbertas: countOrThrow(countResults[4]),
+        ocorrenciasAtrasadas: countOrThrow(countResults[5]),
+        ocorrenciasReaparecemHoje: countOrThrow(countResults[6]),
+        tarefasPendentes: countOrThrow(countResults[7]),
+        tarefasAtrasadas: countOrThrow(countResults[8]),
+        tarefasAguardandoValidacao: countOrThrow(countResults[9]),
+        lancamentosPendentes: countOrThrow(countResults[10]),
+      };
+
       return {
-        counters: {
-          assistenciasTotal: countOrThrow(results[0]),
-          assistenciasExecutadas: countOrThrow(results[1]),
-          assistenciasPendentes: countOrThrow(results[2]),
-          assistenciasRemovidas: countOrThrow(results[3]),
-          ocorrenciasAbertas: countOrThrow(results[4]),
-          ocorrenciasAtrasadas: countOrThrow(results[5]),
-          tarefasPendentes: countOrThrow(results[6]),
-          tarefasAtrasadas: countOrThrow(results[7]),
-          tarefasAguardandoValidacao: countOrThrow(results[8]),
-          lancamentosPendentes: countOrThrow(results[9]),
+        counters,
+        produtividade: {
+          periodo: somarProdutividade(linhasPeriodo),
+          dia: somarProdutividade(linhasDia),
+          semana: somarProdutividade(linhasSemana),
+          porPosto,
         },
+        alertas: montarAlertas(counters, porPosto),
       };
     },
 
@@ -209,7 +268,11 @@ export function todayInBahia(date = new Date()): string {
 }
 
 function nextIsoDate(value: string): string {
+  return addDays(value, 1);
+}
+
+function addDays(value: string, days: number): string {
   const date = new Date(`${value}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + 1);
+  date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }

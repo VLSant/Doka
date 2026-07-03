@@ -5,6 +5,7 @@ import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
 import { useAuth } from "../../auth/AuthProvider";
+import { EntityHistory } from "../../auditoria/EntityHistory";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import type { Lancamento } from "../types";
 import { podeGerenciarLancamento } from "../types";
@@ -196,6 +197,7 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
               </div>
             ) : null}
           </Card>
+          <EntityHistory entityType="lancamentos_operacionais" entityId={item.id} />
         </>
       ) : null}
     </main>

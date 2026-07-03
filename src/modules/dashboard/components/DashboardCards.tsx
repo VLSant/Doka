@@ -13,6 +13,12 @@ const COUNTERS: Array<{
   { key: "assistenciasRemovidas", label: "Removidas", group: "Assistências" },
   { key: "ocorrenciasAbertas", label: "Abertas", group: "Ocorrências", attention: true },
   { key: "ocorrenciasAtrasadas", label: "Atrasadas", group: "Ocorrências", attention: true },
+  {
+    key: "ocorrenciasReaparecemHoje",
+    label: "Retornam hoje",
+    group: "Ocorrências",
+    attention: true,
+  },
   { key: "tarefasPendentes", label: "Pendentes", group: "Tarefas", attention: true },
   { key: "tarefasAtrasadas", label: "Atrasadas", group: "Tarefas", attention: true },
   {

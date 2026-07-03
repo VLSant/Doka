@@ -595,6 +595,7 @@ Atualizar esta tabela ao iniciar ou concluir uma frente.
 | 03/07/2026 | Dashboard | Concluída | Indicadores e listas operacionais conectados aos dados reais; PR #18 | Homologação operacional |
 | 03/07/2026 | Fechamento técnico | Concluído | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros | Publicar PR final e homologar manualmente |
 | 03/07/2026 | Testes SQL dos módulos novos no banco remoto | Concluída | 4 arquivos em `supabase/tests/*_fluxo.sql` executados com sucesso no projeto Doka (com rollback): permissões por perfil/posto, transições, recorrência idempotente, acúmulo, validação de lançamentos, último admin e auditoria | Homologação manual das telas pelo usuário |
+| 03/07/2026 | Complementação do PRD fundador | Concluída | Produtividade/eficiência, metas, Dashboard gerencial, auditoria central, históricos, filtros e obrigatoriedades integrados; migration remota `20260703061153` reconciliada localmente | Homologação manual dos fluxos ampliados |
 
 ---
 
@@ -616,3 +617,24 @@ Ao retomar:
 
 O próximo passo atual é iniciar a homologação manual dos módulos na ordem dos
 PRs. Ajustes secundários serão tratados a partir do uso real.
+
+### Complementação posterior do PRD fundador
+
+Após a entrega enxuta, foram incorporados os requisitos mínimos adicionais:
+
+- produtividade e eficiência diária, semanal e por período;
+- confronto entre previstas, executadas, não executadas, pendentes, canceladas
+  e removidas;
+- metas e margem de frustração por posto;
+- resumo por posto e alertas críticos no Dashboard;
+- Histórico/Auditoria central e histórico contextual de tarefas, ocorrências e
+  lançamentos;
+- metas de eficiência na Administração;
+- filtros adicionais e obrigatoriedades de formulários previstas no mapa de
+  telas;
+- atualização do tipo da tarefa e limpeza de campos opcionais.
+
+Os status operacionais continuam sendo enums oficiais do domínio, não cadastros
+livres, para preservar as transições e regras já protegidas no banco.
+Responsáveis continuam sendo usuários operacionais, evitando um cadastro
+paralelo sem função adicional.

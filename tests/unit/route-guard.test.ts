@@ -70,7 +70,7 @@ describe("route-guard: evaluateRouteAccess", () => {
       authState: authorizedState(supervisaoContext),
       route: getRouteDefinition("historico-auditoria"),
     });
-    expect(outcome).toEqual({ kind: "modulo_indisponivel" });
+    expect(outcome).toEqual({ kind: "autorizado" });
   });
 
   it("authorizes an allowed profile on an available route", () => {

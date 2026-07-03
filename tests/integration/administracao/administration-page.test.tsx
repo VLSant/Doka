@@ -47,6 +47,7 @@ const snapshot: AdministrationSnapshot = {
   cargos: [],
   prioridades: [],
   tiposOcorrencia: [],
+  metasEficiencia: [],
 };
 
 function service(overrides: Partial<AdministrationService> = {}): AdministrationService {
@@ -64,6 +65,8 @@ function service(overrides: Partial<AdministrationService> = {}): Administration
     removePriority: vi.fn(),
     saveOccurrenceType: vi.fn(),
     removeOccurrenceType: vi.fn(),
+    saveEfficiencyTarget: vi.fn(),
+    removeEfficiencyTarget: vi.fn(),
     ...overrides,
   };
 }

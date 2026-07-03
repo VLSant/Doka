@@ -4,6 +4,7 @@ import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
+import { EntityHistory } from "../../auditoria/EntityHistory";
 import { isOccurrenceOverdue, nextStatuses, STATUS_LABELS } from "../occurrence-state";
 import {
   createOccurrenceService,
@@ -210,6 +211,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
           </ol>
         )}
       </Card>
+      <EntityHistory entityType="ocorrencias" entityId={occurrence.id} />
     </main>
   );
 }

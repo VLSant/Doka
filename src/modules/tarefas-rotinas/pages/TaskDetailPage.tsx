@@ -5,6 +5,7 @@ import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
 import { useAuth } from "../../auth/AuthProvider";
+import { EntityHistory } from "../../auditoria/EntityHistory";
 import { createTaskService, type TaskService } from "../task-service";
 import { availableTaskActions, canEditTask } from "../task-state";
 import type { Task, TaskAction, TaskViewer } from "../types";
@@ -108,6 +109,7 @@ export function TaskDetailPage({ service: injected, viewer: injectedViewer }: { 
           catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível remover."); setActing(false); }
         }}>Remover tarefa</Button>
       ) : null}
+      <EntityHistory entityType="tarefas" entityId={task.id} />
     </main>
   );
 }

@@ -180,6 +180,7 @@ export function createTaskService(client: SupabaseClient = getSupabaseClient()):
         p_tarefa_id: id,
         p_titulo: args.p_titulo,
         p_descricao: args.p_descricao,
+        p_tipo: args.p_tipo,
         p_posto_id: args.p_posto_id,
         p_cargo_funcao_id: args.p_cargo_funcao_id,
         p_prioridade_id: args.p_prioridade_id,

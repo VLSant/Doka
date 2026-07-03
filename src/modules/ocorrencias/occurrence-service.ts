@@ -18,7 +18,10 @@ const SELECT_OCCURRENCE = `
   responsavel_id, criada_por, titulo, descricao, observacoes, status,
   data_retorno, resolvida_em, encerrada_em, reaberta_em,
   justificativa_reabertura, created_at, updated_at,
-  assistencia:mms_assistencias!ocorrencias_assistencia_id_fkey(id, numero_assistencia, data_atividade),
+  assistencia:mms_assistencias!ocorrencias_assistencia_id_fkey(
+    id, numero_assistencia, data_atividade,
+    partes:mms_partes_assistencia(recurso_importado,recurso_corrigido)
+  ),
   posto:postos!ocorrencias_posto_id_fkey(id, nome),
   tipo:tipos_ocorrencia!ocorrencias_tipo_ocorrencia_id_fkey(id, nome),
   prioridade:prioridades!ocorrencias_prioridade_id_fkey(id, nome),

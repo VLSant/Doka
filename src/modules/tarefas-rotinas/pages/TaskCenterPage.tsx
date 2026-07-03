@@ -93,7 +93,7 @@ export function TaskCenterPage({
         ))}
       </nav>
       <Card padding="lg">
-        <TaskFiltersForm value={filters} postos={catalogs.postos} usuarios={catalogs.usuarios} disabled={loading} onChange={setFilters} />
+        <TaskFiltersForm value={filters} postos={catalogs.postos} usuarios={catalogs.usuarios} prioridades={catalogs.prioridades} disabled={loading} onChange={setFilters} />
       </Card>
       {loading && tasks.length === 0 ? <LoadingState message="Carregando tarefas..." /> : null}
       {error ? <FeedbackState tone="error" title="Falha ao carregar tarefas" description={error.message} actions={<Button onClick={() => void load()}>Tentar novamente</Button>} /> : null}

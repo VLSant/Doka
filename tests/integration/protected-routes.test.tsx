@@ -107,6 +107,6 @@ describe("protected routes: direct URL, favorites/history, posto_id, denial prec
 
   it("reports module-unavailable (not denied) for an allowed Supervisao profile on a placeholder route", async () => {
     renderAtPath("/app/historico-auditoria", "historico-auditoria", supervisaoResult);
-    await waitFor(() => expect(screen.getByTestId("modulo-indisponivel")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("protected-content")).toBeInTheDocument());
   });
 });

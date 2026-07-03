@@ -104,7 +104,7 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
     label: "Histórico / Auditoria",
     icon: "history",
     profiles: ["supervisao", "direcao_admin"],
-    availability: "placeholder",
+    availability: "available",
     navigationOrder: 8,
   },
 ];

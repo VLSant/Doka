@@ -231,9 +231,14 @@ select pg_temp.assert_true(
    where t.rotina_id = pg_temp.fx_rotina_id() and t.deleted_at is null),
   'reprocessar nao deve duplicar tarefas de rotina');
 
+-- A interface envia sempre o estado completo do formulario ao atualizar.
 select pg_temp.assert_true(
   (public.atualizar_rotina(
     p_rotina_id => pg_temp.fx_rotina_id(),
+    p_nome => 'FX rotina diaria',
+    p_recorrencia => 'diaria',
+    p_posto_id => 'ff400000-0000-0000-0000-000000000001',
+    p_data_inicio => (now() at time zone 'America/Bahia')::date - 2,
     p_status => 'pausada'
   ) ->> 'status') = 'pausada',
   'supervisao deve pausar a rotina');

@@ -59,7 +59,7 @@ describe("estado das ocorrências", () => {
     expect(occurrenceMatchesFilters(late, { tab: "atrasadas" }, "2026-07-03")).toBe(true);
   });
 
-  it("exige assistência, posto derivado, tipo e título", () => {
+  it("exige os campos operacionais definidos pelo PRD", () => {
     const empty: OccurrenceInput = {
       assistencia_id: "",
       posto_id: "",
@@ -74,7 +74,11 @@ describe("estado das ocorrências", () => {
     expect(validateOccurrenceInput(empty)).toEqual({
       assistencia_id: "Selecione uma assistência válida.",
       tipo_ocorrencia_id: "Selecione o tipo.",
+      prioridade_id: "Selecione a prioridade.",
+      responsavel_id: "Selecione o responsável.",
+      data_retorno: "Informe a data de retorno.",
       titulo: "Informe o título.",
+      descricao: "Informe a descrição.",
     });
   });
 

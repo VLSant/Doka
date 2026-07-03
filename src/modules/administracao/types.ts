@@ -55,6 +55,16 @@ export interface TipoOcorrencia {
   ativo: boolean;
 }
 
+export interface MetaEficiencia {
+  id: string;
+  posto_id: string;
+  tipo_atividade_normalizado: string;
+  meta_percentual: number;
+  vigencia_inicio: string;
+  vigencia_fim: string | null;
+  ativo: boolean;
+}
+
 export interface AdministrationSnapshot {
   usuarios: UsuarioOperacional[];
   postos: Posto[];
@@ -62,6 +72,7 @@ export interface AdministrationSnapshot {
   cargos: CargoFuncao[];
   prioridades: Prioridade[];
   tiposOcorrencia: TipoOcorrencia[];
+  metasEficiencia: MetaEficiencia[];
 }
 
 export interface UsuarioInput {
@@ -96,5 +107,14 @@ export interface PrioridadeInput {
 export interface TipoOcorrenciaInput {
   nome: string;
   descricao: string | null;
+  ativo: boolean;
+}
+
+export interface MetaEficienciaInput {
+  posto_id: string;
+  tipo_atividade_normalizado: string;
+  meta_percentual: number;
+  vigencia_inicio: string;
+  vigencia_fim: string | null;
   ativo: boolean;
 }
