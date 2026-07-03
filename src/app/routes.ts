@@ -59,7 +59,7 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
     label: "Tarefas e Rotinas",
     icon: "list-checks",
     profiles: ALL_OFFICIAL_PROFILES,
-    availability: "placeholder",
+    availability: "available",
     navigationOrder: 3,
   },
   {
