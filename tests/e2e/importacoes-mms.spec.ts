@@ -128,23 +128,18 @@ test.describe("E2E-07-01 — Lista e filtros", () => {
       test.skip(true, "Paginação não disponível com a massa atual.");
     }
 
-    const getLoteIds = () =>
-      page.evaluate(() =>
-        Array.from(document.querySelectorAll("[data-lote-id]")).map(
-          (el) => (el as HTMLElement).dataset.loteId,
-        ),
-      );
+    const getLoteHrefs = () =>
+      page.getByRole("table").getByRole("link", { name: "Abrir" })
+        .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
 
-    const firstIds = await getLoteIds();
+    const firstIds = await getLoteHrefs();
     await carregarMais.click();
     await expect(carregarMais.or(page.getByRole("table"))).toBeVisible();
-    const allIds = await getLoteIds();
+    const allIds = await getLoteHrefs();
 
-    if (allIds.length > 0) {
-      const unique = new Set(allIds);
-      expect(unique.size).toBe(allIds.length);
-      expect(allIds.length).toBeGreaterThan(firstIds.length);
-    }
+    const unique = new Set(allIds);
+    expect(unique.size).toBe(allIds.length);
+    expect(allIds.length).toBeGreaterThan(firstIds.length);
   });
 });
 
@@ -236,7 +231,7 @@ test.describe("E2E-07-03 — Matriz de permissoes por perfil", () => {
 test.describe("E2E-07-05 — Concluir e reprocessar", () => {
   test("erro pendente bloqueia botao de concluir tratamento", async ({ page }) => {
     await login(page, PROFILES.supervisao.email);
-    await page.goto(`/app/importacoes-mms/${LOTE_COM_ERRO_ID}`);
+    await page.goto(`/app/importacoes-mms/${LOTE_COM_ERRO_ID}/tratamento`);
 
     const concluirBtn = page.getByRole("button", { name: /concluir/i });
     if (!(await concluirBtn.isVisible())) {
@@ -248,7 +243,7 @@ test.describe("E2E-07-05 — Concluir e reprocessar", () => {
 
   test("dialogo de reprocessar exige confirmacao explicita", async ({ page }) => {
     await login(page, PROFILES.direcaoAdmin.email);
-    await page.goto(`/app/importacoes-mms/${LOTE_COM_ERRO_ID}`);
+    await page.goto(`/app/importacoes-mms/${LOTE_COM_ERRO_ID}/tratamento`);
 
     const reprocessarBtn = page.getByRole("button", { name: /reprocessar/i });
     if (!(await reprocessarBtn.isVisible())) {

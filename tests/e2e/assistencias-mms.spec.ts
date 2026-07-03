@@ -38,6 +38,11 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/app\/dashboard$/);
 }
 
+async function openAssistanceDetail(page: Page, assistanceNumber: string) {
+  const row = page.getByRole("row").filter({ hasText: assistanceNumber });
+  await row.getByRole("link", { name: /abrir detalhe/i }).click();
+}
+
 async function expectNoSeriousOrCriticalViolations(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
@@ -149,7 +154,7 @@ test.describe("E2E-08-01 — Lista e filtros", () => {
     await page.getByRole("button", { name: /aplicar/i }).click();
     await expect(page.getByText("ASS-100")).toBeVisible();
 
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
 
     await page.getByRole("link", { name: /voltar/i }).click();
@@ -199,7 +204,7 @@ test.describe("E2E-08-03 — Detalhe ASS-100", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
   });
 
@@ -238,7 +243,7 @@ test.describe("E2E-08-04 — Corrigir campos autorizados", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
 
     // Abre diálogo de correção do cliente (nível assistência)
@@ -258,7 +263,7 @@ test.describe("E2E-08-04 — Corrigir campos autorizados", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
 
     await page.getByRole("button", { name: /corrigir/i }).first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -276,7 +281,7 @@ test.describe("E2E-08-04 — Corrigir campos autorizados", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
 
     const corrigirBtn = page.getByRole("button", { name: /corrigir/i }).first();
     await corrigirBtn.click();
@@ -299,7 +304,7 @@ test.describe("E2E-08-05 — Restricoes de edicao e acesso", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
 
     // Número, posto, data e status não devem ter ação de correção
@@ -337,7 +342,7 @@ test.describe("E2E-08-07 — Historico e integracao com Spec 007", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
 
     // Aguarda seção de histórico
@@ -357,7 +362,7 @@ test.describe("E2E-08-07 — Historico e integracao com Spec 007", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
 
     const loteLink = page.getByRole("link", { name: /abrir lote/i }).first();
@@ -387,7 +392,7 @@ test.describe("Acessibilidade — Assistencias MMS", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await expect(page).toHaveURL(/assistencias-mms\/.+/);
     await expectNoSeriousOrCriticalViolations(page);
   });
@@ -397,7 +402,7 @@ test.describe("Acessibilidade — Assistencias MMS", () => {
     await page.goto("/app/assistencias-mms");
     await page.getByLabel(/número/i).fill("ASS-100");
     await page.getByRole("button", { name: /aplicar/i }).click();
-    await page.getByRole("link", { name: "ASS-100" }).first().click();
+    await openAssistanceDetail(page, "ASS-100");
     await page.getByRole("button", { name: /corrigir/i }).first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expectNoSeriousOrCriticalViolations(page);
