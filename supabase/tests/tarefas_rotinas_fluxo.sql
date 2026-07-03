@@ -85,6 +85,33 @@ select pg_temp.assert_true(
      and tr.deleted_at is null),
   'responsavel padrao da tarefa do operador deve ser ele mesmo');
 
+-- Atualizacao com estado completo: muda o tipo e permite limpar opcionais.
+select pg_temp.assert_true(
+  (public.atualizar_tarefa(
+    p_tarefa_id => pg_temp.fx_tarefa_id(),
+    p_titulo => 'FX tarefa do operador',
+    p_descricao => 'com descricao',
+    p_tipo => 'estrategia',
+    p_posto_id => 'ff400000-0000-0000-0000-000000000001',
+    p_prazo_data => (now() at time zone 'America/Bahia')::date
+  ) ->> 'tipo') = 'estrategia',
+  'atualizar deve alterar o tipo para estrategia');
+
+select pg_temp.assert_true(
+  (public.atualizar_tarefa(
+    p_tarefa_id => pg_temp.fx_tarefa_id(),
+    p_titulo => 'FX tarefa do operador',
+    p_descricao => null,
+    p_tipo => 'avulsa',
+    p_posto_id => 'ff400000-0000-0000-0000-000000000001',
+    p_prazo_data => null
+  ) ->> 'descricao') is null,
+  'atualizar deve permitir limpar a descricao');
+
+select pg_temp.assert_true(
+  (select prazo_data is null from public.tarefas where id = pg_temp.fx_tarefa_id()),
+  'atualizar deve permitir limpar o prazo');
+
 do $$
 begin
   perform public.criar_tarefa(

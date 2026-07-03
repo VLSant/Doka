@@ -33,6 +33,12 @@ function errorFor(message?: string): AdministrationError {
   if (message?.includes("duplicate") || message?.includes("unique")) {
     return new AdministrationError("duplicado", "Já existe um cadastro ativo com esses dados.");
   }
+  if (message?.includes("exclusion") || message?.includes("sobreposicao")) {
+    return new AdministrationError(
+      "duplicado",
+      "Já existe uma meta ativa para este posto e tipo com vigência sobreposta.",
+    );
+  }
   return new AdministrationError(
     "falha_temporaria",
     "Não foi possível concluir a operação. Tente novamente.",
