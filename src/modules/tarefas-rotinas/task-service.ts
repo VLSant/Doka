@@ -178,7 +178,15 @@ export function createTaskService(client: SupabaseClient = getSupabaseClient()):
       const args = taskArgs(input);
       const updated = await rpc<Task>(client, "atualizar_tarefa", {
         p_tarefa_id: id,
-        ...args,
+        p_titulo: args.p_titulo,
+        p_descricao: args.p_descricao,
+        p_posto_id: args.p_posto_id,
+        p_cargo_funcao_id: args.p_cargo_funcao_id,
+        p_prioridade_id: args.p_prioridade_id,
+        p_prazo_data: args.p_prazo_data,
+        p_horario_limite: args.p_horario_limite,
+        p_exige_validacao: args.p_exige_validacao,
+        p_observacoes: args.p_observacoes,
         p_responsaveis: canChangeResponsible ? input.responsaveis : null,
       });
       return getTask(updated.id);

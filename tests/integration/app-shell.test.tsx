@@ -82,14 +82,13 @@ describe("AppShell", () => {
     await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
   });
 
-  it("renders unavailable routes as disabled (no link), keeping them screen-reader understandable", async () => {
+  it("renders available operational routes as links", async () => {
     renderShellAt("/app/dashboard", operadorResult);
     await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
 
-    const disabledItem = screen.getByText("Ocorrências").closest("[aria-disabled]");
-    expect(disabledItem).not.toBeNull();
-    expect(disabledItem).toHaveAttribute("aria-disabled", "true");
-    expect(screen.queryByRole("link", { name: /ocorrências/i })).not.toBeInTheDocument();
+    const occurrenceLink = screen.getByRole("link", { name: /ocorrências/i });
+    expect(occurrenceLink).toHaveAttribute("href", "/app/ocorrencias");
+    expect(occurrenceLink.closest("[aria-disabled]")).toBeNull();
   });
 
   it("hides administrative-only entries from an Operador menu", async () => {
