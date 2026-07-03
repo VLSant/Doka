@@ -83,10 +83,10 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
   {
     id: "custos-extras",
     path: "/app/custos-extras",
-    label: "Custos Extras",
+    label: "Deslocamentos e Custos",
     icon: "wallet",
     profiles: ALL_OFFICIAL_PROFILES,
-    availability: "placeholder",
+    availability: "available",
     navigationOrder: 6,
   },
   {

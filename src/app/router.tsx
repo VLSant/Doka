@@ -51,6 +51,9 @@ const RoutineFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/Rout
 const OccurrenceListPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceListPage"));
 const OccurrenceFormPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceFormPage"));
 const OccurrenceDetailPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceDetailPage"));
+const LancamentoListPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoListPage"));
+const LancamentoFormPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoFormPage"));
+const LancamentoDetailPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoDetailPage"));
 
 function RootLayout() {
   const navigation = useNavigation();
@@ -153,6 +156,10 @@ export const router = createBrowserRouter([
                 <Suspense fallback={<LoadingState message="Carregando importação..." />}>
                   <ImportListPage />
                 </Suspense>
+              ) : route.id === "custos-extras" ? (
+                <Suspense fallback={<LoadingState message="Carregando lançamentos..." />}>
+                  <LancamentoListPage />
+                </Suspense>
               ) : (
                 <ModuleUnavailablePage moduleLabel={route.label} />
               )}
@@ -194,6 +201,18 @@ export const router = createBrowserRouter([
           {
             path: "tarefas-rotinas/:tarefaId",
             element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando tarefa..." />}><TaskDetailPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "custos-extras/novo",
+            element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><LancamentoFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "custos-extras/:id/editar",
+            element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><LancamentoFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "custos-extras/:id",
+            element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando lançamento..." />}><LancamentoDetailPage /></Suspense></ProtectedRoute>,
           },
           {
             path: "assistencias-mms/:assistenciaId",

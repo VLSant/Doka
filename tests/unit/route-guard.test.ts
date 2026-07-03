@@ -70,8 +70,8 @@ describe("route-guard: evaluateRouteAccess", () => {
 
   it("reports modulo_indisponivel for an allowed profile on a placeholder route", () => {
     const outcome = evaluateRouteAccess({
-      authState: authorizedState(operadorContext),
-      route: getRouteDefinition("custos-extras"),
+      authState: authorizedState(supervisaoContext),
+      route: getRouteDefinition("historico-auditoria"),
     });
     expect(outcome).toEqual({ kind: "modulo_indisponivel" });
   });
