@@ -586,14 +586,14 @@ Atualizar esta tabela ao iniciar ou concluir uma frente.
 | 03/07/2026 | Auditoria inicial do trabalho do Fable | Concluída | Quatro migrations remotas confirmadas; frontend não integrado | Estabilizar migrations |
 | 03/07/2026 | Plano vivo de execução | Concluído | Documento criado; nenhum código alterado | Iniciar Fase 0 |
 | 03/07/2026 | Reconciliação nominal de migrations | Concluída | Arquivos locais renomeados para as versões remotas já aplicadas | Revisar contratos e permissões |
-| 03/07/2026 | Execução paralela dos módulos operacionais | Em andamento | Tarefas, Ocorrências e Lançamentos distribuídos em worktrees isolados | Integrar cada fatia após testes |
-| — | Fundação frontend | Pendente | — | Revisar service e CSS compartilhados |
-| — | Tarefas e Rotinas | Pendente | — | Detalhar módulo antes de implementar |
-| — | Ocorrências | Pendente | — | Detalhar módulo antes de implementar |
-| — | Deslocamentos e Custos | Pendente | — | Detalhar módulo antes de implementar |
-| — | Administração | Pendente | — | Aguardar necessidades dos módulos |
-| — | Dashboard | Pendente | — | Implementar após módulos operacionais |
-| — | Fechamento técnico | Pendente | — | Integrar e executar verificações |
+| 03/07/2026 | Execução paralela dos módulos operacionais | Concluída | Tarefas, Ocorrências e Lançamentos implementados e publicados em PRs empilhados | Validar integração final |
+| 03/07/2026 | Fundação frontend | Concluída | Rotas, navegação e contratos compartilhados integrados | Manter enxuta |
+| 03/07/2026 | Tarefas e Rotinas | Concluída | CRUD, permissões, telas e testes essenciais implementados; PR #14 | Homologação operacional |
+| 03/07/2026 | Ocorrências | Concluída | CRUD, escopo por posto, responsável validado e testes essenciais; PR #15 | Homologação operacional |
+| 03/07/2026 | Deslocamentos e Custos | Concluída | Tipos reunidos no mesmo módulo, CRUD manual e testes essenciais; PR #16 | Homologação operacional |
+| 03/07/2026 | Administração | Concluída | Usuários, postos, vínculos e cadastros auxiliares mínimos; PR #17 | Homologação administrativa |
+| 03/07/2026 | Dashboard | Concluída | Indicadores e listas operacionais conectados aos dados reais; PR #18 | Homologação operacional |
+| 03/07/2026 | Fechamento técnico | Concluído | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros | Publicar PR final e homologar manualmente |
 
 ---
 
@@ -613,5 +613,5 @@ Ao retomar:
    daquele módulo após revisar PRD, regras, migration e frontend existente.
 10. Atualizar o registro ao final de cada etapa, inclusive em caso de bloqueio.
 
-O próximo passo atual é a **Fase 0 — estabilizar a base recebida**, começando
-pela reconciliação não destrutiva do histórico de migrations.
+O próximo passo atual é iniciar a homologação manual dos módulos na ordem dos
+PRs. Ajustes secundários serão tratados a partir do uso real.

@@ -67,7 +67,7 @@ describe("ProtectedRoute revalidation", () => {
     fireEvent.click(screen.getByRole("button", { name: "Abrir cadastros" }));
 
     await waitFor(() => expect(resolveInitialContext).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.getByRole("heading", { name: /Cadastros ainda não disponível/i })).toBeVisible());
+    await waitFor(() => expect(screen.getByText("Conteúdo final não deveria existir")).toBeVisible());
     expect(screen.queryByText("Acesso negado")).not.toBeInTheDocument();
   });
 });

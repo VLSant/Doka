@@ -212,11 +212,11 @@ export const router = createBrowserRouter([
             element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><LancamentoFormPage /></Suspense></ProtectedRoute>,
           },
           {
-            path: "custos-extras/:id/editar",
+            path: "custos-extras/:lancamentoId/editar",
             element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><LancamentoFormPage /></Suspense></ProtectedRoute>,
           },
           {
-            path: "custos-extras/:id",
+            path: "custos-extras/:lancamentoId",
             element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando lançamento..." />}><LancamentoDetailPage /></Suspense></ProtectedRoute>,
           },
           {
