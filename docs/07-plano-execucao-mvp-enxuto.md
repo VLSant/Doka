@@ -592,7 +592,7 @@ Atualizar esta tabela ao iniciar ou concluir uma frente.
 | 03/07/2026 | Ocorrências | Concluída | CRUD, escopo por posto, responsável validado e testes essenciais; PR #15 | Homologação operacional |
 | 03/07/2026 | Deslocamentos e Custos | Concluída | Tipos reunidos no mesmo módulo, CRUD manual e testes essenciais; PR #16 | Homologação operacional |
 | 03/07/2026 | Administração | Concluída | Usuários, postos, vínculos e cadastros auxiliares mínimos; PR #17 | Homologação administrativa |
-| 03/07/2026 | Dashboard | Concluída | Indicadores e listas operacionais conectados aos dados reais | Publicar PR empilhado |
+| 03/07/2026 | Dashboard | Concluída | Indicadores e listas operacionais conectados aos dados reais; PR #18 | Homologação operacional |
 | 03/07/2026 | Fechamento técnico | Concluído | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros | Publicar PR final e homologar manualmente |
 
 ---
@@ -613,6 +613,5 @@ Ao retomar:
    daquele módulo após revisar PRD, regras, migration e frontend existente.
 10. Atualizar o registro ao final de cada etapa, inclusive em caso de bloqueio.
 
-O próximo passo atual é publicar o PR empilhado do Dashboard e iniciar a
-homologação manual dos módulos na ordem dos PRs. Ajustes secundários serão
-tratados a partir do uso real.
+O próximo passo atual é iniciar a homologação manual dos módulos na ordem dos
+PRs. Ajustes secundários serão tratados a partir do uso real.
