@@ -50,7 +50,7 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
     label: "Ocorrências",
     icon: "alert-triangle",
     profiles: ALL_OFFICIAL_PROFILES,
-    availability: "placeholder",
+    availability: "available",
     navigationOrder: 2,
   },
   {
