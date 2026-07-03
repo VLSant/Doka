@@ -48,6 +48,9 @@ const TaskFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskFor
 const TaskDetailPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskDetailPage"));
 const RoutineListPage = lazy(() => import("../modules/tarefas-rotinas/pages/RoutineListPage"));
 const RoutineFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/RoutineFormPage"));
+const OccurrenceListPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceListPage"));
+const OccurrenceFormPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceFormPage"));
+const OccurrenceDetailPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceDetailPage"));
 
 function RootLayout() {
   const navigation = useNavigation();
@@ -134,6 +137,10 @@ export const router = createBrowserRouter([
             <ProtectedRoute routeId={route.id}>
               {route.id === "dashboard" ? (
                 <DashboardPage />
+              ) : route.id === "ocorrencias" ? (
+                <Suspense fallback={<LoadingState message="Carregando ocorrências..." />}>
+                  <OccurrenceListPage />
+                </Suspense>
               ) : route.id === "tarefas-rotinas" ? (
                 <Suspense fallback={<LoadingState message="Carregando tarefas..." />}>
                   <TaskCenterPage />
@@ -152,6 +159,18 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
           ),
           })),
+          {
+            path: "ocorrencias/nova",
+            element: <ProtectedRoute routeId="ocorrencias"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><OccurrenceFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "ocorrencias/:ocorrenciaId/editar",
+            element: <ProtectedRoute routeId="ocorrencias"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><OccurrenceFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "ocorrencias/:ocorrenciaId",
+            element: <ProtectedRoute routeId="ocorrencias"><Suspense fallback={<LoadingState message="Carregando ocorrência..." />}><OccurrenceDetailPage /></Suspense></ProtectedRoute>,
+          },
           {
             path: "tarefas-rotinas/rotinas",
             element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando rotinas..." />}><RoutineListPage /></Suspense></ProtectedRoute>,

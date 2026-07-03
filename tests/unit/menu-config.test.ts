@@ -67,9 +67,9 @@ describe("menu-config: buildMenuForProfile", () => {
 
   it("marks a placeholder route as disabled, with a clear unavailable label, but still rendered", () => {
     const menu = buildMenuForProfile("operador");
-    const ocorrencias = menu.find((item) => item.id === "ocorrencias");
-    expect(ocorrencias?.disabled).toBe(true);
-    expect(ocorrencias?.unavailableLabel).toMatch(/ainda n[aã]o dispon[ií]vel/i);
+    const custos = menu.find((item) => item.id === "custos-extras");
+    expect(custos?.disabled).toBe(true);
+    expect(custos?.unavailableLabel).toMatch(/ainda n[aã]o dispon[ií]vel/i);
   });
 
   it("excludes (hides) a route entirely when the profile is not allowed for it", () => {
