@@ -15,8 +15,8 @@ import "./Occurrences.css";
 export function OccurrenceFormPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
   const navigate = useNavigate();
-  const { occurrenceId } = useParams();
-  const editing = Boolean(occurrenceId);
+  const { ocorrenciaId } = useParams();
+  const editing = Boolean(ocorrenciaId);
   const [catalogs, setCatalogs] = useState<OccurrenceCatalogs | null>(null);
   const [initial, setInitial] = useState<OccurrenceInput | undefined>();
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
     try {
       const [options, occurrence] = await Promise.all([
         service.catalogs(),
-        occurrenceId ? service.detail(occurrenceId) : Promise.resolve(null),
+        ocorrenciaId ? service.detail(ocorrenciaId) : Promise.resolve(null),
       ]);
       setCatalogs(options);
       if (occurrence) {
@@ -50,7 +50,7 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
     } finally {
       setLoading(false);
     }
-  }, [occurrenceId, service]);
+  }, [ocorrenciaId, service]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => void load(), [load]);
@@ -59,7 +59,7 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
     setSaving(true);
     setError(null);
     try {
-      if (occurrenceId) {
+      if (ocorrenciaId) {
         const editable = {
           tipo_ocorrencia_id: input.tipo_ocorrencia_id,
           prioridade_id: input.prioridade_id,
@@ -69,8 +69,8 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
           observacoes: input.observacoes,
           data_retorno: input.data_retorno,
         };
-        await service.update(occurrenceId, editable);
-        navigate(`/app/ocorrencias/${occurrenceId}`);
+        await service.update(ocorrenciaId, editable);
+        navigate(`/app/ocorrencias/${ocorrenciaId}`);
       } else {
         const created = await service.create(input);
         navigate(`/app/ocorrencias/${created.id}`);
@@ -110,7 +110,7 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
             editing={editing}
             saving={saving}
             onSubmit={submit}
-            onCancel={() => navigate(occurrenceId ? `/app/ocorrencias/${occurrenceId}` : "/app/ocorrencias")}
+            onCancel={() => navigate(ocorrenciaId ? `/app/ocorrencias/${ocorrenciaId}` : "/app/ocorrencias")}
           />
         </Card>
       ) : null}

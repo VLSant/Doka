@@ -57,6 +57,18 @@ export function occurrenceMatchesFilters(
   }
   if (filters.prioridade_id && occurrence.prioridade_id !== filters.prioridade_id) return false;
   if (filters.status && occurrence.status !== filters.status) return false;
+  if (filters.assistencia_id && occurrence.assistencia_id !== filters.assistencia_id) return false;
+  if (filters.data_de && occurrence.created_at.slice(0, 10) < filters.data_de) return false;
+  if (filters.data_ate && occurrence.created_at.slice(0, 10) > filters.data_ate) return false;
+  if (filters.montador) {
+    const needle = filters.montador.trim().toLocaleLowerCase("pt-BR");
+    const resources = occurrence.assistencia?.partes
+      ?.flatMap((parte) => [parte.recurso_corrigido, parte.recurso_importado])
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("pt-BR") ?? "";
+    if (!resources.includes(needle)) return false;
+  }
   if (filters.busca) {
     const needle = filters.busca.trim().toLocaleLowerCase("pt-BR");
     const content = [
@@ -79,7 +91,11 @@ export function validateOccurrenceInput(input: OccurrenceInput): Record<string, 
   if (!input.assistencia_id) errors.assistencia_id = "Selecione uma assistência.";
   if (!input.posto_id) errors.assistencia_id = "Selecione uma assistência válida.";
   if (!input.tipo_ocorrencia_id) errors.tipo_ocorrencia_id = "Selecione o tipo.";
+  if (!input.prioridade_id) errors.prioridade_id = "Selecione a prioridade.";
+  if (!input.responsavel_id) errors.responsavel_id = "Selecione o responsável.";
+  if (!input.data_retorno) errors.data_retorno = "Informe a data de retorno.";
   if (!input.titulo.trim()) errors.titulo = "Informe o título.";
+  if (!input.descricao?.trim()) errors.descricao = "Informe a descrição.";
   return errors;
 }
 

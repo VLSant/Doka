@@ -6,6 +6,7 @@ import { Card } from "../../../components/ui/Card";
 import { createDashboardService, todayInBahia, type DashboardService } from "../dashboard-service";
 import { DashboardCards } from "../components/DashboardCards";
 import { DashboardFiltersForm } from "../components/DashboardFiltersForm";
+import { DashboardProductivity } from "../components/DashboardProductivity";
 import type { DashboardData, DashboardError, DashboardFilters, DashboardPosto } from "../types";
 import "./DashboardOperationalPage.css";
 
@@ -15,7 +16,11 @@ function initialFilters(): DashboardFilters {
 }
 
 function hasOperationalData(data: DashboardData): boolean {
-  return Object.values(data.counters).some((value) => value > 0);
+  return (
+    Object.values(data.counters).some((value) => value > 0) ||
+    data.produtividade.periodo.previstas > 0 ||
+    data.produtividade.periodo.removidas > 0
+  );
 }
 
 export function DashboardOperationalPage({
@@ -101,6 +106,13 @@ export function DashboardOperationalPage({
         <>
           {loading ? <p role="status">Atualizando indicadores...</p> : null}
           <DashboardCards counters={data.counters} />
+          <DashboardProductivity
+            dia={data.produtividade.dia}
+            semana={data.produtividade.semana}
+            periodo={data.produtividade.periodo}
+            porPosto={data.produtividade.porPosto}
+            alertas={data.alertas}
+          />
           {!hasOperationalData(data) ? (
             <FeedbackState
               tone="empty"

@@ -114,10 +114,11 @@ export function OccurrenceForm({
           ) : null}
         </label>
         <label>
-          Prioridade
+          Prioridade <span aria-hidden="true">*</span>
           <select
             value={input.prioridade_id ?? ""}
             disabled={saving}
+            aria-invalid={Boolean(errors.prioridade_id)}
             onChange={(event) => change("prioridade_id", event.target.value || null)}
           >
             <option value="">Sem prioridade</option>
@@ -127,12 +128,14 @@ export function OccurrenceForm({
               </option>
             ))}
           </select>
+          {errors.prioridade_id ? <small role="alert">{errors.prioridade_id}</small> : null}
         </label>
         <label>
-          Responsável
+          Responsável <span aria-hidden="true">*</span>
           <select
             value={input.responsavel_id ?? ""}
             disabled={saving}
+            aria-invalid={Boolean(errors.responsavel_id)}
             onChange={(event) => change("responsavel_id", event.target.value || null)}
           >
             <option value="">Não definido</option>
@@ -142,12 +145,14 @@ export function OccurrenceForm({
               </option>
             ))}
           </select>
+          {errors.responsavel_id ? <small role="alert">{errors.responsavel_id}</small> : null}
         </label>
         <Input
-          label="Data de retorno"
+          label="Data de retorno *"
           type="date"
           value={input.data_retorno ?? ""}
           disabled={saving}
+          error={errors.data_retorno}
           onChange={(event) => change("data_retorno", event.target.value || null)}
         />
       </div>
@@ -159,13 +164,15 @@ export function OccurrenceForm({
         onChange={(event) => change("titulo", event.target.value)}
       />
       <label>
-        Descrição
+        Descrição <span aria-hidden="true">*</span>
         <textarea
           rows={5}
           value={input.descricao ?? ""}
           disabled={saving}
+          aria-invalid={Boolean(errors.descricao)}
           onChange={(event) => change("descricao", event.target.value || null)}
         />
+        {errors.descricao ? <small role="alert">{errors.descricao}</small> : null}
       </label>
       <label>
         Observações

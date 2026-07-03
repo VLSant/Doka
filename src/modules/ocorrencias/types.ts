@@ -39,7 +39,12 @@ export interface OccurrenceListItem {
   justificativa_reabertura: string | null;
   created_at: string;
   updated_at: string;
-  assistencia: { id: string; numero_assistencia: string; data_atividade: string } | null;
+  assistencia: {
+    id: string;
+    numero_assistencia: string;
+    data_atividade: string;
+    partes?: Array<{ recurso_importado: string | null; recurso_corrigido: string | null }>;
+  } | null;
   posto: NamedOption | null;
   tipo: NamedOption | null;
   prioridade: NamedOption | null;
@@ -67,6 +72,10 @@ export interface OccurrenceFilters {
   tipo_ocorrencia_id?: string;
   prioridade_id?: string;
   status?: OccurrenceStatus | "";
+  assistencia_id?: string;
+  montador?: string;
+  data_de?: string;
+  data_ate?: string;
 }
 
 export interface OccurrenceInput {
@@ -92,6 +101,7 @@ export interface OccurrenceCatalogs {
 export type OccurrenceErrorCode =
   | "acesso_negado"
   | "assistencia_invalida"
+  | "responsavel_fora_do_posto"
   | "justificativa_obrigatoria"
   | "transicao_invalida"
   | "validacao"

@@ -55,6 +55,7 @@ const LancamentoListPage = lazy(() => import("../modules/lancamentos-operacionai
 const LancamentoFormPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoFormPage"));
 const LancamentoDetailPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoDetailPage"));
 const AdministrationPage = lazy(() => import("../modules/administracao/pages/AdministrationPage").then((module) => ({ default: module.AdministrationPage })));
+const AuditHistoryPage = lazy(() => import("../modules/auditoria/pages/AuditHistoryPage"));
 
 function RootLayout() {
   const navigation = useNavigation();
@@ -164,6 +165,10 @@ export const router = createBrowserRouter([
               ) : route.id === "cadastros" ? (
                 <Suspense fallback={<LoadingState message="Carregando cadastros..." />}>
                   <AdministrationPage />
+                </Suspense>
+              ) : route.id === "historico-auditoria" ? (
+                <Suspense fallback={<LoadingState message="Carregando histórico..." />}>
+                  <AuditHistoryPage />
                 </Suspense>
               ) : (
                 <ModuleUnavailablePage moduleLabel={route.label} />

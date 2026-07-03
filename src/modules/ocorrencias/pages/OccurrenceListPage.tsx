@@ -171,6 +171,16 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
               ))}
             </select>
           </label>
+          <label>
+            Assistência
+            <select value={filters.assistencia_id ?? ""} onChange={(event) => setFilter("assistencia_id", event.target.value)}>
+              <option value="">Todas</option>
+              {catalogs.assistencias.map((item) => <option key={item.id} value={item.id}>{item.numero_assistencia}</option>)}
+            </select>
+          </label>
+          <label>Montador / recurso<input value={filters.montador ?? ""} onChange={(event) => setFilter("montador", event.target.value)} /></label>
+          <label>Registrada de<input type="date" value={filters.data_de ?? ""} onChange={(event) => setFilter("data_de", event.target.value)} /></label>
+          <label>Registrada até<input type="date" value={filters.data_ate ?? ""} onChange={(event) => setFilter("data_ate", event.target.value)} /></label>
         </div>
       </Card>
 

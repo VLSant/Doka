@@ -46,6 +46,10 @@ function dashboardClient(counts: number[]) {
         query.filters.push(["lt", column, value]);
         return builder;
       },
+      or(value: string) {
+        query.filters.push(["or", "", value]);
+        return builder;
+      },
       order() {
         return Promise.resolve({ data: [], error: null });
       },
@@ -64,7 +68,7 @@ function dashboardClient(counts: number[]) {
 
 describe("dashboard service", () => {
   it("applies period and posto to every RLS-backed counter query", async () => {
-    const mock = dashboardClient([10, 4, 5, 1, 3, 1, 8, 2, 1, 2]);
+    const mock = dashboardClient([10, 4, 5, 1, 3, 1, 6, 8, 2, 1, 2]);
     const result = await createDashboardService(mock.client).load({
       inicio: "2026-07-01",
       fim: "2026-07-03",
@@ -74,7 +78,7 @@ describe("dashboard service", () => {
     expect(result.counters.assistenciasTotal).toBe(10);
     expect(result.counters.tarefasAtrasadas).toBe(2);
     expect(result.counters.lancamentosPendentes).toBe(2);
-    expect(mock.queries).toHaveLength(10);
+    expect(mock.queries).toHaveLength(13);
     expect(
       mock.queries.every((query) =>
         query.filters.some(

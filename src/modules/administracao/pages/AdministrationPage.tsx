@@ -11,10 +11,11 @@ import {
 import { PostsSection } from "../components/PostsSection";
 import { RegistriesSection } from "../components/RegistriesSection";
 import { UsersSection } from "../components/UsersSection";
+import { EfficiencyTargetsSection } from "../components/EfficiencyTargetsSection";
 import type { AdministrationSnapshot } from "../types";
 import "./AdministrationPage.css";
 
-type Section = "usuarios" | "postos" | "cadastros";
+type Section = "usuarios" | "postos" | "cadastros" | "metas";
 
 export interface AdministrationPageProps {
   service?: AdministrationService;
@@ -127,6 +128,9 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
         <Tab active={section === "cadastros"} onClick={() => setSection("cadastros")}>
           Cadastros auxiliares
         </Tab>
+        <Tab active={section === "metas"} onClick={() => setSection("metas")}>
+          Metas de eficiência
+        </Tab>
       </nav>
 
       {notice && (
@@ -165,6 +169,16 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
       )}
       {section === "cadastros" && (
         <RegistriesSection
+          data={data}
+          service={service}
+          actorId={actorId}
+          canEdit={canEdit}
+          onChanged={onChanged}
+          onError={onError}
+        />
+      )}
+      {section === "metas" && (
+        <EfficiencyTargetsSection
           data={data}
           service={service}
           actorId={actorId}

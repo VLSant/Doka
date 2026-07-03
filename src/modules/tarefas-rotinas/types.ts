@@ -71,6 +71,10 @@ export interface TaskFilters {
   status?: TaskStatus | "";
   postoId?: string;
   responsavelId?: string;
+  prioridadeId?: string;
+  tipo?: TaskType | "";
+  prazoDe?: string;
+  prazoAte?: string;
 }
 
 export interface TaskInput {

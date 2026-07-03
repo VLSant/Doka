@@ -32,6 +32,10 @@ export function taskMatchesSlice(task: Task, filters: TaskFilters, today = new D
     (!filters.postoId || task.posto_id === filters.postoId) &&
     (!filters.responsavelId ||
       task.responsaveis.some((responsavel) => responsavel.id === filters.responsavelId)) &&
+    (!filters.prioridadeId || task.prioridade_id === filters.prioridadeId) &&
+    (!filters.tipo || task.tipo === filters.tipo) &&
+    (!filters.prazoDe || Boolean(task.prazo_data && task.prazo_data >= filters.prazoDe)) &&
+    (!filters.prazoAte || Boolean(task.prazo_data && task.prazo_data <= filters.prazoAte)) &&
     (!term ||
       task.titulo.toLocaleLowerCase("pt-BR").includes(term) ||
       Boolean(task.descricao?.toLocaleLowerCase("pt-BR").includes(term)))

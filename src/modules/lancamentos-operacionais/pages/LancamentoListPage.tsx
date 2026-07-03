@@ -63,6 +63,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
         <LancamentoFiltersForm
           value={filters}
           postos={options.postos}
+          assistencias={options.assistencias}
           disabled={loading}
           onChange={setFilters}
         />

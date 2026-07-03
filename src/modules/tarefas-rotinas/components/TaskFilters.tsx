@@ -5,12 +5,14 @@ export function TaskFiltersForm({
   value,
   postos,
   usuarios,
+  prioridades,
   disabled,
   onChange,
 }: {
   value: TaskFilters;
   postos: CatalogItem[];
   usuarios: UsuarioItem[];
+  prioridades: CatalogItem[];
   disabled?: boolean;
   onChange: (filters: TaskFilters) => void;
 }) {
@@ -73,6 +75,22 @@ export function TaskFiltersForm({
           ))}
         </select>
       </label>
+      <label>
+        Prioridade
+        <select value={value.prioridadeId ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, prioridadeId: event.target.value })}>
+          <option value="">Todas</option>
+          {prioridades.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
+        </select>
+      </label>
+      <label>
+        Tipo
+        <select value={value.tipo ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, tipo: event.target.value as TaskFilters["tipo"] })}>
+          <option value="">Todos</option><option value="avulsa">Avulsa</option>
+          <option value="estrategia">Estratégia</option><option value="rotina">Rotina</option>
+        </select>
+      </label>
+      <label>Prazo de<input type="date" value={value.prazoDe ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, prazoDe: event.target.value })} /></label>
+      <label>Prazo até<input type="date" value={value.prazoAte ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, prazoAte: event.target.value })} /></label>
     </div>
   );
 }

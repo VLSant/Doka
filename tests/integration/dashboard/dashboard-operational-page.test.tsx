@@ -12,6 +12,7 @@ const emptyCounters: DashboardCounters = {
   assistenciasRemovidas: 0,
   ocorrenciasAbertas: 0,
   ocorrenciasAtrasadas: 0,
+  ocorrenciasReaparecemHoje: 0,
   tarefasPendentes: 0,
   tarefasAtrasadas: 0,
   tarefasAguardandoValidacao: 0,
@@ -22,7 +23,16 @@ function service(
   counters: DashboardCounters = emptyCounters,
 ): DashboardService & { load: ReturnType<typeof vi.fn> } {
   return {
-    load: vi.fn().mockResolvedValue({ counters }),
+    load: vi.fn().mockResolvedValue({
+      counters,
+      produtividade: {
+        periodo: { previstas: 0, removidas: 0, executadas: 0, naoExecutadas: 0, pendentes: 0, iniciadas: 0, canceladas: 0, eficiencia: null },
+        dia: { previstas: 0, removidas: 0, executadas: 0, naoExecutadas: 0, pendentes: 0, iniciadas: 0, canceladas: 0, eficiencia: null },
+        semana: { previstas: 0, removidas: 0, executadas: 0, naoExecutadas: 0, pendentes: 0, iniciadas: 0, canceladas: 0, eficiencia: null },
+        porPosto: [],
+      },
+      alertas: [],
+    }),
     listPostos: vi.fn().mockResolvedValue([
       { id: "posto-1", nome: "Salvador", codigo: "SSA" },
     ]),

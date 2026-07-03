@@ -53,7 +53,14 @@ export function TaskForm({
   function submit(event: FormEvent) {
     event.preventDefault();
     setTouched(true);
-    if (!titulo.trim() || responsaveis.length === 0) return;
+    if (
+      !titulo.trim() ||
+      !descricao.trim() ||
+      !postoId ||
+      !prioridadeId ||
+      !prazoData ||
+      responsaveis.length === 0
+    ) return;
     void onSubmit({
       titulo,
       descricao,
@@ -92,19 +99,19 @@ export function TaskForm({
       </label>
       <label>
         Posto
-        <select value={postoId} disabled={saving} onChange={(event) => setPostoId(event.target.value)}>
-          <option value="">Geral / sem posto</option>
+        <select value={postoId} disabled={saving} aria-invalid={touched && !postoId} onChange={(event) => setPostoId(event.target.value)}>
+          <option value="">Selecione</option>
           {postos.map((posto) => <option key={posto.id} value={posto.id}>{posto.nome}</option>)}
         </select>
       </label>
       <label className="tasks-form__wide">
-        Descrição
-        <textarea value={descricao} disabled={saving} rows={4} onChange={(event) => setDescricao(event.target.value)} />
+        Descrição *
+        <textarea value={descricao} disabled={saving} rows={4} aria-invalid={touched && !descricao.trim()} onChange={(event) => setDescricao(event.target.value)} />
       </label>
       <label>
-        Prioridade
-        <select value={prioridadeId} disabled={saving} onChange={(event) => setPrioridadeId(event.target.value)}>
-          <option value="">Sem prioridade</option>
+        Prioridade *
+        <select value={prioridadeId} disabled={saving} aria-invalid={touched && !prioridadeId} onChange={(event) => setPrioridadeId(event.target.value)}>
+          <option value="">Selecione</option>
           {prioridades.map((prioridade) => <option key={prioridade.id} value={prioridade.id}>{prioridade.nome}</option>)}
         </select>
       </label>
@@ -116,8 +123,8 @@ export function TaskForm({
         </select>
       </label>
       <label>
-        Prazo
-        <input type="date" value={prazoData} disabled={saving} onChange={(event) => setPrazoData(event.target.value)} />
+        Prazo *
+        <input type="date" value={prazoData} disabled={saving} aria-invalid={touched && !prazoData} onChange={(event) => setPrazoData(event.target.value)} />
       </label>
       <label>
         Horário limite

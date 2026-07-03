@@ -18,7 +18,10 @@ const SELECT_OCCURRENCE = `
   responsavel_id, criada_por, titulo, descricao, observacoes, status,
   data_retorno, resolvida_em, encerrada_em, reaberta_em,
   justificativa_reabertura, created_at, updated_at,
-  assistencia:mms_assistencias!ocorrencias_assistencia_id_fkey(id, numero_assistencia, data_atividade),
+  assistencia:mms_assistencias!ocorrencias_assistencia_id_fkey(
+    id, numero_assistencia, data_atividade,
+    partes:mms_partes_assistencia(recurso_importado,recurso_corrigido)
+  ),
   posto:postos!ocorrencias_posto_id_fkey(id, nome),
   tipo:tipos_ocorrencia!ocorrencias_tipo_ocorrencia_id_fkey(id, nome),
   prioridade:prioridades!ocorrencias_prioridade_id_fkey(id, nome),
@@ -28,6 +31,7 @@ const SELECT_OCCURRENCE = `
 const MESSAGES: Record<OccurrenceErrorCode, string> = {
   acesso_negado: "Você não possui permissão para esta ocorrência.",
   assistencia_invalida: "A assistência selecionada não está disponível.",
+  responsavel_fora_do_posto: "O responsável precisa estar vinculado ao posto da assistência.",
   justificativa_obrigatoria: "Informe uma justificativa.",
   transicao_invalida: "Esta mudança de status não é permitida.",
   validacao: "Revise os dados informados.",
@@ -39,6 +43,7 @@ export function mapOccurrenceError(error: PostgrestError | Error): OccurrenceErr
     [
       "acesso_negado",
       "assistencia_invalida",
+      "responsavel_fora_do_posto",
       "justificativa_obrigatoria",
       "transicao_invalida",
     ] as OccurrenceErrorCode[]
