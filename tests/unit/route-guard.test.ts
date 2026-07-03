@@ -49,9 +49,7 @@ describe("route-guard: evaluateRouteAccess", () => {
     expect(outcome).toEqual({ kind: "falha_temporaria" });
   });
 
-  it("denies acesso_negado when the profile is not allowed for the route, even if the module would be unavailable", () => {
-    // "cadastros" is supervisao/direcao_admin only and is a placeholder
-    // (unavailable) route: an Operador must see "denied", not "unavailable".
+  it("denies acesso_negado when the profile is not allowed for the route", () => {
     const outcome = evaluateRouteAccess({
       authState: authorizedState(operadorContext),
       route: getRouteDefinition("cadastros"),
@@ -59,13 +57,12 @@ describe("route-guard: evaluateRouteAccess", () => {
     expect(outcome).toEqual({ kind: "acesso_negado" });
   });
 
-  it("allows profile-permitted Supervisao onto a profile-restricted route, deferring to availability next", () => {
+  it("allows profile-permitted Supervisao onto an available restricted route", () => {
     const outcome = evaluateRouteAccess({
       authState: authorizedState(supervisaoContext),
       route: getRouteDefinition("cadastros"),
     });
-    // Allowed by profile/posto, but the module itself is a placeholder.
-    expect(outcome).toEqual({ kind: "modulo_indisponivel" });
+    expect(outcome).toEqual({ kind: "autorizado" });
   });
 
   it("reports modulo_indisponivel for an allowed profile on a placeholder route", () => {
@@ -108,7 +105,7 @@ describe("route-guard: evaluateRouteAccess", () => {
       route: getRouteDefinition("cadastros"),
       requestedPostoId: "40000000-0000-0000-0000-000000000099",
     });
-    expect(outcome).toEqual({ kind: "modulo_indisponivel" });
+    expect(outcome).toEqual({ kind: "autorizado" });
   });
 
   it("reports rota_nao_encontrada when no route definition is given for a known path lookup failure", () => {
