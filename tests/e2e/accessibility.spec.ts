@@ -13,6 +13,10 @@
  * not-found) require no backend and run unconditionally. See
  * `specs/005-fundacao-app-autenticacao/tasks.md` Phase 7 checkpoint for the
  * current local-execution status of this suite.
+ *
+ * Specs 007/008: adicional requer seeds de importação MMS e
+ * interface_assistencias_mms para que as páginas de lista/detalhe
+ * contenham dados reais.
  */
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -89,6 +93,51 @@ test.describe("Acessibilidade automatizada (axe-core)", () => {
   }) => {
     await login(page);
     await page.goto("/rota-que-nao-existe");
+    await expectNoSeriousOrCriticalViolations(page);
+  });
+
+  // Spec 007 — Importações MMS
+  test("lista de importacoes MMS nao tem violacoes serias/criticas", async ({ page }) => {
+    await login(page);
+    await page.goto("/app/importacoes-mms");
+    await expect(page.getByRole("table").or(page.getByRole("list")).or(
+      page.getByText(/nenhuma importação|sem importações/i),
+    )).toBeVisible();
+    await expectNoSeriousOrCriticalViolations(page);
+  });
+
+  test("detalhe de lote MMS nao tem violacoes serias/criticas", async ({ page }) => {
+    await login(page);
+    await page.goto("/app/importacoes-mms/70000000-0000-4000-8000-000000000002");
+    // Se o operador não tiver acesso a esse lote no seed, pula
+    const denied = await page.getByText(/acesso negado|não autorizado/i).isVisible().catch(() => false);
+    if (denied) {
+      test.skip(true, "Operador sem acesso ao lote de referência no seed atual.");
+    }
+    await expectNoSeriousOrCriticalViolations(page);
+  });
+
+  // Spec 008 — Assistências MMS
+  test("lista de assistencias MMS nao tem violacoes serias/criticas", async ({ page }) => {
+    await login(page);
+    await page.goto("/app/assistencias-mms");
+    await expect(page.getByRole("table").or(
+      page.getByText(/nenhuma assistência/i),
+    )).toBeVisible();
+    await expectNoSeriousOrCriticalViolations(page);
+  });
+
+  test("detalhe de assistencia MMS nao tem violacoes serias/criticas", async ({ page }) => {
+    await login(page);
+    await page.goto("/app/assistencias-mms");
+    await page.getByLabel(/número/i).fill("ASS-100").catch(() => undefined);
+    await page.getByRole("button", { name: /aplicar/i }).click().catch(() => undefined);
+    const link = page.getByRole("link", { name: "ASS-100" }).first();
+    if (!(await link.isVisible().catch(() => false))) {
+      test.skip(true, "ASS-100 não encontrada; seed interface_assistencias_mms não aplicado.");
+    }
+    await link.click();
+    await expect(page).toHaveURL(/assistencias-mms\/.+/);
     await expectNoSeriousOrCriticalViolations(page);
   });
 });
