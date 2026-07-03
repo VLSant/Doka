@@ -594,6 +594,7 @@ Atualizar esta tabela ao iniciar ou concluir uma frente.
 | 03/07/2026 | Administração | Concluída | Usuários, postos, vínculos e cadastros auxiliares mínimos; PR #17 | Homologação administrativa |
 | 03/07/2026 | Dashboard | Concluída | Indicadores e listas operacionais conectados aos dados reais; PR #18 | Homologação operacional |
 | 03/07/2026 | Fechamento técnico | Concluído | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros | Publicar PR final e homologar manualmente |
+| 03/07/2026 | Testes SQL dos módulos novos no banco remoto | Concluída | 4 arquivos em `supabase/tests/*_fluxo.sql` executados com sucesso no projeto Doka (com rollback): permissões por perfil/posto, transições, recorrência idempotente, acúmulo, validação de lançamentos, último admin e auditoria | Homologação manual das telas pelo usuário |
 
 ---
 
