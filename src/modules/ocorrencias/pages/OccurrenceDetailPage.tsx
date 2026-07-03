@@ -16,7 +16,7 @@ import "./Occurrences.css";
 export function OccurrenceDetailPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
   const navigate = useNavigate();
-  const { occurrenceId = "" } = useParams();
+  const { ocorrenciaId = "" } = useParams();
   const [occurrence, setOccurrence] = useState<OccurrenceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -30,13 +30,13 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     setLoading(true);
     setError(null);
     try {
-      setOccurrence(await service.detail(occurrenceId));
+      setOccurrence(await service.detail(ocorrenciaId));
     } catch (cause) {
       setError(cause instanceof Error ? cause : new Error("Falha ao carregar a ocorrência."));
     } finally {
       setLoading(false);
     }
-  }, [occurrenceId, service]);
+  }, [ocorrenciaId, service]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => void load(), [load]);
@@ -47,7 +47,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     setActing(true);
     setError(null);
     try {
-      await service.addComment(occurrenceId, comment);
+      await service.addComment(ocorrenciaId, comment);
       setComment("");
       await load();
     } catch (cause) {
@@ -67,7 +67,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     setError(null);
     try {
       await service.transition(
-        occurrenceId,
+        ocorrenciaId,
         nextStatus,
         justification,
         returnDate || null,
@@ -88,7 +88,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     setActing(true);
     setError(null);
     try {
-      await service.remove(occurrenceId, reason);
+      await service.remove(ocorrenciaId, reason);
       navigate("/app/ocorrencias");
     } catch (cause) {
       setError(cause instanceof Error ? cause : new Error("Falha ao remover a ocorrência."));

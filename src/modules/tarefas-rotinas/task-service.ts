@@ -83,7 +83,12 @@ export interface TaskService {
   listTasks(filters?: Partial<TaskFilters>): Promise<Task[]>;
   getTask(id: string): Promise<Task>;
   createTask(input: TaskInput): Promise<Task>;
-  updateTask(id: string, input: TaskInput, canChangeResponsible: boolean): Promise<Task>;
+  updateTask(
+    id: string,
+    input: TaskInput,
+    canChangeResponsible: boolean,
+    originalType?: Task["tipo"],
+  ): Promise<Task>;
   transitionTask(id: string, action: TaskAction, justification?: string): Promise<Task>;
   removeTask(id: string, justification: string): Promise<void>;
   listRoutines(): Promise<Routine[]>;
@@ -173,14 +178,14 @@ export function createTaskService(client: SupabaseClient = getSupabaseClient()):
       const created = await rpc<Task>(client, "criar_tarefa", taskArgs(input));
       return getTask(created.id);
     },
-    async updateTask(id, input, canChangeResponsible) {
+    async updateTask(id, input, canChangeResponsible, originalType) {
       if (!input.titulo.trim()) throw mapTaskError(new Error("validacao"));
       const args = taskArgs(input);
       const updated = await rpc<Task>(client, "atualizar_tarefa", {
         p_tarefa_id: id,
         p_titulo: args.p_titulo,
         p_descricao: args.p_descricao,
-        p_tipo: args.p_tipo,
+        p_tipo: originalType === "rotina" ? null : args.p_tipo,
         p_posto_id: args.p_posto_id,
         p_cargo_funcao_id: args.p_cargo_funcao_id,
         p_prioridade_id: args.p_prioridade_id,

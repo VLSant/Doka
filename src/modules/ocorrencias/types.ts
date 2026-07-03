@@ -101,6 +101,7 @@ export interface OccurrenceCatalogs {
 export type OccurrenceErrorCode =
   | "acesso_negado"
   | "assistencia_invalida"
+  | "responsavel_fora_do_posto"
   | "justificativa_obrigatoria"
   | "transicao_invalida"
   | "validacao"

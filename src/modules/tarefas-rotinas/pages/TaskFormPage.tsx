@@ -65,7 +65,12 @@ export function TaskFormPage({
             setError(undefined);
             try {
               const saved = task
-                ? await service.updateTask(task.id, input, viewer.perfil !== "operador")
+                ? await service.updateTask(
+                    task.id,
+                    input,
+                    viewer.perfil !== "operador",
+                    task.tipo,
+                  )
                 : await service.createTask(input);
               navigate(`/app/tarefas-rotinas/${saved.id}`);
             } catch (cause) {

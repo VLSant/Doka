@@ -116,8 +116,6 @@ export function createDashboardService(
         .select("id", { count: "exact", head: true })
         .is("deleted_at", null)
         .in("status", ["aberta", "em_acompanhamento", "aguardando_retorno", "reaberta"])
-        .gte("created_at", `${filters.inicio}T00:00:00-03:00`)
-        .lt("created_at", `${fimExclusivo}T00:00:00-03:00`)
         .lt("data_retorno", hoje);
       let ocorrenciasReaparecemHoje = client
         .from("ocorrencias")
@@ -137,8 +135,6 @@ export function createDashboardService(
         .select("id", { count: "exact", head: true })
         .is("deleted_at", null)
         .in("status", ["pendente", "em_andamento", "reaberta"])
-        .gte("created_at", `${filters.inicio}T00:00:00-03:00`)
-        .lt("created_at", `${fimExclusivo}T00:00:00-03:00`)
         .lt("prazo_data", hoje);
       let tarefasAguardandoValidacao = client
         .from("tarefas")

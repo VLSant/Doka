@@ -31,6 +31,7 @@ const SELECT_OCCURRENCE = `
 const MESSAGES: Record<OccurrenceErrorCode, string> = {
   acesso_negado: "Você não possui permissão para esta ocorrência.",
   assistencia_invalida: "A assistência selecionada não está disponível.",
+  responsavel_fora_do_posto: "O responsável precisa estar vinculado ao posto da assistência.",
   justificativa_obrigatoria: "Informe uma justificativa.",
   transicao_invalida: "Esta mudança de status não é permitida.",
   validacao: "Revise os dados informados.",
@@ -42,6 +43,7 @@ export function mapOccurrenceError(error: PostgrestError | Error): OccurrenceErr
     [
       "acesso_negado",
       "assistencia_invalida",
+      "responsavel_fora_do_posto",
       "justificativa_obrigatoria",
       "transicao_invalida",
     ] as OccurrenceErrorCode[]
