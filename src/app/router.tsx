@@ -43,6 +43,11 @@ const ImportDetailPage = lazy(() => import("../modules/importacoes-mms/pages/Imp
 const ImportTreatmentPage = lazy(() => import("../modules/importacoes-mms/pages/ImportTreatmentPage"));
 const AssistanceListPage = lazy(() => import("../modules/assistencias-mms/pages/AssistanceListPage"));
 const AssistanceDetailPage = lazy(() => import("../modules/assistencias-mms/pages/AssistanceDetailPage"));
+const TaskCenterPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskCenterPage"));
+const TaskFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskFormPage"));
+const TaskDetailPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskDetailPage"));
+const RoutineListPage = lazy(() => import("../modules/tarefas-rotinas/pages/RoutineListPage"));
+const RoutineFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/RoutineFormPage"));
 
 function RootLayout() {
   const navigation = useNavigation();
@@ -129,6 +134,10 @@ export const router = createBrowserRouter([
             <ProtectedRoute routeId={route.id}>
               {route.id === "dashboard" ? (
                 <DashboardPage />
+              ) : route.id === "tarefas-rotinas" ? (
+                <Suspense fallback={<LoadingState message="Carregando tarefas..." />}>
+                  <TaskCenterPage />
+                </Suspense>
               ) : route.id === "assistencias-mms" ? (
                 <Suspense fallback={<LoadingState message="Carregando assistências..." />}>
                   <AssistanceListPage />
@@ -143,6 +152,30 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
           ),
           })),
+          {
+            path: "tarefas-rotinas/rotinas",
+            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando rotinas..." />}><RoutineListPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "tarefas-rotinas/rotinas/nova",
+            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><RoutineFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "tarefas-rotinas/rotinas/:rotinaId/editar",
+            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><RoutineFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "tarefas-rotinas/nova",
+            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><TaskFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "tarefas-rotinas/:tarefaId/editar",
+            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><TaskFormPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "tarefas-rotinas/:tarefaId",
+            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando tarefa..." />}><TaskDetailPage /></Suspense></ProtectedRoute>,
+          },
           {
             path: "assistencias-mms/:assistenciaId",
             element: <ProtectedRoute routeId="assistencias-mms"><Suspense fallback={<LoadingState message="Carregando assistência..." />}><AssistanceDetailPage /></Suspense></ProtectedRoute>,
