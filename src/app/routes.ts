@@ -95,7 +95,7 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
     label: "Cadastros",
     icon: "database",
     profiles: ["supervisao", "direcao_admin"],
-    availability: "placeholder",
+    availability: "available",
     navigationOrder: 7,
   },
   {

@@ -98,15 +98,15 @@ describe("protected routes: direct URL, favorites/history, posto_id, denial prec
   });
 
   it("confirms denied takes precedence over unavailable when both apply", async () => {
-    // "cadastros" is both profile-restricted for Operador AND a placeholder
+    // "historico-auditoria" is profile-restricted for Operador AND a placeholder
     // (unavailable) module; the outcome must be the denial, not the
     // unavailable state.
-    renderAtPath("/app/cadastros?posto_id=40000000-0000-0000-0000-000000000099", "cadastros", operadorResult);
+    renderAtPath("/app/historico-auditoria?posto_id=40000000-0000-0000-0000-000000000099", "historico-auditoria", operadorResult);
     await waitFor(() => expect(screen.getByTestId("acesso-negado")).toBeInTheDocument());
   });
 
   it("reports module-unavailable (not denied) for an allowed Supervisao profile on a placeholder route", async () => {
-    renderAtPath("/app/cadastros", "cadastros", supervisaoResult);
+    renderAtPath("/app/historico-auditoria", "historico-auditoria", supervisaoResult);
     await waitFor(() => expect(screen.getByTestId("modulo-indisponivel")).toBeInTheDocument());
   });
 });

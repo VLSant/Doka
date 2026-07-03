@@ -54,6 +54,7 @@ const OccurrenceDetailPage = lazy(() => import("../modules/ocorrencias/pages/Occ
 const LancamentoListPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoListPage"));
 const LancamentoFormPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoFormPage"));
 const LancamentoDetailPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoDetailPage"));
+const AdministrationPage = lazy(() => import("../modules/administracao/pages/AdministrationPage").then((module) => ({ default: module.AdministrationPage })));
 
 function RootLayout() {
   const navigation = useNavigation();
@@ -159,6 +160,10 @@ export const router = createBrowserRouter([
               ) : route.id === "custos-extras" ? (
                 <Suspense fallback={<LoadingState message="Carregando lançamentos..." />}>
                   <LancamentoListPage />
+                </Suspense>
+              ) : route.id === "cadastros" ? (
+                <Suspense fallback={<LoadingState message="Carregando cadastros..." />}>
+                  <AdministrationPage />
                 </Suspense>
               ) : (
                 <ModuleUnavailablePage moduleLabel={route.label} />
