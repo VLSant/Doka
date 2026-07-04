@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
+import { TableFrame } from "../../../components/ui/Patterns";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import type { LotSummary } from "../types";
 
 export function LotsTable({ lots }: { lots: LotSummary[] }) {
   return (
-    <div className="mms-lots-table-wrap">
+    <TableFrame className="mms-lots-table-wrap">
       <table className="mms-lots-table">
         <caption className="sr-only">Lotes de importação MMS</caption>
         <thead><tr>
@@ -18,7 +20,7 @@ export function LotsTable({ lots }: { lots: LotSummary[] }) {
               <td>{lot.data_atividade ?? "—"}</td>
               <td>{lot.postos.map((posto) => posto.nome).join(", ")}{lot.visibilidade_parcial ? " (parcial)" : ""}</td>
               <td>{lot.arquivo ?? "Restrito"}</td>
-              <td><span className={`mms-status mms-status--${lot.status ?? "processando"}`}>{lot.status ?? lot.estado_processamento}</span></td>
+              <td><StatusBadge tone={lot.status === "concluido" ? "success" : lot.status === "erro" ? "danger" : "info"}>{lot.status ?? lot.estado_processamento}</StatusBadge></td>
               <td>{lot.total_linhas} ({lot.total_assistencias} assistências / {lot.total_partes} partes)</td>
               <td>{lot.total_erros_pendentes} / {lot.total_alertas}</td>
               <td>{lot.capacidades.abrir ? <Link to={`/app/importacoes-mms/${lot.lote_id}`}>Abrir</Link> : "—"}</td>
@@ -26,6 +28,6 @@ export function LotsTable({ lots }: { lots: LotSummary[] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   );
 }

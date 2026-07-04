@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
+import { Select } from "../../../components/ui/FormControls";
 import type { AssistenciaCatalogoItem, LancamentoCatalogoItem, LancamentoFilters } from "../types";
 
 interface Props {
@@ -35,56 +36,47 @@ export function LancamentoFiltersForm({ value, postos, assistencias, disabled, o
         disabled={disabled}
         onChange={(event) => setDraft({ ...draft, data_ate: event.target.value })}
       />
-      <label>
-        Posto
-        <select
+      <Select
+        label="Posto"
           value={draft.posto_id ?? ""}
           disabled={disabled}
           onChange={(event) => setDraft({ ...draft, posto_id: event.target.value })}
-        >
+      >
           <option value="">Todos</option>
           {postos.map((posto) => (
             <option key={posto.id} value={posto.id}>
               {posto.nome}
             </option>
           ))}
-        </select>
-      </label>
-      <label>
-        Tipo
-        <select
+      </Select>
+      <Select
+        label="Tipo"
           value={draft.tipo ?? ""}
           disabled={disabled}
           onChange={(event) =>
             setDraft({ ...draft, tipo: event.target.value as LancamentoFilters["tipo"] })
           }
-        >
+      >
           <option value="">Todos</option>
           <option value="deslocamento">Deslocamento</option>
           <option value="custo_extra">Custo extra</option>
-        </select>
-      </label>
-      <label>
-        Status
-        <select
+      </Select>
+      <Select
+        label="Status"
           value={draft.status ?? ""}
           disabled={disabled}
           onChange={(event) =>
             setDraft({ ...draft, status: event.target.value as LancamentoFilters["status"] })
           }
-        >
+      >
           <option value="">Todos</option>
           <option value="pendente">Pendente</option>
           <option value="validado">Validado</option>
-        </select>
-      </label>
-      <label>
-        Assistência
-        <select value={draft.assistencia_id ?? ""} disabled={disabled} onChange={(event) => setDraft({ ...draft, assistencia_id: event.target.value })}>
+      </Select>
+      <Select label="Assistência" value={draft.assistencia_id ?? ""} disabled={disabled} onChange={(event) => setDraft({ ...draft, assistencia_id: event.target.value })}>
           <option value="">Todas</option>
           {assistencias.map((item) => <option key={item.id} value={item.id}>{item.numero}{item.cliente ? ` · ${item.cliente}` : ""}</option>)}
-        </select>
-      </label>
+      </Select>
       <Input
         label="Responsável / recurso"
         value={draft.recurso ?? ""}

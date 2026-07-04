@@ -596,6 +596,9 @@ Atualizar esta tabela ao iniciar ou concluir uma frente.
 | 03/07/2026 | Fechamento técnico | Concluído | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros | Publicar PR final e homologar manualmente |
 | 03/07/2026 | Testes SQL dos módulos novos no banco remoto | Concluída | 4 arquivos em `supabase/tests/*_fluxo.sql` executados com sucesso no projeto Doka (com rollback): permissões por perfil/posto, transições, recorrência idempotente, acúmulo, validação de lançamentos, último admin e auditoria | Homologação manual das telas pelo usuário |
 | 03/07/2026 | Complementação do PRD fundador | Concluída | Produtividade/eficiência, metas, Dashboard gerencial, auditoria central, históricos, filtros e obrigatoriedades integrados; migration remota `20260703061153` reconciliada localmente | Homologação manual dos fluxos ampliados |
+| 04/07/2026 | Validação da auditoria de design system | Concluída | Diagnóstico confrontado com o código e plano priorizado em `docs/08-plano-tarefas-auditoria-design-system.md`; nenhuma tela alterada | Executar a fundação mínima DS-001 a DS-004 |
+| 04/07/2026 | Catálogo de screenshots | Parcial | 29 capturas em 1440x900 catalogadas em `docs/auditoria-visual/README.md`; detalhes/edições sem dados não foram simulados | Executar análise visual e decidir se será criada massa descartável para as lacunas |
+| 04/07/2026 | Redesign e consolidação do design system | Concluída tecnicamente | Tokens reconciliados; componentes compartilhados aplicados; aliases, hex visual e tipografia numérica eliminados de `src/modules`; validações executadas sem browser/E2E | Homologar visualmente as rotas em etapa posterior |
 
 ---
 
@@ -615,8 +618,10 @@ Ao retomar:
    daquele módulo após revisar PRD, regras, migration e frontend existente.
 10. Atualizar o registro ao final de cada etapa, inclusive em caso de bloqueio.
 
-O próximo passo atual é iniciar a homologação manual dos módulos na ordem dos
-PRs. Ajustes secundários serão tratados a partir do uso real.
+O próximo passo atual é homologar manualmente o redesign nas rotas catalogadas
+em `docs/auditoria-visual/README.md`. A implementação técnica do plano
+`docs/08-plano-tarefas-auditoria-design-system.md` foi concluída sem browser,
+E2E ou homologação visual, conforme a restrição vigente do MVP.
 
 ### Complementação posterior do PRD fundador
 

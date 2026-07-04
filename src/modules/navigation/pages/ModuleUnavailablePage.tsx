@@ -18,13 +18,15 @@ export function ModuleUnavailablePage({ moduleLabel }: ModuleUnavailablePageProp
   const navigate = useNavigate();
 
   return (
-    <FeedbackState
-      tone="empty"
-      title={`${moduleLabel} ainda não disponível`}
-      description="Este módulo ainda não foi implementado nesta etapa."
-      actions={
-        <Button onClick={() => navigate("/app/dashboard", { replace: true })}>Voltar ao Dashboard</Button>
-      }
-    />
+    <div className="doka-public-state">
+      <FeedbackState
+        tone="empty"
+        title={`${moduleLabel} ainda não disponível`}
+        description="Este módulo ainda não foi implementado nesta etapa."
+        actions={
+          <Button onClick={() => navigate("/app/dashboard", { replace: true })}>Voltar ao Dashboard</Button>
+        }
+      />
+    </div>
   );
 }

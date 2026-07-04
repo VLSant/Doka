@@ -89,6 +89,23 @@ body {
   outline-offset: 2px;
 }
 
+.doka-login-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.doka-public-state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-9);
+  background: var(--surface-page);
+}
+
+.doka-public-state .doka-feedback-state {
+  width: min(100%, 520px);
+}
+
 /* ---- Dashboard neutral content --------------------------------------------- */
 .doka-dashboard-page {
   display: flex;

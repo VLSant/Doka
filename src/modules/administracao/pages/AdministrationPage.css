@@ -1,13 +1,7 @@
-.administration-page {
-  display: grid;
-  gap: 1rem;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  color: var(--color-text-primary, #172033);
+﻿.administration-page {
+  color: var(--text-strong);
 }
 
-.administration-page__header,
 .admin-section__header {
   display: flex;
   align-items: flex-start;
@@ -22,38 +16,6 @@
   margin-top: 0;
 }
 
-.administration-page__eyebrow {
-  margin-bottom: 0.25rem;
-  color: var(--color-primary-600, #2455a4);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.administration-page__tabs {
-  display: flex;
-  gap: 0.35rem;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--color-border, #d7deea);
-}
-
-.administration-page__tab {
-  padding: 0.75rem 1rem;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.administration-page__tab--active {
-  border-bottom-color: var(--color-primary-600, #2455a4);
-  color: var(--color-primary-700, #193e7a);
-  font-weight: 700;
-}
-
 .administration-page__notice,
 .administration-page__error {
   padding: 0.75rem 1rem;
@@ -61,25 +23,25 @@
 }
 
 .administration-page__notice {
-  background: #e9f8ef;
-  color: #17663a;
+  background: var(--green-50);
+  color: var(--green-600);
 }
 
 .administration-page__error {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff0f0;
-  color: #9b2424;
+  background: var(--red-50);
+  color: var(--red-600);
 }
 
 .admin-section {
   display: grid;
   gap: 1rem;
   padding: 1.25rem;
-  border: 1px solid var(--color-border, #d7deea);
+  border: 1px solid var(--border-default);
   border-radius: 0.75rem;
-  background: var(--color-surface, #fff);
+  background: var(--surface-card);
 }
 
 .admin-section__header .doka-input {
@@ -96,7 +58,7 @@
 .admin-form--card {
   align-content: start;
   padding: 1rem;
-  border: 1px solid var(--color-border, #d7deea);
+  border: 1px solid var(--border-default);
   border-radius: 0.6rem;
 }
 
@@ -108,9 +70,9 @@
 .admin-field {
   display: grid;
   gap: 0.35rem;
-  color: var(--color-text-secondary, #44506a);
-  font-size: 0.875rem;
-  font-weight: 600;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
 }
 
 .admin-field select,
@@ -118,12 +80,12 @@
   width: 100%;
   min-height: 2.5rem;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--color-border, #c9d2e2);
+  border: 1px solid var(--border-default);
   border-radius: 0.45rem;
-  background: #fff;
+  background: var(--neutral-0);
   color: inherit;
   font: inherit;
-  font-weight: 400;
+  font-weight: var(--fw-regular);
 }
 
 .admin-check {
@@ -131,7 +93,7 @@
   min-height: 2.5rem;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 400;
+  font-weight: var(--fw-regular);
 }
 
 .admin-form__actions,
@@ -160,14 +122,14 @@
 .admin-table th,
 .admin-table td {
   padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid var(--color-border, #e1e6ef);
+  border-bottom: 1px solid var(--border-subtle);
   text-align: left;
   vertical-align: middle;
 }
 
 .admin-table th {
-  color: var(--color-text-secondary, #556079);
-  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
   text-transform: uppercase;
 }
 
@@ -175,18 +137,18 @@
   display: inline-flex;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-bold);
 }
 
 .admin-status--active {
-  background: #e4f6eb;
-  color: #17663a;
+  background: var(--green-50);
+  color: var(--green-600);
 }
 
 .admin-status--inactive {
-  background: #edf0f5;
-  color: #5c6679;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
 }
 
 .admin-registry {
@@ -194,7 +156,7 @@
   align-content: start;
   gap: 0.75rem;
   padding: 1rem;
-  border: 1px solid var(--color-border, #d7deea);
+  border: 1px solid var(--border-default);
   border-radius: 0.6rem;
 }
 
@@ -212,14 +174,14 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.6rem 0;
-  border-bottom: 1px solid var(--color-border, #e1e6ef);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .admin-empty {
   padding: 1rem;
   border-radius: 0.5rem;
-  background: var(--color-background-subtle, #f5f7fa);
-  color: var(--color-text-secondary, #556079);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
   text-align: center;
 }
 

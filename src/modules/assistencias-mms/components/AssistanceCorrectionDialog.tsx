@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Dialog } from "../../../components/ui/Dialog";
+import { Textarea } from "../../../components/ui/FormControls";
+import { Input } from "../../../components/ui/Input";
 import type { AssistanceService } from "../assistance-service";
 import type {
   CorrectableEntity,
@@ -32,41 +35,6 @@ export function AssistanceCorrectionDialog({
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const valueRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const previousFocus =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    valueRef.current?.focus();
-
-    return () => previousFocus?.focus();
-  }, []);
-
-  function handleDialogKeyDown(event: React.KeyboardEvent<HTMLElement>) {
-    if (event.key === "Escape" && !saving) {
-      event.preventDefault();
-      onClose();
-      return;
-    }
-
-    if (event.key !== "Tab") return;
-    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
-    );
-    if (!focusable?.length) return;
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-
   async function save() {
     if (!value.trim()) {
       setMessage("Informe o novo valor.");
@@ -103,50 +71,24 @@ export function AssistanceCorrectionDialog({
   }
 
   return (
-    <div className="assistance-dialog-backdrop">
-      <section
-        ref={dialogRef}
-        className="assistance-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="assistance-correction-title"
-        onKeyDown={handleDialogKeyDown}
-      >
-        <h2 id="assistance-correction-title">Corrigir {target.label.toLocaleLowerCase("pt-BR")}</h2>
+    <Dialog
+      open
+      title={`Corrigir ${target.label.toLocaleLowerCase("pt-BR")}`}
+      onClose={() => !saving && onClose()}
+      actions={<>
+        <Button variant="outline" disabled={saving} onClick={onClose}>Cancelar</Button>
+        <Button loading={saving} onClick={() => void save()}>Confirmar correção</Button>
+      </>}
+    >
         <dl>
           <dt>Importado da MMS</dt>
           <dd>{target.value.importado || "Não informado"}</dd>
           <dt>Valor vigente</dt>
           <dd>{target.value.vigente || "Não informado"}</dd>
         </dl>
-        <label>
-          Novo valor
-          <input
-            ref={valueRef}
-            value={value}
-            disabled={saving}
-            onChange={(event) => setValue(event.target.value)}
-          />
-        </label>
-        <label>
-          Justificativa
-          <textarea
-            value={reason}
-            disabled={saving}
-            maxLength={1000}
-            onChange={(event) => setReason(event.target.value)}
-          />
-        </label>
+        <Input label="Novo valor" autoFocus value={value} disabled={saving} onChange={(event) => setValue(event.target.value)} />
+        <Textarea label="Justificativa" value={reason} disabled={saving} maxLength={1000} onChange={(event) => setReason(event.target.value)} />
         {message ? <p role="alert">{message}</p> : null}
-        <div className="assistance-dialog__actions">
-          <Button variant="outline" disabled={saving} onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button loading={saving} onClick={() => void save()}>
-            Confirmar correção
-          </Button>
-        </div>
-      </section>
-    </div>
+    </Dialog>
   );
 }

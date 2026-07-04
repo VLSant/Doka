@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
+import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { LotFilters } from "../components/LotFilters";
 import { LotsTable } from "../components/LotsTable";
 import { createLotService, type LotService } from "../lot-service";
@@ -32,21 +34,21 @@ export function ImportListPage({ service: injected }: { service?: LotService }) 
   useEffect(() => { void load({}, null); }, [load]);
   function apply(next: Filters) { setFilters(next); void load(next, null); }
 
-  return <main className="mms-management">
-    <header className="mms-management__header"><div><span>Importações MMS</span><h1>Central de importações</h1>
-      <p>Consulte, audite e trate os lotes dentro do seu escopo operacional.</p></div>
-      <Link className="doka-button doka-button--primary doka-button--md" to="/app/importacoes-mms/nova">Nova importação</Link>
-    </header>
+  return <Page className="mms-management">
+    <PageHeader eyebrow="Importações MMS" title="Central de importações"
+      description="Consulte, audite e trate os lotes dentro do seu escopo operacional."
+      actions={<ButtonLink to="/app/importacoes-mms/nova">Nova importação</ButtonLink>} />
     <Card padding="lg"><LotFilters value={filters} disabled={loading} onChange={apply} /></Card>
-    {loading && lots.length === 0 ? <p role="status">Carregando importações...</p> : null}
+    {loading && lots.length === 0 ? <LoadingState message="Carregando importações..." /> : null}
     {error ? <FeedbackState tone="error" title="Falha ao carregar importações" description={error}
       actions={<Button onClick={() => void load(filters, null)}>Tentar novamente</Button>} /> : null}
     {!loading && !error && lots.length === 0 ? <FeedbackState tone="empty"
       title={Object.keys(filters).length ? "Nenhum lote corresponde aos filtros" : "Nenhuma importação disponível"}
-      description={Object.keys(filters).length ? "Revise ou limpe os filtros aplicados." : "Inicie uma nova importação MMS."} /> : null}
+      description={Object.keys(filters).length ? "Revise ou limpe os filtros aplicados." : "Inicie uma nova importação MMS."}
+      actions={!Object.keys(filters).length ? <ButtonLink to="/app/importacoes-mms/nova">Nova importação</ButtonLink> : undefined} /> : null}
     {lots.length ? <><p role="status">{lots.length} lote(s) exibido(s).</p><LotsTable lots={lots} />
       {cursor ? <Button variant="outline" loading={loading} onClick={() => void load(filters, cursor, true)}>Carregar mais</Button> : null}</> : null}
-  </main>;
+  </Page>;
 }
 
 export default ImportListPage;

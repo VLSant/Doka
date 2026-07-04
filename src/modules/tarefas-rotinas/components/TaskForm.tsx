@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Checkbox } from "../../../components/ui/FormControls";
 import type {
   CatalogItem,
   PrioridadeItem,
@@ -130,28 +131,32 @@ export function TaskForm({
         Horário limite
         <input type="time" value={horarioLimite} disabled={saving} onChange={(event) => setHorarioLimite(event.target.value)} />
       </label>
-      <label className="tasks-form__wide">
-        Responsáveis *
+      <div className="tasks-form__wide tasks-form__responsibles">
+        <span>Responsáveis *</span>
         {operator ? (
           <span className="tasks-form__fixed-value">
             {usuarios.find(({ id }) => id === viewer.usuarioId)?.nome ?? "Você"}
             <small>Operadores podem atribuir tarefas somente a si.</small>
           </span>
         ) : (
-          <select
-            multiple
-            value={responsaveis}
-            disabled={saving}
-            aria-invalid={touched && responsaveis.length === 0}
-            onChange={(event) =>
-              setResponsaveis(Array.from(event.currentTarget.selectedOptions, ({ value }) => value))
-            }
-          >
-            {usuarios.map((usuario) => <option key={usuario.id} value={usuario.id}>{usuario.nome} · {usuario.perfil}</option>)}
-          </select>
+          <div className="tasks-checkbox-group" role="group" aria-label="Responsáveis">
+            {usuarios.map((usuario) => (
+              <Checkbox
+                key={usuario.id}
+                label={`${usuario.nome} · ${usuario.perfil}`}
+                checked={responsaveis.includes(usuario.id)}
+                disabled={saving}
+                onChange={(event) => setResponsaveis((current) =>
+                  event.target.checked
+                    ? [...current, usuario.id]
+                    : current.filter((id) => id !== usuario.id),
+                )}
+              />
+            ))}
+          </div>
         )}
         {touched && responsaveis.length === 0 ? <small>Selecione ao menos um responsável.</small> : null}
-      </label>
+      </div>
       <label className="tasks-form__wide">
         Observações
         <textarea value={observacoes} disabled={saving} rows={3} onChange={(event) => setObservacoes(event.target.value)} />

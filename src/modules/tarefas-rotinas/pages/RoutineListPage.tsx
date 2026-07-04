@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { useAuth } from "../../auth/AuthProvider";
 import { createTaskService, type TaskService } from "../task-service";
 import type { Routine, TaskViewer } from "../types";
@@ -44,11 +45,11 @@ export function RoutineListPage({ service: injected, viewer: injectedViewer }: {
     <main className="tasks-module">
       <header className="tasks-header">
         <div><Link to="/app/tarefas-rotinas">Voltar para tarefas</Link><h1>Rotinas recorrentes</h1><p>Atividades geradas automaticamente conforme a frequência configurada.</p></div>
-        <Link className="tasks-link-button" to="/app/tarefas-rotinas/rotinas/nova">Nova rotina</Link>
+        <ButtonLink to="/app/tarefas-rotinas/rotinas/nova">Nova rotina</ButtonLink>
       </header>
       {loading ? <LoadingState message="Carregando rotinas..." /> : null}
       {error ? <FeedbackState tone="error" title="Falha ao carregar rotinas" description={error} actions={<Button onClick={() => void load()}>Tentar novamente</Button>} /> : null}
-      {!loading && !error && routines.length === 0 ? <FeedbackState tone="empty" title="Nenhuma rotina cadastrada" description="Crie uma rotina para gerar tarefas recorrentes." /> : null}
+      {!loading && !error && routines.length === 0 ? <FeedbackState tone="empty" title="Nenhuma rotina cadastrada" description="Crie uma rotina para gerar tarefas recorrentes." actions={<ButtonLink to="/app/tarefas-rotinas/rotinas/nova">Nova rotina</ButtonLink>} /> : null}
       {routines.length ? (
         <div className="tasks-table-wrap">
           <table className="tasks-table">

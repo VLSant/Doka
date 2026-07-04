@@ -3,6 +3,7 @@ import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { AuditEventList } from "../AuditEventList";
 import { createAuditHistoryService, type AuditService } from "../audit-service";
 import type { AuditCatalogs, AuditEvent, AuditFilters } from "../types";
@@ -48,9 +49,9 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
   }
 
   return (
-    <main className="audit-page">
-      <header><span>Governança</span><h1>Histórico e auditoria</h1>
-        <p>Consulte alterações e operações críticas dentro do seu escopo.</p></header>
+    <Page className="audit-page">
+      <PageHeader eyebrow="Governança" title="Histórico e auditoria"
+        description="Consulte alterações e operações críticas dentro do seu escopo." />
       <Card padding="lg">
         <form className="audit-filters" onSubmit={submit}>
           <label>Usuário<select name="usuarioId"><option value="">Todos</option>
@@ -71,7 +72,7 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
       {loading ? <LoadingState message="Carregando histórico..." /> : null}
       {error ? <FeedbackState tone="error" title="Histórico indisponível" description={error} /> : null}
       {!loading && !error ? <AuditEventList events={events} /> : null}
-    </main>
+    </Page>
   );
 }
 

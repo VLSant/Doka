@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
 import { createDashboardService, todayInBahia, type DashboardService } from "../dashboard-service";
@@ -70,12 +71,12 @@ export function DashboardOperationalPage({
   }, [filters, load]);
 
   return (
-    <main className="dashboard-operational">
-      <header className="dashboard-operational__header">
-        <span>Visão geral</span>
-        <h1>Dashboard operacional</h1>
-        <p>Resumo dos dados que você pode consultar por período e posto.</p>
-      </header>
+    <Page className="dashboard-operational">
+      <PageHeader
+        eyebrow="Visão geral"
+        title="Dashboard operacional"
+        description="Resumo dos dados que você pode consultar por período e posto."
+      />
 
       <Card padding="lg">
         <DashboardFiltersForm
@@ -122,7 +123,7 @@ export function DashboardOperationalPage({
           ) : null}
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 

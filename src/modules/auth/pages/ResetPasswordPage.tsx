@@ -18,16 +18,18 @@ export function ResetPasswordPage() {
 
   if (recoveryState !== "valido") {
     return (
-      <FeedbackState
-        tone="error"
-        title="Link de recuperacao invalido"
-        description="Nao foi possivel confirmar sua autorizacao de recuperacao de senha. O link pode ter expirado ou ja ter sido utilizado."
-        actions={
-          <Button onClick={() => navigate("/recuperar-senha", { replace: true })}>
-            Solicitar novo link
-          </Button>
-        }
-      />
+      <div className="doka-public-state">
+        <FeedbackState
+          tone="error"
+          title="Link de recuperação inválido"
+          description="Não foi possível confirmar sua autorização de recuperação de senha. O link pode ter expirado ou já ter sido utilizado."
+          actions={
+            <Button onClick={() => navigate("/recuperar-senha", { replace: true })}>
+              Solicitar novo link
+            </Button>
+          }
+        />
+      </div>
     );
   }
 

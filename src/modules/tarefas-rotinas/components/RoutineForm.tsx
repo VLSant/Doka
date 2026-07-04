@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Checkbox } from "../../../components/ui/FormControls";
 import type { CatalogItem, PrioridadeItem, UsuarioItem } from "../../../services/catalog-service";
 import type { Routine, RoutineInput, TaskViewer } from "../types";
 
@@ -144,12 +145,24 @@ export function RoutineForm({
           {cargos.map((cargo) => <option key={cargo.id} value={cargo.id}>{cargo.nome}</option>)}
         </select>
       </label>
-      <label className="tasks-form__wide">
-        Responsáveis *
-        <select multiple value={responsaveis} disabled={saving} onChange={(event) => setResponsaveis(Array.from(event.currentTarget.selectedOptions, ({ value }) => value))}>
-          {usuarios.map((usuario) => <option key={usuario.id} value={usuario.id}>{usuario.nome} · {usuario.perfil}</option>)}
-        </select>
-      </label>
+      <div className="tasks-form__wide tasks-form__responsibles">
+        <span>Responsáveis *</span>
+        <div className="tasks-checkbox-group" role="group" aria-label="Responsáveis">
+          {usuarios.map((usuario) => (
+            <Checkbox
+              key={usuario.id}
+              label={`${usuario.nome} · ${usuario.perfil}`}
+              checked={responsaveis.includes(usuario.id)}
+              disabled={saving}
+              onChange={(event) => setResponsaveis((current) =>
+                event.target.checked
+                  ? [...current, usuario.id]
+                  : current.filter((id) => id !== usuario.id),
+              )}
+            />
+          ))}
+        </div>
+      </div>
       <label className="tasks-form__check">
         <input type="checkbox" checked={exigeValidacao} disabled={saving} onChange={(event) => setExigeValidacao(event.target.checked)} />
         Exigir validação

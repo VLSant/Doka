@@ -1,4 +1,4 @@
-import { Card } from "../../../components/ui/Card";
+import { MetricCard } from "../../../components/ui/Patterns";
 import type { DashboardCounters } from "../types";
 
 const COUNTERS: Array<{
@@ -36,22 +36,23 @@ const COUNTERS: Array<{
 ];
 
 export function DashboardCards({ counters }: { counters: DashboardCounters }) {
+  const groups = Array.from(new Set(COUNTERS.map(({ group }) => group)));
   return (
     <section className="dashboard-cards" aria-label="Resumo operacional">
-      {COUNTERS.map((counter) => (
-        <Card
-          key={counter.key}
-          padding="md"
-          className={
-            counter.attention && counters[counter.key] > 0
-              ? "dashboard-counter dashboard-counter--attention"
-              : "dashboard-counter"
-          }
-        >
-          <span className="dashboard-counter__group">{counter.group}</span>
-          <strong>{counters[counter.key].toLocaleString("pt-BR")}</strong>
-          <span>{counter.label}</span>
-        </Card>
+      {groups.map((group) => (
+        <section className="dashboard-card-group" key={group}>
+          <h2>{group}</h2>
+          <div className="dashboard-card-group__grid">
+            {COUNTERS.filter((counter) => counter.group === group).map((counter) => (
+              <MetricCard
+                key={counter.key}
+                label={counter.label}
+                value={counters[counter.key].toLocaleString("pt-BR")}
+                tone={counter.attention && counters[counter.key] > 0 ? "attention" : "brand"}
+              />
+            ))}
+          </div>
+        </section>
       ))}
     </section>
   );

@@ -81,7 +81,7 @@ describe("AdministrationPage", () => {
     render(<AdministrationPage service={service()} />);
 
     expect(await screen.findByText("Maria Operadora")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Postos e vínculos" }));
+    await user.click(screen.getByRole("tab", { name: "Postos e vínculos" }));
 
     expect(screen.getAllByText("Posto Salvador")).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "Postos e vínculos" })).toBeInTheDocument();

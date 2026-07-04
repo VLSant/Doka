@@ -18,6 +18,9 @@ export interface FeedbackStateProps {
 export function FeedbackState({ tone = "neutral", title, description, actions }: FeedbackStateProps) {
   return (
     <div className={`doka-feedback-state doka-feedback-state--${tone}`} role="status">
+      <span className="doka-feedback-state__icon" aria-hidden="true">
+        {tone === "error" ? "!" : tone === "empty" ? "○" : "i"}
+      </span>
       <h2 className="doka-feedback-state__title">{title}</h2>
       {description && <p className="doka-feedback-state__description">{description}</p>}
       {actions && <div className="doka-feedback-state__actions">{actions}</div>}

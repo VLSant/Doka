@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import { LancamentoFiltersForm } from "../components/LancamentoFilters";
@@ -47,17 +48,13 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
   const totalPendente = pendentes.reduce((sum, item) => sum + item.valor, 0);
 
   return (
-    <main className="lancamentos-page">
-      <header className="lancamentos-page__header">
-        <div>
-          <span>Operação</span>
-          <h1>Deslocamentos e custos extras</h1>
-          <p>Lance, consulte e valide despesas operacionais em um único lugar.</p>
-        </div>
-        <Link className="lancamentos-link-button" to="/app/custos-extras/novo">
-          Novo lançamento
-        </Link>
-      </header>
+    <Page className="lancamentos-page">
+      <PageHeader
+        eyebrow="Operação"
+        title="Deslocamentos e custos extras"
+        description="Lance, consulte e valide despesas operacionais em um único lugar."
+        actions={<ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>}
+      />
 
       <Card padding="lg">
         <LancamentoFiltersForm
@@ -83,6 +80,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           tone="empty"
           title="Nenhum lançamento encontrado"
           description="Registre um lançamento ou ajuste os filtros."
+          actions={<ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>}
         />
       ) : null}
 
@@ -107,7 +105,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           <LancamentoTable items={items} />
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 

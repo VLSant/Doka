@@ -21,15 +21,17 @@ export function OperationalConfigurationPage() {
   }
 
   return (
-    <FeedbackState
-      tone="neutral"
-      title="Configuracao operacional indisponivel"
-      description="Seu acesso precisa de regularizacao administrativa. Procure a administracao."
-      actions={
-        <Button variant="outline" onClick={handleLogout}>
-          Sair
-        </Button>
-      }
-    />
+    <div className="doka-public-state">
+      <FeedbackState
+        tone="neutral"
+        title="Configuração operacional indisponível"
+        description="Seu acesso precisa de regularização administrativa. Procure a administração."
+        actions={
+          <Button variant="outline" onClick={handleLogout}>
+            Sair
+          </Button>
+        }
+      />
+    </div>
   );
 }

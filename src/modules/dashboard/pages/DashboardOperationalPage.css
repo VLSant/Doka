@@ -1,4 +1,4 @@
-.dashboard-operational {
+﻿.dashboard-operational {
   display: grid;
   gap: var(--space-5, 24px);
   min-width: 0;
@@ -11,9 +11,9 @@
 
 .dashboard-operational__header > span,
 .dashboard-counter__group {
-  color: var(--color-brand-purple, #602860);
-  font-size: 0.76rem;
-  font-weight: 700;
+  color: var(--brand-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -24,7 +24,7 @@
 }
 
 .dashboard-operational__header p {
-  color: var(--color-text-muted, #666);
+  color: var(--text-muted);
 }
 
 .dashboard-filters {
@@ -37,18 +37,18 @@
 .dashboard-filters label {
   display: grid;
   gap: 6px;
-  color: var(--color-text, #3b3b3b);
-  font-size: 0.85rem;
-  font-weight: 600;
+  color: var(--text-body);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
 }
 
 .dashboard-filters input,
 .dashboard-filters select {
   min-height: 42px;
-  border: 1px solid var(--color-border, #e6e6e6);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 8px 12px;
-  background: #fff;
+  background: var(--neutral-0);
   color: inherit;
   font: inherit;
 }
@@ -56,34 +56,48 @@
 .dashboard-filters input:focus,
 .dashboard-filters select:focus {
   outline: 3px solid rgb(240 144 24 / 24%);
-  border-color: #f09018;
+  border-color: var(--brand-primary);
 }
 
 .dashboard-cards {
   display: grid;
+  gap: var(--space-6);
+}
+
+.dashboard-card-group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.dashboard-card-group h2 {
+  font-size: var(--text-lg);
+}
+
+.dashboard-card-group__grid {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .dashboard-counter {
   display: grid;
   gap: 6px;
-  border-left: 4px solid var(--color-brand-purple, #602860);
+  border-left: 4px solid var(--brand-secondary);
 }
 
 .dashboard-counter--attention {
-  border-left-color: var(--color-brand-orange, #f09018);
+  border-left-color: var(--brand-primary);
 }
 
 .dashboard-counter strong {
-  color: var(--color-text, #292929);
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  color: var(--text-strong);
+  font-size: var(--text-3xl);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
 .dashboard-counter > span:last-child {
-  color: var(--color-text-muted, #666);
+  color: var(--text-muted);
 }
 
 .dashboard-operational h2 {
@@ -103,7 +117,7 @@
 }
 
 .dashboard-productivity-card strong {
-  font-size: 1.75rem;
+  font-size: var(--text-2xl);
 }
 
 .dashboard-comparison {
@@ -119,8 +133,8 @@
 
 .dashboard-comparison dd {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: var(--fw-bold);
 }
 
 .dashboard-table-wrap {
@@ -135,7 +149,7 @@
 .dashboard-table th,
 .dashboard-table td {
   padding: 12px;
-  border-bottom: 1px solid var(--color-border, #e6e6e6);
+  border-bottom: 1px solid var(--border-subtle);
   text-align: left;
   white-space: nowrap;
 }
@@ -149,9 +163,9 @@
 
 .dashboard-alert {
   padding: 14px 16px;
-  border-left: 4px solid var(--color-brand-orange, #f09018);
+  border-left: 4px solid var(--brand-primary);
   border-radius: 6px;
-  background: #fff;
+  background: var(--neutral-0);
 }
 
 @media (max-width: 1100px) {
@@ -159,7 +173,7 @@
     grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
 
-  .dashboard-cards {
+  .dashboard-card-group__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

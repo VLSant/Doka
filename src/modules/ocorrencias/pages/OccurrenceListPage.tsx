@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
+import { Tabs } from "../../../components/ui/Tabs";
 import { occurrenceMatchesFilters, STATUS_LABELS } from "../occurrence-state";
 import {
   createOccurrenceService,
@@ -63,30 +65,23 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
   }
 
   return (
-    <main className="occurrences-page">
-      <header className="occurrences-header">
-        <div>
-          <span>Operação</span>
-          <h1>Ocorrências</h1>
-          <p>Acompanhe pendências, reclamações e retornos vinculados às assistências.</p>
-        </div>
-        <Link className="occurrences-primary-link" to="/app/ocorrencias/nova">
-          Nova ocorrência
-        </Link>
-      </header>
+    <Page className="occurrences-page">
+      <PageHeader
+        eyebrow="Operação"
+        title="Ocorrências"
+        description="Acompanhe pendências, reclamações e retornos vinculados às assistências."
+        actions={<ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>}
+      />
 
-      <nav className="occurrence-tabs" aria-label="Recortes de ocorrências">
-        {(["hoje", "abertas", "atrasadas"] as OccurrenceTab[]).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            aria-current={filters.tab === tab ? "page" : undefined}
-            onClick={() => setFilter("tab", tab)}
-          >
-            {tab === "hoje" ? "Hoje" : tab === "abertas" ? "Abertas" : "Atrasadas"}
-          </button>
-        ))}
-      </nav>
+      <Tabs
+        label="Recortes de ocorrências"
+        value={filters.tab}
+        items={(["hoje", "abertas", "atrasadas"] as OccurrenceTab[]).map((tab) => ({
+          id: tab,
+          label: tab === "hoje" ? "Hoje" : tab === "abertas" ? "Abertas" : "Atrasadas",
+        }))}
+        onChange={(tab) => setFilter("tab", tab)}
+      />
 
       <Card padding="lg">
         <div className="occurrence-filters">
@@ -198,6 +193,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           tone="empty"
           title="Nenhuma ocorrência neste recorte"
           description="Altere os filtros ou registre uma nova ocorrência."
+          actions={<ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>}
         />
       ) : null}
       {!loading && !error && visible.length > 0 ? (
@@ -206,7 +202,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           <OccurrenceTable items={visible} />
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 

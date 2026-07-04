@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { useAuth } from "../../auth/AuthProvider";
 import { EntityHistory } from "../../auditoria/EntityHistory";
@@ -67,7 +68,7 @@ export function TaskDetailPage({ service: injected, viewer: injectedViewer }: { 
           <h1>{task.titulo}</h1>
           <p>{task.descricao || "Sem descrição."}</p>
         </div>
-        {canEditTask(task, viewer) ? <Link className="tasks-link-button tasks-link-button--outline" to={`/app/tarefas-rotinas/${task.id}/editar`}>Editar</Link> : null}
+        {canEditTask(task, viewer) ? <ButtonLink variant="outline" to={`/app/tarefas-rotinas/${task.id}/editar`}>Editar</ButtonLink> : null}
       </header>
       {error ? <p className="tasks-form__error" role="alert">{error}</p> : null}
       <section className="tasks-detail-grid">

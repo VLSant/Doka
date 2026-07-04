@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { TableFrame } from "../../../components/ui/Patterns";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import type { Lancamento } from "../types";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -6,7 +8,7 @@ const date = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
 
 export function LancamentoTable({ items }: { items: Lancamento[] }) {
   return (
-    <div className="lancamentos-table-wrap">
+    <TableFrame className="lancamentos-table-wrap">
       <table className="lancamentos-table" aria-label="Deslocamentos e custos extras">
         <thead>
           <tr>
@@ -31,9 +33,9 @@ export function LancamentoTable({ items }: { items: Lancamento[] }) {
               <td>{item.assistencia?.numero_assistencia ?? "Sem vínculo"}</td>
               <td>{item.recurso ?? item.lancador?.nome ?? "—"}</td>
               <td>
-                <span className={`lancamentos-status lancamentos-status--${item.status}`}>
+                <StatusBadge tone={item.status === "pendente" ? "warning" : "success"}>
                   {item.status === "pendente" ? "Pendente" : "Validado"}
-                </span>
+                </StatusBadge>
               </td>
               <td>{currency.format(item.valor)}</td>
               <td>
@@ -43,6 +45,6 @@ export function LancamentoTable({ items }: { items: Lancamento[] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   );
 }

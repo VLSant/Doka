@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Card } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
 import { createAssistanceService, type AssistanceService } from "../assistance-service";
@@ -61,14 +62,12 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
 
   const emptyState = emptyStateFor(filters);
   return (
-    <main className="assistance-management">
-      <header className="assistance-management__header">
-        <div>
-          <span>Assistências / MMS</span>
-          <h1>Assistências MMS</h1>
-          <p>Consulte serviços, partes, correções e origem dentro do seu escopo.</p>
-        </div>
-      </header>
+    <Page className="assistance-management">
+      <PageHeader
+        eyebrow="Assistências / MMS"
+        title="Assistências MMS"
+        description="Consulte serviços, partes, correções e origem dentro do seu escopo."
+      />
       <Card padding="lg">
         <AssistanceFiltersForm
           key={searchParams.toString()}
@@ -127,7 +126,7 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
           ) : null}
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 

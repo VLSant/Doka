@@ -50,7 +50,7 @@
 
 .doka-icon-button--primary {
   background: var(--brand-primary);
-  color: #fff;
+  color: var(--brand-on-primary);
 }
 .doka-icon-button--primary:hover:not(:disabled) {
   background: var(--brand-primary-hover);

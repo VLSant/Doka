@@ -1,4 +1,4 @@
-.occurrences-page {
+﻿.occurrences-page {
   display: grid;
   gap: 1rem;
   width: 100%;
@@ -24,23 +24,23 @@
 .occurrences-secondary-link {
   border-radius: 0.5rem;
   display: inline-flex;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   padding: 0.65rem 1rem;
   text-decoration: none;
 }
 
 .occurrences-primary-link {
-  background: var(--color-primary-600, #0f766e);
-  color: #fff;
+  background: var(--brand-primary);
+  color: var(--neutral-0);
 }
 
 .occurrences-secondary-link {
-  border: 1px solid var(--color-neutral-300, #cbd5e1);
+  border: 1px solid var(--border-default);
   color: inherit;
 }
 
 .occurrence-tabs {
-  border-bottom: 1px solid var(--color-neutral-200, #e2e8f0);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   gap: 0.25rem;
 }
@@ -54,8 +54,8 @@
 }
 
 .occurrence-tabs button[aria-current="page"] {
-  border-color: var(--color-primary-600, #0f766e);
-  font-weight: 700;
+  border-color: var(--brand-primary);
+  font-weight: var(--fw-bold);
 }
 
 .occurrence-filters,
@@ -70,7 +70,7 @@
 .occurrence-detail-grid label,
 .occurrence-comment-form label {
   display: grid;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   gap: 0.35rem;
 }
 
@@ -83,7 +83,7 @@
 .occurrence-detail-grid select,
 .occurrence-detail-grid textarea,
 .occurrence-comment-form textarea {
-  border: 1px solid var(--color-neutral-300, #cbd5e1);
+  border: 1px solid var(--border-default);
   border-radius: 0.45rem;
   font: inherit;
   padding: 0.6rem;
@@ -113,24 +113,24 @@
 
 .occurrence-table th,
 .occurrence-table td {
-  border-bottom: 1px solid var(--color-neutral-200, #e2e8f0);
+  border-bottom: 1px solid var(--border-subtle);
   padding: 0.7rem;
   text-align: left;
   vertical-align: top;
 }
 
 .occurrence-status {
-  background: var(--color-neutral-100, #f1f5f9);
+  background: var(--surface-sunken);
   border-radius: 999px;
   display: inline-block;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   margin: 0 0.2rem 0.2rem 0;
   padding: 0.2rem 0.55rem;
 }
 
 .occurrence-status--overdue {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--red-50);
+  color: var(--red-600);
 }
 
 .occurrence-detail-grid {
@@ -151,12 +151,12 @@
 }
 
 .occurrence-data dt {
-  color: var(--color-neutral-600, #475569);
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }
 
 .occurrence-data dd {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin: 0.2rem 0 0;
 }
 
@@ -175,14 +175,14 @@
 }
 
 .occurrence-comments li {
-  border-left: 3px solid var(--color-primary-500, #14b8a6);
+  border-left: 3px solid var(--brand-primary);
   padding-left: 0.75rem;
 }
 
 .occurrence-comments time {
-  color: var(--color-neutral-600, #475569);
+  color: var(--text-muted);
   display: block;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
 }
 
 @media (max-width: 800px) {

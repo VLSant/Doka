@@ -41,3 +41,18 @@ Ordem atual:
 
 Use `docs/07-plano-execucao-mvp-enxuto.md` como registro vivo de progresso e
 continuidade entre sessões. Atualize esse documento após cada etapa relevante.
+
+## Adoção obrigatória do design system
+
+- `design-system/tokens/*` é a referência de origem e
+  `src/styles/design-system.css` é o bundle consumido pelo aplicativo.
+- Use tokens oficiais para cor, tipografia, espaçamento, raio, sombra e motion.
+  Não crie aliases `--color-*` nem valores visuais locais nos módulos.
+- Antes de criar CSS local, procure um componente em `src/components/ui`,
+  `src/components/feedback` ou `src/components/layout`.
+- Componentes compartilhados ficam nessas pastas; CSS de módulo deve conter
+  apenas composição específica da tela.
+- Hexadecimal só é permitido como dado de negócio documentado. Controles
+  nativos só podem permanecer quando não houver primitive equivalente, como o
+  `input[type=file]` encapsulado no `FileDropzone`.
+- Execute `npm run lint:design-system` após alterações de interface.

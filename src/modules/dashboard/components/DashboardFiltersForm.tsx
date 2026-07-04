@@ -1,4 +1,6 @@
 import { Button } from "../../../components/ui/Button";
+import { Input } from "../../../components/ui/Input";
+import { Select } from "../../../components/ui/FormControls";
 import type { DashboardFilters, DashboardPosto } from "../types";
 
 interface DashboardFiltersFormProps {
@@ -26,17 +28,9 @@ export function DashboardFiltersForm({
 
   return (
     <form className="dashboard-filters" onSubmit={submit}>
-      <label>
-        Data inicial
-        <input name="inicio" type="date" defaultValue={value.inicio} disabled={disabled} required />
-      </label>
-      <label>
-        Data final
-        <input name="fim" type="date" defaultValue={value.fim} disabled={disabled} required />
-      </label>
-      <label>
-        Posto
-        <select name="postoId" defaultValue={value.postoId ?? ""} disabled={disabled}>
+      <Input label="Data inicial" name="inicio" type="date" defaultValue={value.inicio} disabled={disabled} required />
+      <Input label="Data final" name="fim" type="date" defaultValue={value.fim} disabled={disabled} required />
+      <Select label="Posto" name="postoId" defaultValue={value.postoId ?? ""} disabled={disabled}>
           <option value="">Todos os postos permitidos</option>
           {postos.map((posto) => (
             <option key={posto.id} value={posto.id}>
@@ -44,8 +38,7 @@ export function DashboardFiltersForm({
               {posto.nome}
             </option>
           ))}
-        </select>
-      </label>
+      </Select>
       <Button type="submit" disabled={disabled}>
         Aplicar filtros
       </Button>

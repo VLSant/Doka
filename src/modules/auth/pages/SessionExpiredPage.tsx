@@ -11,13 +11,15 @@ export function SessionExpiredPage() {
   const navigate = useNavigate();
 
   return (
-    <FeedbackState
-      tone="neutral"
-      title="Sua sessao expirou"
-      description="Por seguranca, sua sessao foi encerrada. Entre novamente para continuar."
-      actions={
-        <Button onClick={() => navigate("/login", { replace: true })}>Voltar ao login</Button>
-      }
-    />
+    <div className="doka-public-state">
+      <FeedbackState
+        tone="neutral"
+        title="Sua sessão expirou"
+        description="Por segurança, sua sessão foi encerrada. Entre novamente para continuar."
+        actions={
+          <Button onClick={() => navigate("/login", { replace: true })}>Voltar ao login</Button>
+        }
+      />
+    </div>
   );
 }
