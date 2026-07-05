@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
+import { Drawer } from "../../../components/ui/Drawer";
 import { LancamentoForm } from "../components/LancamentoForm";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import type { LancamentoFormOptions, LancamentoInput } from "../types";
@@ -76,15 +76,15 @@ export function LancamentoFormPage({ service: injected, lancamentoId }: Props) {
     }
   }
 
+  const closeTarget = id ? `/app/custos-extras/${id}` : "/app/custos-extras";
   return (
-    <main className="lancamentos-page">
-      <header className="lancamentos-page__header">
-        <div>
-          <span>Deslocamentos e custos extras</span>
-          <h1>{id ? "Editar lançamento" : "Novo lançamento"}</h1>
-          <p>O lançamento é manual e respeita o posto da assistência selecionada.</p>
-        </div>
-      </header>
+    <Drawer
+      open
+      size="lg"
+      title={id ? "Editar lançamento" : "Novo lançamento"}
+      description="O lançamento respeita o posto da assistência selecionada."
+      onClose={() => navigate(closeTarget)}
+    >
       {loading ? <LoadingState message="Preparando formulário..." /> : null}
       {error ? (
         <FeedbackState
@@ -95,18 +95,16 @@ export function LancamentoFormPage({ service: injected, lancamentoId }: Props) {
         />
       ) : null}
       {!loading && options ? (
-        <Card padding="lg">
-          <LancamentoForm
-            key={id ?? "novo"}
-            initial={initial}
-            options={options}
-            saving={saving}
-            onSubmit={save}
-            onCancel={() => navigate(id ? `/app/custos-extras/${id}` : "/app/custos-extras")}
-          />
-        </Card>
+        <LancamentoForm
+          key={id ?? "novo"}
+          initial={initial}
+          options={options}
+          saving={saving}
+          onSubmit={save}
+          onCancel={() => navigate(closeTarget)}
+        />
       ) : null}
-    </main>
+    </Drawer>
   );
 }
 

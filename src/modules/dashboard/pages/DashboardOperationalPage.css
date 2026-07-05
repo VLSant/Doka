@@ -79,6 +79,17 @@
   gap: var(--space-4);
 }
 
+.dashboard-metric-link {
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.dashboard-metric-link:hover {
+  transform: translateY(var(--hover-lift));
+  text-decoration: none;
+}
+
 .dashboard-counter {
   display: grid;
   gap: 6px;

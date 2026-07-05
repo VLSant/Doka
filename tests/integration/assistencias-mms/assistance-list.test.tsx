@@ -27,8 +27,7 @@ describe("assistance list", () => {
     const service = { list: vi.fn().mockResolvedValue(assistancePage([])) };
     renderList(service);
     expect(await screen.findByText("Nenhuma assistência disponível")).toBeVisible();
-    await userEvent.type(screen.getByLabelText("Número da assistência"), "008");
-    await userEvent.click(screen.getByRole("button", { name: "Aplicar filtros" }));
+    await userEvent.type(screen.getByLabelText("Buscar"), "008");
     await waitFor(() =>
       expect(screen.getByText("Nenhuma assistência corresponde aos filtros")).toBeVisible(),
     );
@@ -64,8 +63,7 @@ describe("assistance list", () => {
     renderList(service);
     expect(await screen.findByText("ASS-008")).toBeVisible();
 
-    await userEvent.type(screen.getByLabelText("Número da assistência"), "restrito");
-    await userEvent.click(screen.getByRole("button", { name: "Aplicar filtros" }));
+    await userEvent.type(screen.getByLabelText("Buscar"), "restrito");
 
     expect(await screen.findByText("Acesso negado")).toBeVisible();
     expect(screen.queryByText("ASS-008")).not.toBeInTheDocument();

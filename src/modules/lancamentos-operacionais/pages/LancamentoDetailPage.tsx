@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { useAuth } from "../../auth/AuthProvider";
 import { EntityHistory } from "../../auditoria/EntityHistory";
@@ -155,12 +156,9 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
             <h2>Ações</h2>
             <div className="lancamento-actions__row">
               {item.status === "pendente" ? (
-                <Link
-                  className="lancamentos-link-button lancamentos-link-button--outline"
-                  to={`/app/custos-extras/${id}/editar`}
-                >
+                <ButtonLink variant="outline" to={`/app/custos-extras/${id}/editar`}>
                   Editar
-                </Link>
+                </ButtonLink>
               ) : null}
               {canManage && item.status === "pendente" ? (
                 <Button loading={working} onClick={() => void validate()}>

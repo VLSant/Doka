@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
-import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
+import { Drawer } from "../../../components/ui/Drawer";
+import { FilterChips } from "../../../components/ui/FilterChips";
+import { SearchInput } from "../../../components/ui/SearchInput";
+import { Select } from "../../../components/ui/FormControls";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import { LancamentoFiltersForm } from "../components/LancamentoFilters";
 import { LancamentoTable } from "../components/LancamentoTable";
@@ -23,6 +27,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
   const [filters, setFilters] = useState<LancamentoFilters>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,10 +58,49 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
         eyebrow="Operação"
         title="Deslocamentos e custos extras"
         description="Lance, consulte e valide despesas operacionais em um único lugar."
-        actions={<ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>}
       />
 
-      <Card padding="lg">
+      <div className="doka-list-toolbar">
+        <SearchInput
+          value={filters.recurso ?? ""}
+          placeholder="Buscar responsável ou recurso…"
+          onChange={(recurso) =>
+            setFilters((current) => ({ ...current, recurso: recurso || undefined }))
+          }
+        />
+        <Select
+          className="doka-list-toolbar__select"
+          aria-label="Status"
+          value={filters.status ?? ""}
+          onChange={(event) =>
+            setFilters((current) => ({
+              ...current,
+              status: event.target.value as LancamentoFilters["status"],
+            }))
+          }
+        >
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="validado">Validado</option>
+        </Select>
+        <Button variant="outline" onClick={() => setFiltersOpen(true)}>
+          Filtros ({Object.values(filters).filter(Boolean).length})
+        </Button>
+        <span className="doka-list-toolbar__spacer" />
+        <ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>
+      </div>
+      <FilterChips
+        items={Object.entries(filters)
+          .filter(([key, value]) => !["recurso", "status"].includes(key) && value)
+          .map(([id, value]) => ({ id, label: `${id.replaceAll("_", " ")}: ${value}` }))}
+        onRemove={(id) => setFilters((current) => ({ ...current, [id]: undefined }))}
+        onClear={() => setFilters({ recurso: filters.recurso, status: filters.status })}
+      />
+      <Drawer
+        open={filtersOpen}
+        title="Filtros de lançamentos"
+        onClose={() => setFiltersOpen(false)}
+      >
         <LancamentoFiltersForm
           value={filters}
           postos={options.postos}
@@ -64,9 +108,9 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           disabled={loading}
           onChange={setFilters}
         />
-      </Card>
+      </Drawer>
 
-      {loading ? <LoadingState message="Carregando lançamentos..." /> : null}
+      {loading ? <Skeleton message="Carregando lançamentos..." /> : null}
       {error ? (
         <FeedbackState
           tone="error"

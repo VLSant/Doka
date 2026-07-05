@@ -6,6 +6,10 @@
   background: var(--surface-page);
 }
 
+.doka-app-shell--collapsed {
+  grid-template-columns: 68px 1fr;
+}
+
 .doka-app-shell__content {
   display: flex;
   flex-direction: column;
@@ -19,7 +23,7 @@
   height: var(--topbar-h);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: var(--space-4);
   padding: 0 var(--space-6);
   border-bottom: var(--border-hairline);
@@ -27,6 +31,19 @@
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.doka-app-shell__context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.doka-app-shell__context strong {
+  color: var(--text-strong);
+  font-weight: var(--fw-semibold);
 }
 
 .doka-app-shell__main {

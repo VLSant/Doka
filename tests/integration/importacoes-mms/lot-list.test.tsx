@@ -18,9 +18,12 @@ describe("import lot list", () => {
     const service = { list: vi.fn().mockResolvedValue(page([])) };
     renderManagementRoute(<ImportListPage service={service as never} />);
     expect(await screen.findByText("Nenhuma importação disponível")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Filtros" }));
     await userEvent.selectOptions(screen.getByLabelText("Status"), "erro");
     await userEvent.click(screen.getByRole("button", { name: "Aplicar filtros" }));
-    await waitFor(() => expect(screen.getByText("Nenhum lote corresponde aos filtros")).toBeVisible());
+    await waitFor(() =>
+      expect(screen.getByText("Nenhum lote corresponde aos filtros")).toBeVisible(),
+    );
   });
 
   it("keeps temporary failure distinct from an empty response", async () => {

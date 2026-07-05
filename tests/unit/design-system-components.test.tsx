@@ -5,7 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import { PageHeader } from "../../src/components/layout/Page";
 import { ButtonLink } from "../../src/components/ui/ButtonLink";
 import { Dialog } from "../../src/components/ui/Dialog";
+import { Drawer } from "../../src/components/ui/Drawer";
+import { FilterChips } from "../../src/components/ui/FilterChips";
 import { Select, Textarea } from "../../src/components/ui/FormControls";
+import { Pagination } from "../../src/components/ui/Pagination";
+import { SearchInput } from "../../src/components/ui/SearchInput";
 import { StatusBadge } from "../../src/components/ui/StatusBadge";
 import { Tabs } from "../../src/components/ui/Tabs";
 
@@ -66,5 +70,44 @@ describe("componentes compartilhados do design system", () => {
 
     await userEvent.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("fecha o drawer por Escape e mantém filtros removíveis", async () => {
+    const onClose = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <>
+        <Drawer open title="Filtros" onClose={onClose}>
+          <button>Aplicar</button>
+        </Drawer>
+        <FilterChips
+          items={[{ id: "posto", label: "Posto: Salvador" }]}
+          onRemove={onRemove}
+          onClear={vi.fn()}
+        />
+      </>,
+    );
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledOnce();
+    await userEvent.click(screen.getByRole("button", { name: /Posto: Salvador/ }));
+    expect(onRemove).toHaveBeenCalledWith("posto");
+  });
+
+  it("oferece busca com limpeza e paginação compacta", async () => {
+    const onSearch = vi.fn();
+    const onPage = vi.fn();
+    const { rerender } = render(<SearchInput value="" onChange={onSearch} debounceMs={0} />);
+    await userEvent.type(screen.getByRole("searchbox", { name: "Buscar" }), "tarefa");
+    expect(onSearch).toHaveBeenCalled();
+    rerender(
+      <>
+        <SearchInput value="tarefa" onChange={onSearch} />
+        <Pagination page={1} pageSize={25} total={40} onChange={onPage} />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Limpar busca" }));
+    expect(onSearch).toHaveBeenLastCalledWith("");
+    await userEvent.click(screen.getByRole("button", { name: "Próxima" }));
+    expect(onPage).toHaveBeenCalledWith(2);
   });
 });

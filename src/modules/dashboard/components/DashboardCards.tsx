@@ -43,14 +43,25 @@ export function DashboardCards({ counters }: { counters: DashboardCounters }) {
         <section className="dashboard-card-group" key={group}>
           <h2>{group}</h2>
           <div className="dashboard-card-group__grid">
-            {COUNTERS.filter((counter) => counter.group === group).map((counter) => (
-              <MetricCard
-                key={counter.key}
-                label={counter.label}
-                value={counters[counter.key].toLocaleString("pt-BR")}
-                tone={counter.attention && counters[counter.key] > 0 ? "attention" : "brand"}
-              />
-            ))}
+            {COUNTERS.filter((counter) => counter.group === group).map((counter) => {
+              const route =
+                counter.group === "Tarefas"
+                  ? "/app/tarefas-rotinas"
+                  : counter.group === "Ocorrências"
+                    ? "/app/ocorrencias"
+                    : counter.group === "Assistências"
+                      ? "/app/assistencias-mms"
+                      : "/app/custos-extras";
+              return (
+                <a className="dashboard-metric-link" key={counter.key} href={route}>
+                  <MetricCard
+                    label={counter.label}
+                    value={counters[counter.key].toLocaleString("pt-BR")}
+                    tone={counter.attention && counters[counter.key] > 0 ? "attention" : "brand"}
+                  />
+                </a>
+              );
+            })}
           </div>
         </section>
       ))}

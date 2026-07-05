@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
+import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
+import { Drawer } from "../../../components/ui/Drawer";
 import type { AdministrationService } from "../administration-service";
 import type {
   AdministrationSnapshot,
@@ -45,6 +47,8 @@ export function PostsSection({
   const [post, setPost] = useState(emptyPost);
   const [link, setLink] = useState(emptyLink);
   const [saving, setSaving] = useState(false);
+  const [postOpen, setPostOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
 
   async function submitPost(event: FormEvent) {
     event.preventDefault();
@@ -62,6 +66,7 @@ export function PostsSection({
         actorId,
       );
       setPost(emptyPost);
+      setPostOpen(false);
       await onChanged("Posto salvo.");
     } catch (error) {
       onError(error);
@@ -77,6 +82,7 @@ export function PostsSection({
     try {
       await service.saveLink(link.id, link.usuario_id, link.posto_id, link.nivel_acesso, actorId);
       setLink(emptyLink);
+      setLinkOpen(false);
       await onChanged("Vínculo salvo.");
     } catch (error) {
       onError(error);
@@ -93,6 +99,7 @@ export function PostsSection({
       descricao: item.descricao ?? "",
       ativo: item.ativo,
     });
+    setPostOpen(true);
   }
 
   function editLink(item: VinculoUsuarioPosto) {
@@ -102,6 +109,7 @@ export function PostsSection({
       posto_id: item.posto_id,
       nivel_acesso: item.nivel_acesso,
     });
+    setLinkOpen(true);
   }
 
   async function remove(kind: "post" | "link", id: string) {
@@ -122,107 +130,146 @@ export function PostsSection({
           <h2 id="admin-posts-title">Postos e vínculos</h2>
           <p>Postos operacionais e escopo de acesso de cada usuário.</p>
         </div>
+        {canEdit ? (
+          <div className="admin-actions">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setLink(emptyLink);
+                setLinkOpen(true);
+              }}
+            >
+              Novo vínculo
+            </Button>
+            <Button
+              onClick={() => {
+                setPost(emptyPost);
+                setPostOpen(true);
+              }}
+            >
+              Novo posto
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {canEdit && (
-        <div className="admin-split">
-          <form className="admin-form admin-form--card" onSubmit={submitPost}>
-            <h3>{post.id ? "Editar posto" : "Novo posto"}</h3>
-            <Input
-              label="Nome"
-              value={post.nome}
-              onChange={(event) => setPost({ ...post, nome: event.target.value })}
-              required
-            />
-            <Input
-              label="Código"
-              value={post.codigo}
-              onChange={(event) => setPost({ ...post, codigo: event.target.value })}
-            />
-            <TextareaField
-              label="Descrição"
-              value={post.descricao}
-              onChange={(event) => setPost({ ...post, descricao: event.target.value })}
-            />
-            <Field label="Estado">
-              <label className="admin-check">
-                <input
-                  type="checkbox"
-                  checked={post.ativo}
-                  onChange={(event) => setPost({ ...post, ativo: event.target.checked })}
-                />
-                Posto ativo
-              </label>
-            </Field>
-            <div className="admin-form__actions">
-              <Button type="submit" loading={saving}>
-                Salvar posto
-              </Button>
-              {post.id && (
-                <Button variant="ghost" onClick={() => setPost(emptyPost)}>
-                  Cancelar
+        <>
+          <Drawer
+            open={postOpen}
+            title={post.id ? "Editar posto" : "Novo posto"}
+            onClose={() => {
+              setPostOpen(false);
+              setPost(emptyPost);
+            }}
+          >
+            <form className="admin-form" onSubmit={submitPost}>
+              <h3>{post.id ? "Editar posto" : "Novo posto"}</h3>
+              <Input
+                label="Nome"
+                value={post.nome}
+                onChange={(event) => setPost({ ...post, nome: event.target.value })}
+                required
+              />
+              <Input
+                label="Código"
+                value={post.codigo}
+                onChange={(event) => setPost({ ...post, codigo: event.target.value })}
+              />
+              <TextareaField
+                label="Descrição"
+                value={post.descricao}
+                onChange={(event) => setPost({ ...post, descricao: event.target.value })}
+              />
+              <Field label="Estado">
+                <label className="admin-check">
+                  <input
+                    type="checkbox"
+                    checked={post.ativo}
+                    onChange={(event) => setPost({ ...post, ativo: event.target.checked })}
+                  />
+                  Posto ativo
+                </label>
+              </Field>
+              <div className="admin-form__actions">
+                <Button type="submit" loading={saving}>
+                  Salvar posto
                 </Button>
-              )}
-            </div>
-          </form>
+                {post.id && (
+                  <Button variant="ghost" onClick={() => setPost(emptyPost)}>
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Drawer>
 
-          <form className="admin-form admin-form--card" onSubmit={submitLink}>
-            <h3>{link.id ? "Editar vínculo" : "Novo vínculo"}</h3>
-            <SelectField
-              label="Usuário"
-              value={link.usuario_id}
-              onChange={(event) => setLink({ ...link, usuario_id: event.target.value })}
-              disabled={Boolean(link.id)}
-              required
-            >
-              <option value="">Selecione</option>
-              {data.usuarios
-                .filter((user) => user.ativo)
-                .map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.nome}
-                  </option>
-                ))}
-            </SelectField>
-            <SelectField
-              label="Posto"
-              value={link.posto_id}
-              onChange={(event) => setLink({ ...link, posto_id: event.target.value })}
-              disabled={Boolean(link.id)}
-              required
-            >
-              <option value="">Selecione</option>
-              {data.postos
-                .filter((item) => item.ativo)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-            </SelectField>
-            <SelectField
-              label="Nível"
-              value={link.nivel_acesso}
-              onChange={(event) =>
-                setLink({ ...link, nivel_acesso: event.target.value as NivelAcessoPosto })
-              }
-            >
-              <option value="operacional">Operacional</option>
-              <option value="supervisao">Supervisão</option>
-              <option value="consulta">Consulta</option>
-            </SelectField>
-            <div className="admin-form__actions">
-              <Button type="submit" loading={saving}>
-                Salvar vínculo
-              </Button>
-              {link.id && (
-                <Button variant="ghost" onClick={() => setLink(emptyLink)}>
-                  Cancelar
+          <Drawer
+            open={linkOpen}
+            title={link.id ? "Editar vínculo" : "Novo vínculo"}
+            onClose={() => {
+              setLinkOpen(false);
+              setLink(emptyLink);
+            }}
+          >
+            <form className="admin-form" onSubmit={submitLink}>
+              <h3>{link.id ? "Editar vínculo" : "Novo vínculo"}</h3>
+              <SelectField
+                label="Usuário"
+                value={link.usuario_id}
+                onChange={(event) => setLink({ ...link, usuario_id: event.target.value })}
+                disabled={Boolean(link.id)}
+                required
+              >
+                <option value="">Selecione</option>
+                {data.usuarios
+                  .filter((user) => user.ativo)
+                  .map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.nome}
+                    </option>
+                  ))}
+              </SelectField>
+              <SelectField
+                label="Posto"
+                value={link.posto_id}
+                onChange={(event) => setLink({ ...link, posto_id: event.target.value })}
+                disabled={Boolean(link.id)}
+                required
+              >
+                <option value="">Selecione</option>
+                {data.postos
+                  .filter((item) => item.ativo)
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.nome}
+                    </option>
+                  ))}
+              </SelectField>
+              <SelectField
+                label="Nível"
+                value={link.nivel_acesso}
+                onChange={(event) =>
+                  setLink({ ...link, nivel_acesso: event.target.value as NivelAcessoPosto })
+                }
+              >
+                <option value="operacional">Operacional</option>
+                <option value="supervisao">Supervisão</option>
+                <option value="consulta">Consulta</option>
+              </SelectField>
+              <div className="admin-form__actions">
+                <Button type="submit" loading={saving}>
+                  Salvar vínculo
                 </Button>
-              )}
-            </div>
-          </form>
-        </div>
+                {link.id && (
+                  <Button variant="ghost" onClick={() => setLink(emptyLink)}>
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Drawer>
+        </>
       )}
 
       <h3>Postos cadastrados</h3>
@@ -249,16 +296,12 @@ export function PostsSection({
                   </td>
                   {canEdit && (
                     <td className="admin-actions">
-                      <Button size="sm" variant="outline" onClick={() => editPost(item)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => void remove("post", item.id)}
-                      >
-                        Remover
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuItem onClick={() => editPost(item)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem danger onClick={() => void remove("post", item.id)}>
+                          Remover
+                        </DropdownMenuItem>
+                      </DropdownMenu>
                     </td>
                   )}
                 </tr>
@@ -292,16 +335,12 @@ export function PostsSection({
                   <td>{item.nivel_acesso}</td>
                   {canEdit && (
                     <td className="admin-actions">
-                      <Button size="sm" variant="outline" onClick={() => editLink(item)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => void remove("link", item.id)}
-                      >
-                        Remover
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuItem onClick={() => editLink(item)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem danger onClick={() => void remove("link", item.id)}>
+                          Remover
+                        </DropdownMenuItem>
+                      </DropdownMenu>
                     </td>
                   )}
                 </tr>

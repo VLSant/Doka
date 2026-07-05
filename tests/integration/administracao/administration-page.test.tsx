@@ -83,7 +83,7 @@ describe("AdministrationPage", () => {
     expect(await screen.findByText("Maria Operadora")).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Postos e vínculos" }));
 
-    expect(screen.getAllByText("Posto Salvador")).toHaveLength(2);
+    expect(screen.getByText("Posto Salvador")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Postos e vínculos" })).toBeInTheDocument();
   });
 

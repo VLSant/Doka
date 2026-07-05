@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
+import { Drawer } from "../../../components/ui/Drawer";
 import type { AdministrationService } from "../administration-service";
 import type {
   AdministrationSnapshot,
@@ -41,6 +42,7 @@ export function UsersSection({
   const [form, setForm] = useState(emptyForm);
   const [identities, setIdentities] = useState<IdentidadeAuth[]>([]);
   const [saving, setSaving] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
 
   useEffect(() => {
     if (!canEdit) return;
@@ -67,6 +69,7 @@ export function UsersSection({
       cargo_funcao_id: user.cargo_funcao_id ?? "",
       ativo: user.ativo,
     });
+    setFormOpen(true);
   }
 
   function pickIdentity(id: string) {
@@ -96,6 +99,7 @@ export function UsersSection({
         actorId,
       );
       setForm(emptyForm);
+      setFormOpen(false);
       await onChanged("Usuário salvo.");
     } catch (error) {
       onError(error);
@@ -117,83 +121,110 @@ export function UsersSection({
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Nome ou e-mail"
         />
+        {canEdit ? (
+          <Button
+            onClick={() => {
+              setForm(emptyForm);
+              setFormOpen(true);
+            }}
+          >
+            Novo usuário
+          </Button>
+        ) : null}
       </div>
 
       {canEdit && (
-        <form className="admin-form" onSubmit={submit}>
-          {!form.id && (
-            <SelectField
-              label="Identidade Auth"
-              value={form.auth_user_id}
-              onChange={(event) => pickIdentity(event.target.value)}
-              required
-            >
-              <option value="">Selecione</option>
-              {identities.map((identity) => (
-                <option key={identity.auth_user_id} value={identity.auth_user_id}>
-                  {identity.email}
-                </option>
-              ))}
-            </SelectField>
-          )}
-          <Input
-            label="Nome"
-            value={form.nome}
-            onChange={(event) => setForm({ ...form, nome: event.target.value })}
-            required
-          />
-          <Input
-            label="E-mail"
-            type="email"
-            value={form.email}
-            onChange={(event) => setForm({ ...form, email: event.target.value })}
-            disabled={Boolean(form.auth_user_id)}
-            required
-          />
-          <SelectField
-            label="Perfil"
-            value={form.perfil}
-            onChange={(event) => setForm({ ...form, perfil: event.target.value as PerfilUsuario })}
-          >
-            <option value="operador">Operador</option>
-            <option value="supervisao">Supervisão</option>
-            <option value="direcao_admin">Direção/Administração</option>
-          </SelectField>
-          <SelectField
-            label="Cargo/função"
-            value={form.cargo_funcao_id}
-            onChange={(event) => setForm({ ...form, cargo_funcao_id: event.target.value })}
-          >
-            <option value="">Sem cargo</option>
-            {data.cargos
-              .filter((cargo) => cargo.ativo)
-              .map((cargo) => (
-                <option key={cargo.id} value={cargo.id}>
-                  {cargo.nome}
-                </option>
-              ))}
-          </SelectField>
-          <Field label="Estado">
-            <label className="admin-check">
-              <input
-                type="checkbox"
-                checked={form.ativo}
-                onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
-              />
-              Usuário ativo
-            </label>
-          </Field>
-          <div className="admin-form__actions">
-            <Button type="submit" loading={saving}>
-              {form.id ? "Atualizar" : "Associar usuário"}
-            </Button>
-            {form.id && (
-              <Button variant="ghost" onClick={() => setForm(emptyForm)}>
-                Cancelar
-              </Button>
+        <Drawer
+          open={formOpen}
+          title={form.id ? "Editar usuário" : "Novo usuário"}
+          onClose={() => {
+            setFormOpen(false);
+            setForm(emptyForm);
+          }}
+        >
+          <form className="admin-form" onSubmit={submit}>
+            {!form.id && (
+              <SelectField
+                label="Identidade Auth"
+                value={form.auth_user_id}
+                onChange={(event) => pickIdentity(event.target.value)}
+                required
+              >
+                <option value="">Selecione</option>
+                {identities.map((identity) => (
+                  <option key={identity.auth_user_id} value={identity.auth_user_id}>
+                    {identity.email}
+                  </option>
+                ))}
+              </SelectField>
             )}
-          </div>
-        </form>
+            <Input
+              label="Nome"
+              value={form.nome}
+              onChange={(event) => setForm({ ...form, nome: event.target.value })}
+              required
+            />
+            <Input
+              label="E-mail"
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              disabled={Boolean(form.auth_user_id)}
+              required
+            />
+            <SelectField
+              label="Perfil"
+              value={form.perfil}
+              onChange={(event) =>
+                setForm({ ...form, perfil: event.target.value as PerfilUsuario })
+              }
+            >
+              <option value="operador">Operador</option>
+              <option value="supervisao">Supervisão</option>
+              <option value="direcao_admin">Direção/Administração</option>
+            </SelectField>
+            <SelectField
+              label="Cargo/função"
+              value={form.cargo_funcao_id}
+              onChange={(event) => setForm({ ...form, cargo_funcao_id: event.target.value })}
+            >
+              <option value="">Sem cargo</option>
+              {data.cargos
+                .filter((cargo) => cargo.ativo)
+                .map((cargo) => (
+                  <option key={cargo.id} value={cargo.id}>
+                    {cargo.nome}
+                  </option>
+                ))}
+            </SelectField>
+            <Field label="Estado">
+              <label className="admin-check">
+                <input
+                  type="checkbox"
+                  checked={form.ativo}
+                  onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
+                />
+                Usuário ativo
+              </label>
+            </Field>
+            <div className="admin-form__actions">
+              <Button type="submit" loading={saving}>
+                {form.id ? "Atualizar" : "Associar usuário"}
+              </Button>
+              {form.id && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setForm(emptyForm);
+                    setFormOpen(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </form>
+        </Drawer>
       )}
 
       {filtered.length === 0 ? (

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
-import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
+import { Drawer } from "../../../components/ui/Drawer";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { createDashboardService, todayInBahia, type DashboardService } from "../dashboard-service";
 import { DashboardCards } from "../components/DashboardCards";
 import { DashboardFiltersForm } from "../components/DashboardFiltersForm";
@@ -24,17 +24,14 @@ function hasOperationalData(data: DashboardData): boolean {
   );
 }
 
-export function DashboardOperationalPage({
-  service: injected,
-}: {
-  service?: DashboardService;
-}) {
+export function DashboardOperationalPage({ service: injected }: { service?: DashboardService }) {
   const service = useMemo(() => injected ?? createDashboardService(), [injected]);
   const [filters, setFilters] = useState<DashboardFilters>(initialFilters);
   const [postos, setPostos] = useState<DashboardPosto[]>([]);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<DashboardError | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const load = useCallback(
     async (nextFilters: DashboardFilters) => {
@@ -75,20 +72,28 @@ export function DashboardOperationalPage({
       <PageHeader
         eyebrow="Visão geral"
         title="Dashboard operacional"
-        description="Resumo dos dados que você pode consultar por período e posto."
+        description={`Exibindo ${filters.inicio === filters.fim ? filters.inicio : `${filters.inicio} a ${filters.fim}`} · ${filters.postoId ? (postos.find((posto) => posto.id === filters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
+        actions={
+          <Button variant="outline" onClick={() => setFiltersOpen(true)}>
+            Período e posto
+          </Button>
+        }
       />
 
-      <Card padding="lg">
+      <Drawer open={filtersOpen} title="Filtros do dashboard" onClose={() => setFiltersOpen(false)}>
         <DashboardFiltersForm
           key={`${filters.inicio}:${filters.fim}:${filters.postoId ?? ""}`}
           value={filters}
           postos={postos}
           disabled={loading}
-          onChange={setFilters}
+          onChange={(next) => {
+            setFilters(next);
+            setFiltersOpen(false);
+          }}
         />
-      </Card>
+      </Drawer>
 
-      {loading && !data ? <LoadingState message="Carregando indicadores..." /> : null}
+      {loading && !data ? <Skeleton rows={4} message="Carregando indicadores..." /> : null}
 
       {error ? (
         <FeedbackState

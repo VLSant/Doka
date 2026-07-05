@@ -11,7 +11,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { buildMockAuthUser, buildMockSession, createMockSupabaseClient } from "../helpers/supabase-mocks";
+import {
+  buildMockAuthUser,
+  buildMockSession,
+  createMockSupabaseClient,
+} from "../helpers/supabase-mocks";
 import { operadorResult, supervisaoResult, direcaoAdminContext } from "../helpers/access-fixtures";
 import { AuthProvider } from "../../src/modules/auth/AuthProvider";
 import type { AccessService } from "../../src/modules/access/access-service";
@@ -21,7 +25,9 @@ function asClient(mock: ReturnType<typeof createMockSupabaseClient>): SupabaseCl
   return mock as unknown as SupabaseClient;
 }
 
-function buildAccessService(result: Awaited<ReturnType<AccessService["resolveInitialContext"]>>): AccessService {
+function buildAccessService(
+  result: Awaited<ReturnType<AccessService["resolveInitialContext"]>>,
+): AccessService {
   return { resolveInitialContext: vi.fn().mockResolvedValue(result) };
 }
 
@@ -113,6 +119,16 @@ describe("AppShell", () => {
     renderShellAt("/app/dashboard", operadorResult);
     await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: /sair/i })).toBeInTheDocument();
+  });
+
+  it("persists the collapsed navigation preference", async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+    renderShellAt("/app/dashboard", operadorResult);
+    const toggle = await screen.findByRole("button", { name: "Recolher menu" });
+    await user.click(toggle);
+    expect(localStorage.getItem("doka.sidebar.collapsed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Expandir menu" })).toBeVisible();
   });
 
   it("clears protected content after logout", async () => {

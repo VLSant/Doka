@@ -38,41 +38,6 @@
   gap: 16px;
 }
 
-.assistance-filters label,
-.assistance-dialog label {
-  display: grid;
-  gap: 6px;
-  color: var(--text-body);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-semibold);
-}
-
-.assistance-filters input,
-.assistance-filters select,
-.assistance-dialog input,
-.assistance-dialog textarea {
-  min-height: 42px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 8px 12px;
-  background: var(--neutral-0);
-  color: inherit;
-  font: inherit;
-}
-
-.assistance-dialog textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.assistance-filters input:focus,
-.assistance-filters select:focus,
-.assistance-dialog input:focus,
-.assistance-dialog textarea:focus {
-  outline: 3px solid rgb(240 144 24 / 24%);
-  border-color: var(--brand-primary);
-}
-
 .assistance-filters__actions {
   display: flex;
   align-items: end;

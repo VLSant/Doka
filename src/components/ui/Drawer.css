@@ -1,0 +1,91 @@
+.doka-overlay-open {
+  overflow: hidden;
+}
+
+.doka-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: flex-end;
+  background: var(--scrim);
+  animation: doka-drawer-fade var(--dur-fast) var(--ease-out);
+}
+
+.doka-drawer {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: min(100%, 560px);
+  height: 100%;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-xl);
+  animation: doka-drawer-enter var(--dur-base) var(--ease-out);
+}
+
+.doka-drawer--lg {
+  width: min(100%, 640px);
+}
+.doka-drawer--xl {
+  width: min(100%, 760px);
+}
+
+.doka-drawer__header,
+.doka-drawer__footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  background: var(--surface-card);
+}
+
+.doka-drawer__body .tasks-form__actions,
+.doka-drawer__body .occurrence-actions,
+.doka-drawer__body .lancamento-form__actions {
+  position: sticky;
+  bottom: calc(-1 * var(--space-6));
+  z-index: 2;
+  margin: var(--space-5) calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  padding: var(--space-4) var(--space-6);
+  border-top: var(--border-hairline);
+  background: var(--surface-card);
+  box-shadow: 0 -8px 20px rgb(48 19 48 / 6%);
+}
+
+.doka-drawer__header {
+  border-bottom: var(--border-hairline);
+}
+
+.doka-drawer__header h2 {
+  font-size: var(--text-lg);
+}
+
+.doka-drawer__header p {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.doka-drawer__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.doka-drawer__footer {
+  justify-content: flex-end;
+  border-top: var(--border-hairline);
+}
+
+@keyframes doka-drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes doka-drawer-enter {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}

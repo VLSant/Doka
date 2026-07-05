@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { isOccurrenceOverdue, nextStatuses, STATUS_LABELS } from "../occurrence-state";
-import {
-  createOccurrenceService,
-  type OccurrenceService,
-} from "../occurrence-service";
+import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
 import type { OccurrenceDetail, OccurrenceStatus } from "../types";
 import "./Occurrences.css";
 
@@ -66,12 +64,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     setActing(true);
     setError(null);
     try {
-      await service.transition(
-        ocorrenciaId,
-        nextStatus,
-        justification,
-        returnDate || null,
-      );
+      await service.transition(ocorrenciaId, nextStatus, justification, returnDate || null);
       setNextStatus("");
       setJustification("");
       await load();
@@ -120,9 +113,9 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
           </p>
         </div>
         <div className="occurrence-actions">
-          <Link className="occurrences-secondary-link" to={`/app/ocorrencias/${occurrence.id}/editar`}>
+          <ButtonLink variant="outline" to={`/app/ocorrencias/${occurrence.id}/editar`}>
             Editar
-          </Link>
+          </ButtonLink>
           <Button variant="danger" disabled={acting} onClick={() => void remove()}>
             Remover
           </Button>
@@ -130,19 +123,41 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
       </header>
 
       {error ? (
-        <FeedbackState tone="error" title="A operação não foi concluída" description={error.message} />
+        <FeedbackState
+          tone="error"
+          title="A operação não foi concluída"
+          description={error.message}
+        />
       ) : null}
 
       <div className="occurrence-detail-grid">
         <Card padding="lg">
           <h2>Dados principais</h2>
           <dl className="occurrence-data">
-            <div><dt>Tipo</dt><dd>{occurrence.tipo?.nome ?? "—"}</dd></div>
-            <div><dt>Prioridade</dt><dd>{occurrence.prioridade?.nome ?? "—"}</dd></div>
-            <div><dt>Posto</dt><dd>{occurrence.posto?.nome ?? "—"}</dd></div>
-            <div><dt>Responsável</dt><dd>{occurrence.responsavel?.nome ?? "Não definido"}</dd></div>
-            <div><dt>Retorno</dt><dd>{occurrence.data_retorno ?? "Sem data"}</dd></div>
-            <div><dt>Atualizada</dt><dd>{new Date(occurrence.updated_at).toLocaleString("pt-BR")}</dd></div>
+            <div>
+              <dt>Tipo</dt>
+              <dd>{occurrence.tipo?.nome ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Prioridade</dt>
+              <dd>{occurrence.prioridade?.nome ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Posto</dt>
+              <dd>{occurrence.posto?.nome ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Responsável</dt>
+              <dd>{occurrence.responsavel?.nome ?? "Não definido"}</dd>
+            </div>
+            <div>
+              <dt>Retorno</dt>
+              <dd>{occurrence.data_retorno ?? "Sem data"}</dd>
+            </div>
+            <div>
+              <dt>Atualizada</dt>
+              <dd>{new Date(occurrence.updated_at).toLocaleString("pt-BR")}</dd>
+            </div>
           </dl>
           <h3>Descrição</h3>
           <p>{occurrence.descricao || "Sem descrição."}</p>
@@ -161,20 +176,30 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
             >
               <option value="">Selecione</option>
               {nextStatuses(occurrence.status).map((status) => (
-                <option key={status} value={status}>{STATUS_LABELS[status]}</option>
+                <option key={status} value={status}>
+                  {STATUS_LABELS[status]}
+                </option>
               ))}
             </select>
           </label>
           {nextStatus === "aguardando_retorno" || nextStatus === "reaberta" ? (
             <label>
               Data de retorno
-              <input type="date" value={returnDate} onChange={(event) => setReturnDate(event.target.value)} />
+              <input
+                type="date"
+                value={returnDate}
+                onChange={(event) => setReturnDate(event.target.value)}
+              />
             </label>
           ) : null}
           {nextStatus === "reaberta" ? (
             <label>
               Justificativa *
-              <textarea rows={3} value={justification} onChange={(event) => setJustification(event.target.value)} />
+              <textarea
+                rows={3}
+                value={justification}
+                onChange={(event) => setJustification(event.target.value)}
+              />
             </label>
           ) : null}
           <Button disabled={!nextStatus} loading={acting} onClick={() => void transition()}>
@@ -195,7 +220,9 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
               onChange={(event) => setComment(event.target.value)}
             />
           </label>
-          <Button type="submit" disabled={!comment.trim()} loading={acting}>Adicionar</Button>
+          <Button type="submit" disabled={!comment.trim()} loading={acting}>
+            Adicionar
+          </Button>
         </form>
         {occurrence.comentarios.length === 0 ? (
           <p>Nenhum comentário registrado.</p>
@@ -204,7 +231,9 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
             {occurrence.comentarios.map((item) => (
               <li key={item.id}>
                 <strong>{item.usuario?.nome ?? "Usuário"}</strong>
-                <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString("pt-BR")}</time>
+                <time dateTime={item.created_at}>
+                  {new Date(item.created_at).toLocaleString("pt-BR")}
+                </time>
                 <p>{item.comentario}</p>
               </li>
             ))}
@@ -217,4 +246,3 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
 }
 
 export default OccurrenceDetailPage;
-

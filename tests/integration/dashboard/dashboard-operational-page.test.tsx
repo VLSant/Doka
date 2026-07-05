@@ -26,16 +26,41 @@ function service(
     load: vi.fn().mockResolvedValue({
       counters,
       produtividade: {
-        periodo: { previstas: 0, removidas: 0, executadas: 0, naoExecutadas: 0, pendentes: 0, iniciadas: 0, canceladas: 0, eficiencia: null },
-        dia: { previstas: 0, removidas: 0, executadas: 0, naoExecutadas: 0, pendentes: 0, iniciadas: 0, canceladas: 0, eficiencia: null },
-        semana: { previstas: 0, removidas: 0, executadas: 0, naoExecutadas: 0, pendentes: 0, iniciadas: 0, canceladas: 0, eficiencia: null },
+        periodo: {
+          previstas: 0,
+          removidas: 0,
+          executadas: 0,
+          naoExecutadas: 0,
+          pendentes: 0,
+          iniciadas: 0,
+          canceladas: 0,
+          eficiencia: null,
+        },
+        dia: {
+          previstas: 0,
+          removidas: 0,
+          executadas: 0,
+          naoExecutadas: 0,
+          pendentes: 0,
+          iniciadas: 0,
+          canceladas: 0,
+          eficiencia: null,
+        },
+        semana: {
+          previstas: 0,
+          removidas: 0,
+          executadas: 0,
+          naoExecutadas: 0,
+          pendentes: 0,
+          iniciadas: 0,
+          canceladas: 0,
+          eficiencia: null,
+        },
         porPosto: [],
       },
       alertas: [],
     }),
-    listPostos: vi.fn().mockResolvedValue([
-      { id: "posto-1", nome: "Salvador", codigo: "SSA" },
-    ]),
+    listPostos: vi.fn().mockResolvedValue([{ id: "posto-1", nome: "Salvador", codigo: "SSA" }]),
   };
 }
 
@@ -52,6 +77,8 @@ describe("DashboardOperationalPage", () => {
   it("applies posto and period selected by the user", async () => {
     const mock = service({ ...emptyCounters, tarefasPendentes: 3 });
     render(<DashboardOperationalPage service={mock} />);
+    await screen.findByRole("region", { name: "Resumo operacional" });
+    await userEvent.click(screen.getByRole("button", { name: "Período e posto" }));
     await screen.findByText("SSA — Salvador");
 
     await userEvent.selectOptions(screen.getByLabelText("Posto"), "posto-1");
@@ -80,7 +107,9 @@ describe("DashboardOperationalPage", () => {
     };
     render(<DashboardOperationalPage service={mock} />);
 
-    expect(await screen.findByRole("heading", { name: "Falha ao carregar Dashboard" })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: "Falha ao carregar Dashboard" }),
+    ).toBeVisible();
     expect(screen.queryByText("Nenhum dado no período")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeVisible();
   });

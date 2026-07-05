@@ -4,6 +4,7 @@ import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Tabs } from "../../../components/ui/Tabs";
+import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../auth/AuthProvider";
 import {
   AdministrationError,
@@ -33,7 +34,7 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
   const [data, setData] = useState<AdministrationSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const toast = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,22 +66,25 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
     };
   }, [service]);
 
-  const onError = useCallback((cause: unknown) => {
-    setNotice("");
-    setError(
-      cause instanceof AdministrationError
-        ? cause.message
-        : "Não foi possível concluir a operação.",
-    );
-  }, []);
+  const onError = useCallback(
+    (cause: unknown) => {
+      const message =
+        cause instanceof AdministrationError
+          ? cause.message
+          : "Não foi possível concluir a operação.";
+      setError(message);
+      toast(message, "error");
+    },
+    [toast],
+  );
 
   const onChanged = useCallback(
     async (message: string) => {
-      setNotice(message);
       setError("");
+      toast(message, "success");
       await load();
     },
-    [load],
+    [load, toast],
   );
 
   if (state.name !== "autorizado") {
@@ -108,10 +112,16 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
       <PageHeader
         eyebrow="Configuração operacional"
         title="Administração"
-        description={canEdit
-          ? "Mantenha usuários, postos e cadastros essenciais."
-          : "Consulta dos cadastros autorizados para o seu escopo."}
-        actions={<Button variant="outline" loading={loading} onClick={() => void load()}>Atualizar</Button>}
+        description={
+          canEdit
+            ? "Mantenha usuários, postos e cadastros essenciais."
+            : "Consulta dos cadastros autorizados para o seu escopo."
+        }
+        actions={
+          <Button variant="outline" loading={loading} onClick={() => void load()}>
+            Atualizar
+          </Button>
+        }
       />
 
       <Tabs
@@ -126,11 +136,6 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
         onChange={setSection}
       />
 
-      {notice && (
-        <p className="administration-page__notice" role="status">
-          {notice}
-        </p>
-      )}
       {error && (
         <div className="administration-page__error" role="alert">
           <span>{error}</span>
