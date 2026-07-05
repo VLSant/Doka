@@ -42,8 +42,8 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
   );
 
   // Initial Data API synchronization.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load({});
   }, [load]);
 

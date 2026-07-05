@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot } from "../types";
-import { Field, StatusBadge, TextareaField } from "./AdminFields";
+import { StatusBadge, TextareaField } from "./AdminFields";
 
 interface RegistriesSectionProps {
   data: AdministrationSnapshot;
@@ -291,16 +292,11 @@ function OccurrenceTypeRegistry({
 
 function ActiveField({ value, onChange }: { value: boolean; onChange: (value: boolean) => void }) {
   return (
-    <Field label="Estado">
-      <label className="admin-check">
-        <input
-          type="checkbox"
-          checked={value}
-          onChange={(event) => onChange(event.target.checked)}
-        />
-        Cadastro ativo
-      </label>
-    </Field>
+    <Checkbox
+      label="Cadastro ativo"
+      checked={value}
+      onChange={(event) => onChange(event.target.checked)}
+    />
   );
 }
 

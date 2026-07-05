@@ -16,6 +16,11 @@ function initialFilters(): DashboardFilters {
   return { inicio: hoje, fim: hoje, postoId: null };
 }
 
+function formatDay(iso: string): string {
+  const parsed = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? iso : parsed.toLocaleDateString("pt-BR");
+}
+
 function hasOperationalData(data: DashboardData): boolean {
   return (
     Object.values(data.counters).some((value) => value > 0) ||
@@ -72,7 +77,7 @@ export function DashboardOperationalPage({ service: injected }: { service?: Dash
       <PageHeader
         eyebrow="Visão geral"
         title="Dashboard operacional"
-        description={`Exibindo ${filters.inicio === filters.fim ? filters.inicio : `${filters.inicio} a ${filters.fim}`} · ${filters.postoId ? (postos.find((posto) => posto.id === filters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
+        description={`Exibindo ${filters.inicio === filters.fim ? formatDay(filters.inicio) : `${formatDay(filters.inicio)} a ${formatDay(filters.fim)}`} · ${filters.postoId ? (postos.find((posto) => posto.id === filters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
         actions={
           <Button variant="outline" onClick={() => setFiltersOpen(true)}>
             Período e posto

@@ -51,6 +51,9 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
   const total = items.reduce((sum, item) => sum + item.valor, 0);
   const pendentes = items.filter((item) => item.status === "pendente");
   const totalPendente = pendentes.reduce((sum, item) => sum + item.valor, 0);
+  const advancedCount = Object.entries(filters).filter(
+    ([key, value]) => !["recurso", "status"].includes(key) && Boolean(value),
+  ).length;
 
   return (
     <Page className="lancamentos-page">
@@ -84,7 +87,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           <option value="validado">Validado</option>
         </Select>
         <Button variant="outline" onClick={() => setFiltersOpen(true)}>
-          Filtros ({Object.values(filters).filter(Boolean).length})
+          Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>
         <span className="doka-list-toolbar__spacer" />
         <ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>

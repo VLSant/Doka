@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
 import { Drawer } from "../../../components/ui/Drawer";
@@ -10,7 +11,7 @@ import type {
   Posto,
   VinculoUsuarioPosto,
 } from "../types";
-import { Field, SelectField, StatusBadge, TextareaField } from "./AdminFields";
+import { SelectField, StatusBadge, TextareaField } from "./AdminFields";
 
 interface PostsSectionProps {
   data: AdministrationSnapshot;
@@ -158,13 +159,29 @@ export function PostsSection({
           <Drawer
             open={postOpen}
             title={post.id ? "Editar posto" : "Novo posto"}
+            description="Identifique o posto operacional e o seu estado."
             onClose={() => {
               setPostOpen(false);
               setPost(emptyPost);
             }}
+            footer={
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setPost(emptyPost);
+                    setPostOpen(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" form="admin-post-form" loading={saving}>
+                  Salvar posto
+                </Button>
+              </>
+            }
           >
-            <form className="admin-form" onSubmit={submitPost}>
-              <h3>{post.id ? "Editar posto" : "Novo posto"}</h3>
+            <form id="admin-post-form" className="admin-form" onSubmit={submitPost}>
               <Input
                 label="Nome"
                 value={post.nome}
@@ -181,39 +198,40 @@ export function PostsSection({
                 value={post.descricao}
                 onChange={(event) => setPost({ ...post, descricao: event.target.value })}
               />
-              <Field label="Estado">
-                <label className="admin-check">
-                  <input
-                    type="checkbox"
-                    checked={post.ativo}
-                    onChange={(event) => setPost({ ...post, ativo: event.target.checked })}
-                  />
-                  Posto ativo
-                </label>
-              </Field>
-              <div className="admin-form__actions">
-                <Button type="submit" loading={saving}>
-                  Salvar posto
-                </Button>
-                {post.id && (
-                  <Button variant="ghost" onClick={() => setPost(emptyPost)}>
-                    Cancelar
-                  </Button>
-                )}
-              </div>
+              <Checkbox
+                label="Posto ativo"
+                checked={post.ativo}
+                onChange={(event) => setPost({ ...post, ativo: event.target.checked })}
+              />
             </form>
           </Drawer>
 
           <Drawer
             open={linkOpen}
             title={link.id ? "Editar vínculo" : "Novo vínculo"}
+            description="Defina o escopo de acesso do usuário ao posto."
             onClose={() => {
               setLinkOpen(false);
               setLink(emptyLink);
             }}
+            footer={
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setLink(emptyLink);
+                    setLinkOpen(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" form="admin-link-form" loading={saving}>
+                  Salvar vínculo
+                </Button>
+              </>
+            }
           >
-            <form className="admin-form" onSubmit={submitLink}>
-              <h3>{link.id ? "Editar vínculo" : "Novo vínculo"}</h3>
+            <form id="admin-link-form" className="admin-form" onSubmit={submitLink}>
               <SelectField
                 label="Usuário"
                 value={link.usuario_id}
@@ -257,16 +275,6 @@ export function PostsSection({
                 <option value="supervisao">Supervisão</option>
                 <option value="consulta">Consulta</option>
               </SelectField>
-              <div className="admin-form__actions">
-                <Button type="submit" loading={saving}>
-                  Salvar vínculo
-                </Button>
-                {link.id && (
-                  <Button variant="ghost" onClick={() => setLink(emptyLink)}>
-                    Cancelar
-                  </Button>
-                )}
-              </div>
             </form>
           </Drawer>
         </>

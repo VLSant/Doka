@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { Drawer } from "../../../components/ui/Drawer";
 import type { AdministrationService } from "../administration-service";
@@ -9,7 +10,7 @@ import type {
   PerfilUsuario,
   UsuarioOperacional,
 } from "../types";
-import { Field, SelectField, StatusBadge } from "./AdminFields";
+import { SelectField, StatusBadge } from "./AdminFields";
 
 interface UsersSectionProps {
   data: AdministrationSnapshot;
@@ -137,12 +138,29 @@ export function UsersSection({
         <Drawer
           open={formOpen}
           title={form.id ? "Editar usuário" : "Novo usuário"}
+          description="Associe uma identidade existente e defina perfil, cargo e estado."
           onClose={() => {
             setFormOpen(false);
             setForm(emptyForm);
           }}
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setForm(emptyForm);
+                  setFormOpen(false);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" form="admin-user-form" loading={saving}>
+                {form.id ? "Atualizar" : "Associar usuário"}
+              </Button>
+            </>
+          }
         >
-          <form className="admin-form" onSubmit={submit}>
+          <form id="admin-user-form" className="admin-form" onSubmit={submit}>
             {!form.id && (
               <SelectField
                 label="Identidade Auth"
@@ -197,32 +215,11 @@ export function UsersSection({
                   </option>
                 ))}
             </SelectField>
-            <Field label="Estado">
-              <label className="admin-check">
-                <input
-                  type="checkbox"
-                  checked={form.ativo}
-                  onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
-                />
-                Usuário ativo
-              </label>
-            </Field>
-            <div className="admin-form__actions">
-              <Button type="submit" loading={saving}>
-                {form.id ? "Atualizar" : "Associar usuário"}
-              </Button>
-              {form.id && (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setForm(emptyForm);
-                    setFormOpen(false);
-                  }}
-                >
-                  Cancelar
-                </Button>
-              )}
-            </div>
+            <Checkbox
+              label="Usuário ativo"
+              checked={form.ativo}
+              onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
+            />
           </form>
         </Drawer>
       )}

@@ -41,8 +41,8 @@ export function ImportListPage({ service: injected }: { service?: LotService }) 
   );
 
   // Initial RPC load is the external synchronization performed by this effect.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load({}, null);
   }, [load]);
   function apply(next: Filters) {

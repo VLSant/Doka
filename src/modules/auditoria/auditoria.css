@@ -10,7 +10,8 @@
 .audit-events pre { max-height: 240px; overflow: auto; padding: 10px; background: var(--surface-sunken); white-space: pre-wrap; }
 .audit-timeline { display: grid; gap: var(--space-6); }
 .audit-timeline > section { display: grid; gap: var(--space-3); }
-.audit-timeline h2 { font-size: var(--text-lg); text-transform: capitalize; }
+.audit-timeline h2 { font-size: var(--text-lg); }
+.audit-timeline h2::first-letter { text-transform: uppercase; }
 .audit-events { position: relative; padding-left: var(--space-6); }
 .audit-events::before { content: ""; position: absolute; inset: 0 auto 0 var(--space-2); width: 2px; background: var(--border-subtle); }
 .audit-events > li { position: relative; }

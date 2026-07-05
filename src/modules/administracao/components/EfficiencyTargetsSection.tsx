@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot, MetaEficiencia } from "../types";
-import { Field, SelectField, StatusBadge } from "./AdminFields";
+import { SelectField, StatusBadge } from "./AdminFields";
 
 const empty = {
   id: "",
@@ -137,16 +138,11 @@ export function EfficiencyTargetsSection({
             value={form.vigencia_fim}
             onChange={(event) => setForm({ ...form, vigencia_fim: event.target.value })}
           />
-          <Field label="Estado">
-            <label className="admin-check">
-              <input
-                type="checkbox"
-                checked={form.ativo}
-                onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
-              />
-              Meta ativa
-            </label>
-          </Field>
+          <Checkbox
+            label="Meta ativa"
+            checked={form.ativo}
+            onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
+          />
           <div className="admin-form__actions">
             <Button type="submit">{form.id ? "Atualizar" : "Adicionar"}</Button>
             {form.id ? (
