@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -57,19 +58,28 @@ describe("componentes compartilhados do design system", () => {
     expect(onChange).toHaveBeenCalledWith("abertas");
   });
 
-  it("fecha o diálogo por Escape e devolve o foco", async () => {
-    const onClose = vi.fn();
-    render(
-      <>
-        <button>Origem</button>
-        <Dialog open title="Confirmar operação" onClose={onClose}>
-          <button>Conteúdo</button>
-        </Dialog>
-      </>,
-    );
+  it("fecha o diálogo por Escape e devolve o foco ao controle que o abriu", async () => {
+    function DialogHarness() {
+      const [open, setOpen] = useState(false);
 
+      return (
+        <>
+          <button onClick={() => setOpen(true)}>Abrir diálogo</button>
+          <Dialog open={open} title="Confirmar operação" onClose={() => setOpen(false)}>
+            <button>Conteúdo</button>
+          </Dialog>
+        </>
+      );
+    }
+
+    render(<DialogHarness />);
+
+    const trigger = screen.getByRole("button", { name: "Abrir diálogo" });
+    await userEvent.click(trigger);
     await userEvent.keyboard("{Escape}");
-    expect(onClose).toHaveBeenCalledOnce();
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 
   it("fecha o drawer por Escape e mantém filtros removíveis", async () => {

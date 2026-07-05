@@ -22,7 +22,9 @@ export function Dialog({
   size = "md",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocus = useRef<HTMLElement | null>(document.activeElement as HTMLElement | null);
+  const previousFocus = useRef<HTMLElement | null>(
+    document.activeElement instanceof HTMLElement ? document.activeElement : null,
+  );
   const onCloseRef = useRef(onClose);
 
   useEffect(() => {
@@ -30,8 +32,24 @@ export function Dialog({
   }, [onClose]);
 
   useEffect(() => {
+    if (open) return;
+    function trackFocus(event: FocusEvent) {
+      if (event.target instanceof HTMLElement) previousFocus.current = event.target;
+    }
+    document.addEventListener("focusin", trackFocus);
+    return () => document.removeEventListener("focusin", trackFocus);
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
-    const returnFocus = previousFocus.current;
+    const activeElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const returnFocus =
+      activeElement &&
+      activeElement !== document.body &&
+      !panelRef.current?.contains(activeElement)
+        ? activeElement
+        : previousFocus.current;
     const initialControl =
       panelRef.current?.querySelector<HTMLElement>("[autofocus]") ??
       panelRef.current?.querySelector<HTMLElement>("input:not(:disabled), select:not(:disabled), textarea:not(:disabled)") ??
