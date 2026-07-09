@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
@@ -7,7 +9,6 @@ import { TableFrame } from "../../../components/ui/Patterns";
 import type { AdministrationService } from "../administration-service";
 import type {
   AdministrationSnapshot,
-  IdentidadeAuth,
   PerfilUsuario,
   UsuarioOperacional,
 } from "../types";
@@ -42,14 +43,14 @@ export function UsersSection({
 }: UsersSectionProps) {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
-  const [identities, setIdentities] = useState<IdentidadeAuth[]>([]);
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-
-  useEffect(() => {
-    if (!canEdit) return;
-    void service.listAvailableIdentities().then(setIdentities).catch(onError);
-  }, [canEdit, onError, service]);
+  const identitiesQuery = useQuery({
+    queryKey: queryKeys.administration.identities(),
+    queryFn: () => service.listAvailableIdentities(),
+    enabled: canEdit,
+  });
+  const identities = identitiesQuery.data ?? [];
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");

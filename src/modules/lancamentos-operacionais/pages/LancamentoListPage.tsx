@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
@@ -12,41 +14,32 @@ import { Skeleton } from "../../../components/ui/Skeleton";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import { LancamentoFiltersForm } from "../components/LancamentoFilters";
 import { LancamentoTable } from "../components/LancamentoTable";
-import type { Lancamento, LancamentoFilters, LancamentoFormOptions } from "../types";
+import type { LancamentoFilters } from "../types";
 import "../lancamentos-operacionais.css";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 export function LancamentoListPage({ service: injected }: { service?: LancamentoService }) {
   const service = useMemo(() => injected ?? createLancamentoService(), [injected]);
-  const [items, setItems] = useState<Lancamento[]>([]);
-  const [options, setOptions] = useState<LancamentoFormOptions>({
-    postos: [],
-    assistencias: [],
-  });
   const [filters, setFilters] = useState<LancamentoFilters>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [rows, nextOptions] = await Promise.all([service.list(filters), service.formOptions()]);
-      setItems(rows);
-      setOptions(nextOptions);
-    } catch (cause) {
-      setItems([]);
-      setError(cause instanceof Error ? cause : new Error("Falha ao carregar lançamentos."));
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, service]);
-
-  // Remote synchronization for the current filter set.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const listQuery = useQuery({
+    queryKey: queryKeys.lancamentos.list(filters),
+    queryFn: () => service.list(filters),
+  });
+  const optionsQuery = useQuery({
+    queryKey: queryKeys.lancamentos.options(),
+    queryFn: () => service.formOptions(),
+  });
+  const items = listQuery.data ?? [];
+  const options = optionsQuery.data ?? { postos: [], assistencias: [] };
+  const loading = listQuery.isPending || optionsQuery.isPending;
+  const error = listQuery.error ?? optionsQuery.error;
+  const reload = () => {
+    void listQuery.refetch();
+    void optionsQuery.refetch();
+  };
 
   const total = items.reduce((sum, item) => sum + item.valor, 0);
   const pendentes = items.filter((item) => item.status === "pendente");
@@ -119,7 +112,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           tone="error"
           title="Falha ao carregar lançamentos"
           description={error.message}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={() => reload()}>Tentar novamente</Button>}
         />
       ) : null}
       {!loading && !error && items.length === 0 ? (

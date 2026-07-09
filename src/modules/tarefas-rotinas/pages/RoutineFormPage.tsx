@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -8,7 +10,7 @@ import type { CatalogService } from "../../../services/catalog-service";
 import { useAuth } from "../../auth/AuthProvider";
 import { RoutineForm } from "../components/RoutineForm";
 import { createTaskService, type TaskService } from "../task-service";
-import type { Routine, TaskViewer } from "../types";
+import type { TaskViewer } from "../types";
 import { useTaskCatalogs } from "../use-task-catalogs";
 import "../tasks.css";
 
@@ -39,19 +41,36 @@ export function RoutineFormPage({
     loading: catalogsLoading,
     error: catalogsError,
   } = useTaskCatalogs(catalogService);
-  const [routine, setRoutine] = useState<Routine>();
-  const [loading, setLoading] = useState(Boolean(rotinaId));
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    if (!rotinaId) return;
-    void service
-      .getRoutine(rotinaId)
-      .then(setRoutine)
-      .catch((cause: Error) => setError(cause.message))
-      .finally(() => setLoading(false));
-  }, [rotinaId, service]);
+  const routineQuery = useQuery({
+    queryKey: queryKeys.routines.detail(rotinaId ?? "nova"),
+    queryFn: () => service.getRoutine(rotinaId ?? ""),
+    enabled: Boolean(rotinaId),
+  });
+  const routine = routineQuery.data;
+  const loading = Boolean(rotinaId) && routineQuery.isPending;
+  const saveMutation = useMutation({
+    mutationFn: (input: Parameters<typeof service.createRoutine>[0]) =>
+      routine ? service.updateRoutine(routine.id, input) : service.createRoutine(input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      navigate("/app/tarefas-rotinas/rotinas");
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause.message : "Nao foi possivel salvar a rotina."),
+  });
+  const removeMutation = useMutation({
+    mutationFn: ({ id, justification }: { id: string; justification: string }) =>
+      service.removeRoutine(id, justification),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      navigate("/app/tarefas-rotinas/rotinas");
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause.message : "Nao foi possivel remover."),
+  });
 
   if (!viewer) return null;
   if (viewer.perfil === "operador")
@@ -68,7 +87,7 @@ export function RoutineFormPage({
       <FeedbackState
         tone="error"
         title="Não foi possível abrir a rotina"
-        description={error ?? catalogsError?.message}
+        description={error ?? catalogsError?.message ?? routineQuery.error?.message}
       />
     );
 
@@ -84,37 +103,22 @@ export function RoutineFormPage({
         initial={routine}
         viewer={viewer}
         {...catalogs}
-        saving={saving}
+        saving={saveMutation.isPending}
         error={error}
         onCancel={() => navigate("/app/tarefas-rotinas/rotinas")}
-        onSubmit={async (input) => {
-          setSaving(true);
+        onSubmit={(input) => {
           setError(undefined);
-          try {
-            if (routine) await service.updateRoutine(routine.id, input);
-            else await service.createRoutine(input);
-            navigate("/app/tarefas-rotinas/rotinas");
-          } catch (cause) {
-            setError(cause instanceof Error ? cause.message : "Não foi possível salvar a rotina.");
-          } finally {
-            setSaving(false);
-          }
+          saveMutation.mutate(input);
         }}
       />
       {routine ? (
         <Button
-          variant="danger"
-          onClick={async () => {
-            const justification = window.prompt("Justificativa da remoção:")?.trim();
-            if (!justification) return;
-            setSaving(true);
-            try {
-              await service.removeRoutine(routine.id, justification);
-              navigate("/app/tarefas-rotinas/rotinas");
-            } catch (cause) {
-              setError(cause instanceof Error ? cause.message : "Não foi possível remover.");
-              setSaving(false);
-            }
+          variant="danger" loading={removeMutation.isPending}
+          onClick={() => {
+            const justification = window.prompt("Justificativa da remocao:")?.trim();
+            if (!justification || !routine) return;
+            setError(undefined);
+            removeMutation.mutate({ id: routine.id, justification });
           }}
         >
           Remover rotina

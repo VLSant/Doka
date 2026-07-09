@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -6,7 +8,7 @@ import { Button } from "../../../components/ui/Button";
 import { Drawer } from "../../../components/ui/Drawer";
 import { LancamentoForm } from "../components/LancamentoForm";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
-import type { LancamentoFormOptions, LancamentoInput } from "../types";
+import type { LancamentoInput } from "../types";
 import "../lancamentos-operacionais.css";
 
 interface Props {
@@ -19,61 +21,46 @@ export function LancamentoFormPage({ service: injected, lancamentoId }: Props) {
   const id = lancamentoId ?? params.lancamentoId;
   const service = useMemo(() => injected ?? createLancamentoService(), [injected]);
   const navigate = useNavigate();
-  const [options, setOptions] = useState<LancamentoFormOptions | null>(null);
-  const [initial, setInitial] = useState<LancamentoInput | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const [formError, setFormError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [nextOptions, existing] = await Promise.all([
-          service.formOptions(),
-          id ? service.detail(id) : Promise.resolve(null),
-        ]);
-        if (!active) return;
-        setOptions(nextOptions);
-        if (existing) {
-          setInitial({
-            tipo: existing.tipo,
-            assistencia_id: existing.assistencia_id,
-            posto_id: existing.posto_id,
-            recurso: existing.recurso,
-            data_lancamento: existing.data_lancamento,
-            descricao: existing.descricao,
-            valor: existing.valor,
-            observacoes: existing.observacoes,
-          });
-        }
-      } catch (cause) {
-        if (active) {
-          setError(cause instanceof Error ? cause : new Error("Falha ao carregar formulário."));
-        }
-      } finally {
-        if (active) setLoading(false);
+  const optionsQuery = useQuery({
+    queryKey: queryKeys.lancamentos.options(),
+    queryFn: () => service.formOptions(),
+  });
+  const detailQuery = useQuery({
+    queryKey: queryKeys.lancamentos.detail(id ?? "novo"),
+    queryFn: () => service.detail(id ?? ""),
+    enabled: Boolean(id),
+  });
+  const options = optionsQuery.data ?? null;
+  const existing = detailQuery.data ?? null;
+  const initial = existing
+    ? {
+        tipo: existing.tipo,
+        assistencia_id: existing.assistencia_id,
+        posto_id: existing.posto_id,
+        recurso: existing.recurso,
+        data_lancamento: existing.data_lancamento,
+        descricao: existing.descricao,
+        valor: existing.valor,
+        observacoes: existing.observacoes,
       }
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [id, service]);
-
-  async function save(input: LancamentoInput) {
-    setSaving(true);
-    setError(null);
-    try {
-      const result = id ? await service.update(id, input) : await service.create(input);
+    : undefined;
+  const loading = optionsQuery.isPending || (Boolean(id) && detailQuery.isPending);
+  const loadError = optionsQuery.error ?? detailQuery.error;
+  const saveMutation = useMutation({
+    mutationFn: (input: LancamentoInput) => (id ? service.update(id, input) : service.create(input)),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.lancamentos.all });
       navigate(`/app/custos-extras/${result.id}`, { replace: true });
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao salvar lançamento."));
-    } finally {
-      setSaving(false);
-    }
+    },
+    onError: (cause) => setFormError(cause instanceof Error ? cause : new Error("Falha ao salvar lancamento.")),
+  });
+
+  function save(input: LancamentoInput) {
+    setFormError(null);
+    saveMutation.mutate(input);
   }
 
   const closeTarget = id ? `/app/custos-extras/${id}` : "/app/custos-extras";
@@ -86,12 +73,12 @@ export function LancamentoFormPage({ service: injected, lancamentoId }: Props) {
       onClose={() => navigate(closeTarget)}
     >
       {loading ? <LoadingState message="Preparando formulário..." /> : null}
-      {error ? (
+      {(formError ?? loadError) ? (
         <FeedbackState
           tone="error"
           title={id ? "Não foi possível carregar ou salvar" : "Não foi possível salvar"}
-          description={error.message}
-          actions={loading ? undefined : <Button onClick={() => setError(null)}>Fechar</Button>}
+          description={(formError ?? loadError)?.message}
+          actions={loading ? undefined : <Button onClick={() => setFormError(null)}>Fechar</Button>}
         />
       ) : null}
       {!loading && options ? (
@@ -99,7 +86,7 @@ export function LancamentoFormPage({ service: injected, lancamentoId }: Props) {
           key={id ?? "novo"}
           initial={initial}
           options={options}
-          saving={saving}
+          saving={saveMutation.isPending}
           onSubmit={save}
           onCancel={() => navigate(closeTarget)}
         />

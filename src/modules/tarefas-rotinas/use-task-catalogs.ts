@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../app/query-keys";
 import {
   createCatalogService,
   type CatalogItem,
@@ -18,31 +20,18 @@ const EMPTY: TaskCatalogs = { postos: [], prioridades: [], cargos: [], usuarios:
 
 export function useTaskCatalogs(injected?: CatalogService) {
   const service = useMemo(() => injected ?? createCatalogService(), [injected]);
-  const [catalogs, setCatalogs] = useState<TaskCatalogs>(EMPTY);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const query = useQuery({
+    queryKey: queryKeys.taskCatalogs(),
+    queryFn: async () => {
+      const [postos, prioridades, cargos, usuarios] = await Promise.all([
+        service.postos(),
+        service.prioridades(),
+        service.cargosFuncoes(),
+        service.usuariosAtivos(),
+      ]);
+      return { postos, prioridades, cargos, usuarios };
+    },
+  });
 
-  useEffect(() => {
-    let active = true;
-    void Promise.all([
-      service.postos(),
-      service.prioridades(),
-      service.cargosFuncoes(),
-      service.usuariosAtivos(),
-    ])
-      .then(([postos, prioridades, cargos, usuarios]) => {
-        if (active) setCatalogs({ postos, prioridades, cargos, usuarios });
-      })
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause : new Error("Falha ao carregar cadastros."));
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [service]);
-
-  return { catalogs, loading, error };
+  return { catalogs: query.data ?? EMPTY, loading: query.isPending, error: query.error };
 }

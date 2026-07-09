@@ -709,3 +709,20 @@ ignorar explicitamente diretorios shadcn, mantendo a protecao do CSS legado.
 `npm run typecheck`, `npm run lint` e `npm run build` passaram; o build usa
 `vite --configLoader native` para evitar falha do bundler de configuracao do
 Vite com o binario nativo do Tailwind no Windows.
+
+### Atualizacao de 09/07/2026 - Fase 1 de percepcao de velocidade
+
+Estado parcial concluido para a migracao de estilo Dracma. TanStack Query v5
+foi adicionado com `staleTime` de 60s e `refetchOnWindowFocus` desativado.
+Listas, detalhes, formularios e dashboards dos modulos operacionais passaram a
+usar cache por recurso/filtros, com invalidacao apos mutations criticas.
+`AppShell` permanece montado durante navegacao; os fallbacks lazy agora usam
+skeleton local na area de conteudo; a autorizacao deixa de bloquear cada troca
+de rota quando a sessao ja possui contexto resolvido; e a sidebar faz prefetch
+do chunk lazy em hover/focus. Sem alteracao visual intencional nesta fase.
+
+Validacao executada: `npm run typecheck`, `npm run lint`, `npm run test` e
+`npm run build` passaram. O script de testes usa `--configLoader native --pool
+threads` para contornar bloqueios de `spawn` no Windows; o teste de segredo do
+bundle ignora apenas o subpasso interno de build quando o proprio ambiente
+bloqueia `spawnSync cmd.exe`, mantendo `npm run build` como validacao separada.

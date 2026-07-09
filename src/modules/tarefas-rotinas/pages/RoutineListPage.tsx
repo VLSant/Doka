@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Link, useNavigate } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
-import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
@@ -50,23 +52,13 @@ export function RoutineListPage({
         }
       : null);
   const service = useMemo(() => injected ?? createTaskService(), [injected]);
-  const [routines, setRoutines] = useState<Routine[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>();
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(undefined);
-    try {
-      setRoutines(await service.listRoutines());
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar as rotinas.");
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
-  // Initial Data API synchronization.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const routinesQuery = useQuery({
+    queryKey: queryKeys.routines.list(),
+    queryFn: () => service.listRoutines(),
+  });
+  const routines = routinesQuery.data ?? [];
+  const loading = routinesQuery.isPending;
+  const error = routinesQuery.error?.message;
 
   if (!viewer) return null;
   if (viewer.perfil === "operador")
@@ -86,13 +78,13 @@ export function RoutineListPage({
         actions={<ButtonLink to="/app/tarefas-rotinas/rotinas/nova">Nova rotina</ButtonLink>}
       />
       <Link to="/app/tarefas-rotinas">Voltar para tarefas</Link>
-      {loading ? <LoadingState message="Carregando rotinas..." /> : null}
+      {loading ? <Skeleton message="Carregando rotinas..." /> : null}
       {error ? (
         <FeedbackState
           tone="error"
           title="Falha ao carregar rotinas"
           description={error}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={() => void routinesQuery.refetch()}>Tentar novamente</Button>}
         />
       ) : null}
       {!loading && !error && routines.length === 0 ? (

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
@@ -10,42 +12,28 @@ import { Select } from "../../../components/ui/FormControls";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { AuditEventList } from "../AuditEventList";
 import { createAuditHistoryService, type AuditService } from "../audit-service";
-import type { AuditCatalogs, AuditEvent, AuditFilters } from "../types";
+import type { AuditCatalogs, AuditFilters } from "../types";
 import "../auditoria.css";
 
 const EMPTY_CATALOGS: AuditCatalogs = { usuarios: [], postos: [] };
 
 export function AuditHistoryPage({ service: injected }: { service?: AuditService }) {
   const service = useMemo(() => injected ?? createAuditHistoryService(), [injected]);
-  const [events, setEvents] = useState<AuditEvent[]>([]);
-  const [catalogs, setCatalogs] = useState(EMPTY_CATALOGS);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [filters, setFilters] = useState<AuditFilters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const load = useCallback(
-    async (next: AuditFilters) => {
-      setLoading(true);
-      setError("");
-      try {
-        const [rows, options] = await Promise.all([service.list(next), service.catalogs()]);
-        setEvents(rows);
-        setCatalogs(options);
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Histórico indisponível.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [service],
-  );
-
-  // Initial Data API synchronization.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load({});
-  }, [load]);
+  const eventsQuery = useQuery({
+    queryKey: queryKeys.audit.history(filters),
+    queryFn: () => service.list(filters),
+  });
+  const catalogsQuery = useQuery({
+    queryKey: queryKeys.audit.catalogs(),
+    queryFn: () => service.catalogs(),
+  });
+  const events = eventsQuery.data ?? [];
+  const catalogs = catalogsQuery.data ?? EMPTY_CATALOGS;
+  const loading = eventsQuery.isPending || catalogsQuery.isPending;
+  const error = eventsQuery.error?.message ?? catalogsQuery.error?.message ?? "";
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,13 +48,11 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
       dataAte: value("dataAte"),
     };
     setFilters(next);
-    void load(next);
   }
 
   function updateSearch(acao: string) {
     const next = { ...filters, acao: acao || undefined };
     setFilters(next);
-    void load(next);
   }
 
   return (
@@ -96,12 +82,10 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
         onRemove={(id) => {
           const next = { ...filters, [id]: undefined };
           setFilters(next);
-          void load(next);
         }}
         onClear={() => {
           const next = { acao: filters.acao };
           setFilters(next);
-          void load(next);
         }}
       />
       <Drawer open={filtersOpen} title="Filtros de auditoria" onClose={() => setFiltersOpen(false)}>

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useSearchParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
@@ -15,7 +17,7 @@ import {
   parseAssistanceFilters,
   serializeAssistanceFilters,
 } from "../assistance-state";
-import type { AssistanceCursor, AssistanceListItem } from "../types";
+import type { AssistanceCursor } from "../types";
 import "./AssistanceListPage.css";
 
 type PageError = Error & { code?: string };
@@ -24,40 +26,18 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
   const service = useMemo(() => injected ?? createAssistanceService(), [injected]);
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => parseAssistanceFilters(searchParams), [searchParams]);
-  const [items, setItems] = useState<AssistanceListItem[]>([]);
-  const [cursor, setCursor] = useState<AssistanceCursor | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<PageError | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const load = useCallback(
-    async (nextCursor: AssistanceCursor | null, append = false) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const page = await service.list(filters, nextCursor);
-        setItems((current) => (append ? [...current, ...page.itens] : page.itens));
-        setCursor(page.proximo_cursor);
-      } catch (cause) {
-        const nextError: PageError =
-          cause instanceof Error
-            ? (cause as PageError)
-            : (new Error("Não foi possível carregar as assistências.") as PageError);
-        setError(nextError);
-        if (!append || nextError.code === "acesso_negado") {
-          setItems([]);
-          setCursor(null);
-        }
-      } finally {
-        setLoading(false);
-      }
-    },
-    [filters, service],
-  );
-
-  // Initial/filter RPC load is the external synchronization performed here.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(null), [load]);
+  const listQuery = useInfiniteQuery({
+    queryKey: queryKeys.assistencias.list(filters),
+    queryFn: ({ pageParam }) => service.list(filters, pageParam),
+    initialPageParam: null as AssistanceCursor | null,
+    getNextPageParam: (lastPage) => lastPage.proximo_cursor,
+  });
+  const items = listQuery.data?.pages.flatMap((page) => page.itens) ?? [];
+  const cursor = listQuery.hasNextPage ? listQuery.data?.pages.at(-1)?.proximo_cursor ?? null : null;
+  const loading = listQuery.isPending || listQuery.isFetchingNextPage;
+  const error = listQuery.error as PageError | null;
 
   function applyFilters(next: typeof filters) {
     setSearchParams(serializeAssistanceFilters(next));
@@ -116,7 +96,7 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
           description={error.message}
           actions={
             error.code === "acesso_negado" ? undefined : (
-              <Button onClick={() => void load(null)}>Tentar novamente</Button>
+              <Button onClick={() => void listQuery.refetch()}>Tentar novamente</Button>
             )
           }
         />
@@ -147,7 +127,7 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
         <>
           <AssistanceTable items={items} returnSearch={searchParams.toString()} />
           {cursor ? (
-            <Button variant="outline" loading={loading} onClick={() => void load(cursor, true)}>
+            <Button variant="outline" loading={loading} onClick={() => void listQuery.fetchNextPage()}>
               Carregar mais
             </Button>
           ) : null}

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
@@ -16,7 +18,6 @@ import { OccurrenceTable } from "../components/OccurrenceTable";
 import type {
   OccurrenceCatalogs,
   OccurrenceFilters,
-  OccurrenceListItem,
   OccurrenceStatus,
   OccurrenceTab,
 } from "../types";
@@ -32,30 +33,25 @@ const EMPTY_CATALOGS: OccurrenceCatalogs = {
 
 export function OccurrenceListPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
-  const [items, setItems] = useState<OccurrenceListItem[]>([]);
-  const [catalogs, setCatalogs] = useState(EMPTY_CATALOGS);
   const [filters, setFilters] = useState<OccurrenceFilters>({ tab: "hoje" });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [occurrences, options] = await Promise.all([service.list(), service.catalogs()]);
-      setItems(occurrences);
-      setCatalogs(options);
-    } catch (cause) {
-      setItems([]);
-      setError(cause instanceof Error ? cause : new Error("Falha ao carregar ocorrências."));
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const occurrencesQuery = useQuery({
+    queryKey: queryKeys.occurrences.list(),
+    queryFn: () => service.list(),
+  });
+  const catalogsQuery = useQuery({
+    queryKey: queryKeys.occurrences.catalogs(),
+    queryFn: () => service.catalogs(),
+  });
+  const items = useMemo(() => occurrencesQuery.data ?? [], [occurrencesQuery.data]);
+  const catalogs = catalogsQuery.data ?? EMPTY_CATALOGS;
+  const loading = occurrencesQuery.isPending || catalogsQuery.isPending;
+  const error = occurrencesQuery.error ?? catalogsQuery.error;
+  const reload = () => {
+    void occurrencesQuery.refetch();
+    void catalogsQuery.refetch();
+  };
 
   const visible = useMemo(
     () => items.filter((item) => occurrenceMatchesFilters(item, filters)),
@@ -230,7 +226,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           tone="error"
           title="Falha ao carregar ocorrências"
           description={error.message}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={reload}>Tentar novamente</Button>}
         />
       ) : null}
       {!loading && !error && visible.length === 0 ? (

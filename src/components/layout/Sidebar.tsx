@@ -13,6 +13,8 @@
 import { NavLink } from "react-router-dom";
 import { Button } from "../ui/Button";
 import { Icon, type IconName } from "../ui/Icon";
+import { prefetchRouteChunk } from "../../app/route-prefetch";
+import type { RouteId } from "../../app/routes";
 import { buildMenuForProfile } from "../../modules/navigation/menu-config";
 import type { PerfilUsuario } from "../../modules/access/types";
 import "./Sidebar.css";
@@ -60,6 +62,8 @@ export function Sidebar({ perfil, collapsed = false, onToggle }: SidebarProps) {
                 <NavLink
                   to={item.path}
                   title={collapsed ? item.label : undefined}
+                  onMouseEnter={() => prefetchRouteChunk(item.id as RouteId)}
+                  onFocus={() => prefetchRouteChunk(item.id as RouteId)}
                   className={({ isActive }) =>
                     ["doka-sidebar__link", isActive ? "doka-sidebar__link--active" : ""]
                       .filter(Boolean)

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -57,26 +59,33 @@ export function TaskDetailPage({
         }
       : null);
   const service = useMemo(() => injected ?? createTaskService(), [injected]);
-  const [task, setTask] = useState<Task | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [acting, setActing] = useState(false);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(undefined);
-    try {
-      setTask(await service.getTask(tarefaId));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar a tarefa.");
-    } finally {
-      setLoading(false);
-    }
-  }, [service, tarefaId]);
-
-  // Initial Data API synchronization.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const taskQuery = useQuery({
+    queryKey: queryKeys.tasks.detail(tarefaId),
+    queryFn: () => service.getTask(tarefaId),
+    enabled: Boolean(tarefaId),
+  });
+  const task = taskQuery.data ?? null;
+  const loading = taskQuery.isPending;
+  const transitionMutation = useMutation({
+    mutationFn: ({ action, justification }: { action: TaskAction; justification?: string }) =>
+      service.transitionTask(tarefaId, action, justification),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause.message : "Nao foi possivel concluir a acao."),
+  });
+  const removeMutation = useMutation({
+    mutationFn: (justification: string) => service.removeTask(tarefaId, justification),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      navigate("/app/tarefas-rotinas");
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause.message : "Nao foi possivel remover."),
+  });
+  const acting = transitionMutation.isPending || removeMutation.isPending;
 
   if (!viewer) return null;
   if (loading && !task) return <LoadingState message="Carregando tarefa..." />;
@@ -84,19 +93,12 @@ export function TaskDetailPage({
 
   const actions = availableTaskActions(task, viewer);
 
-  async function transition(action: TaskAction) {
+  function transition(action: TaskAction) {
     const justification =
       action === "reabrir" ? window.prompt("Justificativa da reabertura:")?.trim() : undefined;
     if (action === "reabrir" && !justification) return;
-    setActing(true);
     setError(undefined);
-    try {
-      setTask(await service.transitionTask(task!.id, action, justification));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível concluir a ação.");
-    } finally {
-      setActing(false);
-    }
+    transitionMutation.mutate({ action, justification });
   }
 
   return (
@@ -195,17 +197,11 @@ export function TaskDetailPage({
       {viewer.perfil !== "operador" ? (
         <Button
           variant="danger"
-          onClick={async () => {
-            const justification = window.prompt("Justificativa da remoção:")?.trim();
+          onClick={() => {
+            const justification = window.prompt("Justificativa da remocao:")?.trim();
             if (!justification) return;
-            setActing(true);
-            try {
-              await service.removeTask(task.id, justification);
-              navigate("/app/tarefas-rotinas");
-            } catch (cause) {
-              setError(cause instanceof Error ? cause.message : "Não foi possível remover.");
-              setActing(false);
-            }
+            setError(undefined);
+            removeMutation.mutate(justification);
           }}
         >
           Remover tarefa

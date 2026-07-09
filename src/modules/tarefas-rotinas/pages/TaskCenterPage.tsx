@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
@@ -16,7 +18,7 @@ import { TaskFiltersForm } from "../components/TaskFilters";
 import { TaskList } from "../components/TaskList";
 import { createTaskService, type TaskService } from "../task-service";
 import { taskMatchesSlice } from "../task-state";
-import type { Task, TaskFilters, TaskViewer } from "../types";
+import type { TaskFilters, TaskViewer } from "../types";
 import { useTaskCatalogs } from "../use-task-catalogs";
 import "../tasks.css";
 
@@ -50,30 +52,38 @@ export function TaskCenterPage({
       : null);
   const service = useMemo(() => injected ?? createTaskService(), [injected]);
   const { catalogs } = useTaskCatalogs(catalogService);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [filters, setFilters] = useState<TaskFilters>({ slice: "hoje" });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await service.generateRoutineTasks();
-      setTasks(await service.listTasks());
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Não foi possível carregar as tarefas."));
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
+  const queryClient = useQueryClient();
+  // A geração de tarefas de rotina é uma escrita: roda a cada visita à tela,
+  // fora da queryFn, para não ficar presa ao staleTime do cache de leitura.
+  useEffect(() => {
+    let cancelled = false;
+    service
+      .generateRoutineTasks()
+      .then(() => {
+        if (!cancelled) {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.tasks.list() });
+        }
+      })
+      .catch(() => {
+        // Falha na geração não bloqueia a listagem.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [service, queryClient]);
 
-  // Initial Data API synchronization.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const tasksQuery = useQuery({
+    queryKey: queryKeys.tasks.list(),
+    queryFn: () => service.listTasks(),
+  });
+  const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
+  const loading = tasksQuery.isPending;
+  const error = tasksQuery.error;
   const visible = useMemo(
     () => tasks.filter((task) => taskMatchesSlice(task, filters)),
     [filters, tasks],
@@ -196,7 +206,7 @@ export function TaskCenterPage({
           tone="error"
           title="Falha ao carregar tarefas"
           description={error.message}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={() => void tasksQuery.refetch()}>Tentar novamente</Button>}
         />
       ) : null}
       {!loading && !error && visible.length === 0 ? (

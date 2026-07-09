@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -7,7 +9,7 @@ import type { CatalogService } from "../../../services/catalog-service";
 import { useAuth } from "../../auth/AuthProvider";
 import { TaskForm } from "../components/TaskForm";
 import { createTaskService, type TaskService } from "../task-service";
-import type { Task, TaskError, TaskViewer } from "../types";
+import type { TaskViewer } from "../types";
 import { useTaskCatalogs } from "../use-task-catalogs";
 import "../tasks.css";
 
@@ -38,19 +40,27 @@ export function TaskFormPage({
     loading: catalogsLoading,
     error: catalogsError,
   } = useTaskCatalogs(catalogService);
-  const [task, setTask] = useState<Task | undefined>();
-  const [loading, setLoading] = useState(Boolean(tarefaId));
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    if (!tarefaId) return;
-    void service
-      .getTask(tarefaId)
-      .then(setTask)
-      .catch((cause: TaskError) => setError(cause.message))
-      .finally(() => setLoading(false));
-  }, [service, tarefaId]);
+  const taskQuery = useQuery({
+    queryKey: queryKeys.tasks.detail(tarefaId ?? "novo"),
+    queryFn: () => service.getTask(tarefaId ?? ""),
+    enabled: Boolean(tarefaId),
+  });
+  const task = taskQuery.data;
+  const loading = Boolean(tarefaId) && taskQuery.isPending;
+  const saveMutation = useMutation({
+    mutationFn: (input: Parameters<typeof service.createTask>[0]) =>
+      task
+        ? service.updateTask(task.id, input, viewer?.perfil !== "operador", task.tipo)
+        : service.createTask(input),
+    onSuccess: async (saved) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      navigate(`/app/tarefas-rotinas/${saved.id}`);
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause.message : "Nao foi possivel salvar a tarefa."),
+  });
 
   if (!viewer) return null;
   if (loading || catalogsLoading) return <LoadingState message="Preparando formulário..." />;
@@ -59,7 +69,7 @@ export function TaskFormPage({
       <FeedbackState
         tone="error"
         title="Não foi possível abrir a tarefa"
-        description={error ?? catalogsError?.message}
+        description={error ?? catalogsError?.message ?? taskQuery.error?.message}
       />
     );
 
@@ -76,22 +86,12 @@ export function TaskFormPage({
         initial={task}
         viewer={viewer}
         {...catalogs}
-        saving={saving}
+        saving={saveMutation.isPending}
         error={error}
         onCancel={() => navigate(closeTarget)}
-        onSubmit={async (input) => {
-          setSaving(true);
+        onSubmit={(input) => {
           setError(undefined);
-          try {
-            const saved = task
-              ? await service.updateTask(task.id, input, viewer.perfil !== "operador", task.tipo)
-              : await service.createTask(input);
-            navigate(`/app/tarefas-rotinas/${saved.id}`);
-          } catch (cause) {
-            setError(cause instanceof Error ? cause.message : "Não foi possível salvar a tarefa.");
-          } finally {
-            setSaving(false);
-          }
+          saveMutation.mutate(input);
         }}
       />
     </Drawer>
