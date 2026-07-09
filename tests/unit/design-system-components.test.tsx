@@ -7,6 +7,7 @@ import { PageHeader } from "../../src/components/layout/Page";
 import { ButtonLink } from "../../src/components/ui/ButtonLink";
 import { Dialog } from "../../src/components/ui/Dialog";
 import { Drawer } from "../../src/components/ui/Drawer";
+import { DropdownMenu, DropdownMenuItem } from "../../src/components/ui/DropdownMenu";
 import { FilterChips } from "../../src/components/ui/FilterChips";
 import { Select, Textarea } from "../../src/components/ui/FormControls";
 import { Pagination } from "../../src/components/ui/Pagination";
@@ -41,19 +42,25 @@ describe("componentes compartilhados do design system", () => {
 
   it("altera a aba selecionada sem depender de estilo local", async () => {
     const onChange = vi.fn();
-    render(
-      <Tabs
-        label="Recortes"
-        value="hoje"
-        items={[
-          { id: "hoje", label: "Hoje" },
-          { id: "abertas", label: "Abertas" },
-        ]}
-        onChange={onChange}
-      />,
+    const items: Array<{ id: "hoje" | "abertas"; label: string }> = [
+      { id: "hoje", label: "Hoje" },
+      { id: "abertas", label: "Abertas" },
+    ];
+    const { rerender } = render(
+      <Tabs label="Recortes" value="hoje" items={items} onChange={onChange} />,
     );
 
     expect(screen.getByRole("tab", { name: "Hoje" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Hoje" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("tab", { name: "Abertas" })).toHaveAttribute("tabindex", "-1");
+
+    screen.getByRole("tab", { name: "Hoje" }).focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(onChange).toHaveBeenCalledWith("abertas");
+
+    rerender(<Tabs label="Recortes" value="abertas" items={items} onChange={onChange} />);
+    expect(screen.getByRole("tab", { name: "Abertas" })).toHaveAttribute("tabindex", "0");
+
     await userEvent.click(screen.getByRole("tab", { name: "Abertas" }));
     expect(onChange).toHaveBeenCalledWith("abertas");
   });
@@ -119,5 +126,33 @@ describe("componentes compartilhados do design system", () => {
     expect(onSearch).toHaveBeenLastCalledWith("");
     await userEvent.click(screen.getByRole("button", { name: "Próxima" }));
     expect(onPage).toHaveBeenCalledWith(2);
+  });
+  it("opera menus por foco e teclado", async () => {
+    const edit = vi.fn();
+    render(
+      <DropdownMenu label="Acoes da linha">
+        <DropdownMenuItem onClick={edit}>Editar</DropdownMenuItem>
+        <DropdownMenuItem>Remover</DropdownMenuItem>
+      </DropdownMenu>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Acoes da linha" });
+    await userEvent.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Editar" })).toHaveFocus();
+
+    await userEvent.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Remover" })).toHaveFocus();
+
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Editar" }));
+    expect(edit).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 });

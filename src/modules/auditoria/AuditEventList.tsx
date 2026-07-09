@@ -1,4 +1,5 @@
 import type { AuditEvent } from "./types";
+import { Card } from "../../components/ui/Card";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 
 function jsonSummary(value: Record<string, unknown> | null) {
@@ -21,20 +22,33 @@ export function AuditEventList({ events }: { events: AuditEvent[] }) {
           <ol className="audit-events">
             {dayEvents.map((event) => (
               <li key={event.id}>
-                <div className="audit-events__heading">
-                  <strong>{event.acao.replaceAll("_", " ")}</strong>
-                  <time dateTime={event.created_at}>{new Date(event.created_at).toLocaleTimeString("pt-BR")}</time>
-                </div>
-                <p><StatusBadge tone="brand">{event.entidade_tipo}</StatusBadge> {event.usuario?.nome ?? "Sistema"}</p>
-                {(event.valor_anterior || event.valor_novo) && (
-                  <details>
-                    <summary>Ver valores alterados</summary>
-                    <div className="audit-events__values">
-                      <div><h4>Anterior</h4><pre>{jsonSummary(event.valor_anterior)}</pre></div>
-                      <div><h4>Novo</h4><pre>{jsonSummary(event.valor_novo)}</pre></div>
-                    </div>
-                  </details>
-                )}
+                <Card padding="sm">
+                  <div className="audit-events__heading">
+                    <strong>{event.acao.replaceAll("_", " ")}</strong>
+                    <time dateTime={event.created_at}>
+                      {new Date(event.created_at).toLocaleTimeString("pt-BR")}
+                    </time>
+                  </div>
+                  <p>
+                    <StatusBadge tone="brand">{event.entidade_tipo}</StatusBadge>{" "}
+                    {event.usuario?.nome ?? "Sistema"}
+                  </p>
+                  {(event.valor_anterior || event.valor_novo) && (
+                    <details>
+                      <summary>Ver valores alterados</summary>
+                      <div className="audit-events__values">
+                        <div>
+                          <h4>Anterior</h4>
+                          <pre>{jsonSummary(event.valor_anterior)}</pre>
+                        </div>
+                        <div>
+                          <h4>Novo</h4>
+                          <pre>{jsonSummary(event.valor_novo)}</pre>
+                        </div>
+                      </div>
+                    </details>
+                  )}
+                </Card>
               </li>
             ))}
           </ol>

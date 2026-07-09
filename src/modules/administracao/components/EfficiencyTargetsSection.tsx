@@ -3,6 +3,7 @@ import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
+import { TableFrame } from "../../../components/ui/Patterns";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot, MetaEficiencia } from "../types";
 import { SelectField, StatusBadge } from "./AdminFields";
@@ -153,8 +154,8 @@ export function EfficiencyTargetsSection({
           </div>
         </form>
       )}
-      <div className="admin-table-wrap">
-        <table className="admin-table">
+      <TableFrame>
+        <table>
           <thead>
             <tr>
               <th>Posto</th>
@@ -191,7 +192,7 @@ export function EfficiencyTargetsSection({
             ))}
           </tbody>
         </table>
-      </div>
+      </TableFrame>
     </section>
   );
 }

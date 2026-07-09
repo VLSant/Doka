@@ -1,25 +1,24 @@
-﻿@import "./AssistanceListPage.css";
+@import "./AssistanceListPage.css";
 
 .assistance-summary {
   display: grid;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .assistance-summary__identity,
 .assistance-part__heading,
-.assistance-section-heading,
 .effective-value__heading,
 .assistance-history__heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .assistance-summary__identity > div,
 .assistance-part__heading > div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .assistance-summary__identity strong {
@@ -30,14 +29,14 @@
 .assistance-summary__facts {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
   margin: 0;
 }
 
 .assistance-summary__facts div,
 .effective-value dl {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .assistance-summary__facts dt,
@@ -56,20 +55,20 @@
 .assistance-part__values {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .effective-value {
   display: grid;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
 }
 
 .effective-value__heading > div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .effective-value__label {
@@ -88,17 +87,17 @@
 }
 
 .assistance-section-heading {
-  margin-bottom: 14px;
+  margin-bottom: var(--space-4);
 }
 
 .assistance-section-heading h2,
 .assistance-part__heading h3 {
-  margin: 2px 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 .assistance-parts {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .assistance-history {
@@ -112,17 +111,17 @@
   position: relative;
   display: grid;
   grid-template-columns: 18px 1fr;
-  gap: 12px;
-  padding-bottom: 20px;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
 }
 
 .assistance-history li::before {
   content: "";
   position: absolute;
-  top: 14px;
+  top: var(--space-4);
   bottom: 0;
-  left: 6px;
-  width: 2px;
+  left: var(--space-2);
+  width: var(--border-w);
   background: var(--border-subtle);
 }
 
@@ -134,15 +133,15 @@
   z-index: 1;
   width: 14px;
   height: 14px;
-  margin-top: 4px;
-  border: 3px solid var(--neutral-0);
-  border-radius: 50%;
+  margin-top: var(--space-1);
+  border: var(--space-1) solid var(--neutral-0);
+  border-radius: var(--radius-pill);
   background: var(--brand-primary);
-  box-shadow: 0 0 0 1px var(--brand-primary);
+  box-shadow: 0 0 0 var(--border-w) var(--brand-primary);
 }
 
 .assistance-history p {
-  margin: 5px 0;
+  margin: var(--space-1) 0;
 }
 
 .assistance-history time {

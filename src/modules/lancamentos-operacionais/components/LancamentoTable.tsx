@@ -8,8 +8,8 @@ const date = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
 
 export function LancamentoTable({ items }: { items: Lancamento[] }) {
   return (
-    <TableFrame className="lancamentos-table-wrap">
-      <table className="lancamentos-table" aria-label="Deslocamentos e custos extras">
+    <TableFrame>
+      <table aria-label="Deslocamentos e custos extras">
         <thead>
           <tr>
             <th>Data</th>

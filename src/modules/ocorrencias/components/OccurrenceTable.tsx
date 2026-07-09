@@ -14,8 +14,8 @@ export function OccurrenceTable({ items }: { items: OccurrenceListItem[] }) {
     reaberta: "warning",
   };
   return (
-    <TableFrame className="occurrence-table-wrap">
-      <table className="occurrence-table">
+    <TableFrame>
+      <table>
         <thead>
           <tr>
             <th>Assistência</th>
@@ -38,9 +38,7 @@ export function OccurrenceTable({ items }: { items: OccurrenceListItem[] }) {
               </td>
               <td>{item.tipo?.nome ?? "—"}</td>
               <td>
-                <StatusBadge tone={tone[item.status]}>
-                  {STATUS_LABELS[item.status]}
-                </StatusBadge>
+                <StatusBadge tone={tone[item.status]}>{STATUS_LABELS[item.status]}</StatusBadge>
                 {isOccurrenceOverdue(item) ? (
                   <StatusBadge tone="danger">Atrasada</StatusBadge>
                 ) : null}
@@ -59,4 +57,3 @@ export function OccurrenceTable({ items }: { items: OccurrenceListItem[] }) {
     </TableFrame>
   );
 }
-

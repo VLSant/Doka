@@ -2,14 +2,27 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
+import { Select, Textarea } from "../../../components/ui/FormControls";
+import { Input } from "../../../components/ui/Input";
+import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { isOccurrenceOverdue, nextStatuses, STATUS_LABELS } from "../occurrence-state";
 import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
 import type { OccurrenceDetail, OccurrenceStatus } from "../types";
 import "./Occurrences.css";
+
+const STATUS_TONE: Record<OccurrenceStatus, StatusTone> = {
+  aberta: "warning",
+  em_acompanhamento: "info",
+  aguardando_retorno: "warning",
+  resolvida: "success",
+  encerrada: "neutral",
+  reaberta: "warning",
+};
 
 export function OccurrenceDetailPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
@@ -102,25 +115,29 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
   }
 
   return (
-    <main className="occurrences-page occurrences-page--narrow">
-      <header className="occurrences-header">
-        <div>
-          <span>Assistência {occurrence.assistencia?.numero_assistencia}</span>
-          <h1>{occurrence.titulo}</h1>
-          <p>
-            {STATUS_LABELS[occurrence.status]}
-            {isOccurrenceOverdue(occurrence) ? " · Atrasada" : ""}
-          </p>
-        </div>
-        <div className="occurrence-actions">
-          <ButtonLink variant="outline" to={`/app/ocorrencias/${occurrence.id}/editar`}>
-            Editar
-          </ButtonLink>
-          <Button variant="danger" disabled={acting} onClick={() => void remove()}>
-            Remover
-          </Button>
-        </div>
-      </header>
+    <Page className="occurrences-page" width="narrow">
+      <PageHeader
+        eyebrow={`Assistência ${occurrence.assistencia?.numero_assistencia ?? ""}`.trim()}
+        title={occurrence.titulo}
+        description={occurrence.descricao || "Sem descrição."}
+        actions={
+          <div className="occurrence-actions">
+            <ButtonLink variant="outline" to={`/app/ocorrencias/${occurrence.id}/editar`}>
+              Editar
+            </ButtonLink>
+            <Button variant="danger" disabled={acting} onClick={() => void remove()}>
+              Remover
+            </Button>
+          </div>
+        }
+      />
+
+      <div className="occurrence-status-row">
+        <StatusBadge tone={STATUS_TONE[occurrence.status]}>
+          {STATUS_LABELS[occurrence.status]}
+        </StatusBadge>
+        {isOccurrenceOverdue(occurrence) ? <StatusBadge tone="danger">Atrasada</StatusBadge> : null}
+      </div>
 
       {error ? (
         <FeedbackState
@@ -167,40 +184,34 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
 
         <Card padding="lg">
           <h2>Alterar status</h2>
-          <label>
-            Novo status
-            <select
-              value={nextStatus}
-              disabled={acting}
-              onChange={(event) => setNextStatus(event.target.value as OccurrenceStatus | "")}
-            >
-              <option value="">Selecione</option>
-              {nextStatuses(occurrence.status).map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Novo status"
+            value={nextStatus}
+            disabled={acting}
+            onChange={(event) => setNextStatus(event.target.value as OccurrenceStatus | "")}
+          >
+            <option value="">Selecione</option>
+            {nextStatuses(occurrence.status).map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </Select>
           {nextStatus === "aguardando_retorno" || nextStatus === "reaberta" ? (
-            <label>
-              Data de retorno
-              <input
-                type="date"
-                value={returnDate}
-                onChange={(event) => setReturnDate(event.target.value)}
-              />
-            </label>
+            <Input
+              label="Data de retorno"
+              type="date"
+              value={returnDate}
+              onChange={(event) => setReturnDate(event.target.value)}
+            />
           ) : null}
           {nextStatus === "reaberta" ? (
-            <label>
-              Justificativa *
-              <textarea
-                rows={3}
-                value={justification}
-                onChange={(event) => setJustification(event.target.value)}
-              />
-            </label>
+            <Textarea
+              label="Justificativa *"
+              rows={3}
+              value={justification}
+              onChange={(event) => setJustification(event.target.value)}
+            />
           ) : null}
           <Button disabled={!nextStatus} loading={acting} onClick={() => void transition()}>
             Confirmar mudança
@@ -211,15 +222,13 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
       <Card padding="lg">
         <h2>Comentários e acompanhamento</h2>
         <form className="occurrence-comment-form" onSubmit={(event) => void addComment(event)}>
-          <label>
-            Novo comentário
-            <textarea
-              rows={3}
-              value={comment}
-              disabled={acting}
-              onChange={(event) => setComment(event.target.value)}
-            />
-          </label>
+          <Textarea
+            label="Novo comentário"
+            rows={3}
+            value={comment}
+            disabled={acting}
+            onChange={(event) => setComment(event.target.value)}
+          />
           <Button type="submit" disabled={!comment.trim()} loading={acting}>
             Adicionar
           </Button>
@@ -241,7 +250,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
         )}
       </Card>
       <EntityHistory entityType="ocorrencias" entityId={occurrence.id} />
-    </main>
+    </Page>
   );
 }
 

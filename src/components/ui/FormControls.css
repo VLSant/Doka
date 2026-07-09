@@ -4,6 +4,10 @@
   min-width: 0;
 }
 
+.doka-field--full {
+  width: 100%;
+}
+
 .doka-field__label,
 .doka-checkbox__label {
   color: var(--text-strong);
@@ -24,9 +28,14 @@
   background: var(--surface-card);
   color: var(--text-strong);
   font: inherit;
+  font-size: var(--text-base);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.doka-field__control--select {
+  padding-right: var(--space-6);
 }
 
 .doka-field__control--textarea {
@@ -39,6 +48,10 @@
   border-color: var(--border-brand);
   outline: none;
   box-shadow: var(--ring);
+}
+
+.doka-field__control[aria-invalid="true"] {
+  border-color: var(--red-500);
 }
 
 .doka-field__control:disabled {
@@ -57,20 +70,34 @@
   color: var(--red-600);
 }
 
-.doka-checkbox {
+.doka-checkbox,
+.doka-radio {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: var(--space-2);
 }
 
-.doka-checkbox__control {
+.doka-checkbox__control,
+.doka-radio__control {
   width: var(--space-4);
   height: var(--space-4);
   margin: 2px 0 0;
   accent-color: var(--brand-primary);
 }
 
+.doka-checkbox__control:focus-visible,
+.doka-radio__control:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
 .doka-checkbox .doka-field__message {
   grid-column: 2;
+}
+
+.doka-radio__label {
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
 }

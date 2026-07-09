@@ -1,15 +1,6 @@
-import type { ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { Select, Textarea } from "../../../components/ui/FormControls";
 import { StatusBadge as SharedStatusBadge } from "../../../components/ui/StatusBadge";
-
-export function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="admin-field">
-      <span>{label}</span>
-      {children}
-    </label>
-  );
-}
 
 export function SelectField({
   label,

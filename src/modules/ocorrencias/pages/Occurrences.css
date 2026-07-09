@@ -1,23 +1,7 @@
-﻿.occurrences-page {
+.occurrences-page {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-5);
   width: 100%;
-}
-
-.occurrences-page--narrow {
-  max-width: 1100px;
-}
-
-.occurrences-header {
-  align-items: flex-start;
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-}
-
-.occurrences-header h1,
-.occurrences-header p {
-  margin: 0.25rem 0;
 }
 
 .occurrence-filters,
@@ -27,85 +11,33 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-.occurrence-form label,
-.occurrence-detail-grid label,
-.occurrence-comment-form label {
-  display: grid;
-  font-weight: var(--fw-semibold);
-  gap: 0.35rem;
-}
-
-.occurrence-form input,
-.occurrence-form select,
-.occurrence-form textarea,
-.occurrence-detail-grid input,
-.occurrence-detail-grid select,
-.occurrence-detail-grid textarea,
-.occurrence-comment-form textarea {
-  border: 1px solid var(--border-default);
-  border-radius: 0.45rem;
-  font: inherit;
-  padding: 0.6rem;
-}
-
 .occurrence-form {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
-.occurrence-actions {
-  align-items: center;
+.occurrence-actions,
+.occurrence-status-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.occurrence-table-wrap {
-  overflow-x: auto;
-}
-
-.occurrence-table {
-  border-collapse: collapse;
-  min-width: 950px;
-  width: 100%;
-}
-
-.occurrence-table th,
-.occurrence-table td {
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 0.7rem;
-  text-align: left;
-  vertical-align: top;
-}
-
-.occurrence-status {
-  background: var(--surface-sunken);
-  border-radius: 999px;
-  display: inline-block;
-  font-size: var(--text-xs);
-  margin: 0 0.2rem 0.2rem 0;
-  padding: 0.2rem 0.55rem;
-}
-
-.occurrence-status--overdue {
-  background: var(--red-50);
-  color: var(--red-600);
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .occurrence-detail-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
 }
 
 .occurrence-detail-grid > * {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .occurrence-data {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
@@ -115,47 +47,32 @@
 }
 
 .occurrence-data dd {
+  margin: var(--space-1) var(--space-0) var(--space-0);
   font-weight: var(--fw-semibold);
-  margin: 0.2rem 0 0;
 }
 
 .occurrence-comment-form {
-  align-items: end;
   display: grid;
-  gap: 0.75rem;
   grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--space-3);
 }
 
 .occurrence-comments {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
   list-style: none;
-  padding: 0;
 }
 
 .occurrence-comments li {
+  padding-left: var(--space-3);
   border-left: 3px solid var(--brand-primary);
-  padding-left: 0.75rem;
 }
 
 .occurrence-comments time {
-  color: var(--text-muted);
   display: block;
+  color: var(--text-muted);
   font-size: var(--text-xs);
-}
-
-@media (max-width: 800px) {
-  .occurrences-header,
-  .occurrence-comment-form {
-    align-items: stretch;
-    grid-template-columns: 1fr;
-  }
-
-  .occurrences-header {
-    display: grid;
-  }
-
-  .occurrence-detail-grid {
-    grid-template-columns: 1fr;
-  }
 }

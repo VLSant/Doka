@@ -13,14 +13,22 @@
   width: 100%;
   max-height: calc(100vh - var(--space-10));
   overflow: auto;
-  border-radius: var(--radius-lg);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
   background: var(--surface-raised);
   box-shadow: var(--shadow-xl);
+  animation: doka-dialog-enter var(--dur-fast) var(--ease-out);
 }
 
-.doka-dialog--sm { max-width: 440px; }
-.doka-dialog--md { max-width: 640px; }
-.doka-dialog--lg { max-width: 840px; }
+.doka-dialog--sm {
+  max-width: 440px;
+}
+.doka-dialog--md {
+  max-width: 640px;
+}
+.doka-dialog--lg {
+  max-width: 840px;
+}
 
 .doka-dialog__header,
 .doka-dialog__actions {
@@ -55,5 +63,14 @@
 }
 
 @keyframes doka-dialog-fade {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes doka-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
 }

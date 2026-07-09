@@ -3,6 +3,7 @@ import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { Drawer } from "../../../components/ui/Drawer";
+import { TableFrame } from "../../../components/ui/Patterns";
 import type { AdministrationService } from "../administration-service";
 import type {
   AdministrationSnapshot,
@@ -227,8 +228,8 @@ export function UsersSection({
       {filtered.length === 0 ? (
         <p className="admin-empty">Nenhum usuário encontrado.</p>
       ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <TableFrame>
+          <table>
             <thead>
               <tr>
                 <th>Nome</th>
@@ -262,7 +263,7 @@ export function UsersSection({
               ))}
             </tbody>
           </table>
-        </div>
+        </TableFrame>
       )}
     </section>
   );

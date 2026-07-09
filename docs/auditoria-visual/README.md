@@ -129,3 +129,50 @@ Executar uma análise visual por padrão de tela, não apenas por módulo:
 
 A análise deve produzir recomendações de redesign, prioridades e referências
 visuais sem alterar o código nesta etapa.
+
+---
+
+## Capturas pós-redesign — 05/07/2026
+
+**Viewport:** 1440x900  
+**Perfil autenticado:** Direção/Administração, escopo global  
+**Pasta:** `screenshots/2026-07-05-pos-redesign/`
+
+As imagens abaixo foram refeitas após o redesign e mantêm a numeração do
+catálogo anterior para permitir comparação direta.
+
+| Tela | Antes | Depois |
+| --- | --- | --- |
+| Dashboard | [01](screenshots/2026-07-04/01-dashboard.png) | [01](screenshots/2026-07-05-pos-redesign/01-dashboard.png) |
+| Ocorrências — lista | [02](screenshots/2026-07-04/02-ocorrencias-lista.png) | [02](screenshots/2026-07-05-pos-redesign/02-ocorrencias-lista.png) |
+| Ocorrências — nova | [03](screenshots/2026-07-04/03-ocorrencias-nova.png) | [03](screenshots/2026-07-05-pos-redesign/03-ocorrencias-nova.png) |
+| Tarefas — lista | [05](screenshots/2026-07-04/05-tarefas-lista.png) | [05](screenshots/2026-07-05-pos-redesign/05-tarefas-lista.png) |
+| Rotinas — lista | [07](screenshots/2026-07-04/07-rotinas-lista.png) | [07](screenshots/2026-07-05-pos-redesign/07-rotinas-lista.png) |
+| Assistências — lista | [09](screenshots/2026-07-04/09-assistencias-lista.png) | [09](screenshots/2026-07-05-pos-redesign/09-assistencias-lista.png) |
+| Importações — lista | [12](screenshots/2026-07-04/12-importacoes-lista.png) | [12](screenshots/2026-07-05-pos-redesign/12-importacoes-lista.png) |
+| Importações — nova | [13](screenshots/2026-07-04/13-importacoes-nova.png) | [13](screenshots/2026-07-05-pos-redesign/13-importacoes-nova.png) |
+| Deslocamentos e custos — lista | [16](screenshots/2026-07-04/16-custos-lista.png) | [16](screenshots/2026-07-05-pos-redesign/16-custos-lista.png) |
+| Histórico e auditoria | [22](screenshots/2026-07-04/22-auditoria.png) | [22](screenshots/2026-07-05-pos-redesign/22-auditoria.png) |
+| Login | [23](screenshots/2026-07-04/23-login.png) | [23](screenshots/2026-07-05-pos-redesign/23-login.png) |
+| Recuperar senha | [24](screenshots/2026-07-04/24-recuperar-senha.png) | [24](screenshots/2026-07-05-pos-redesign/24-recuperar-senha.png) |
+| Redefinição inválida | [25](screenshots/2026-07-04/25-redefinir-senha-invalida.png) | [25](screenshots/2026-07-05-pos-redesign/25-redefinir-senha-invalida.png) |
+| Sessão expirada | [26](screenshots/2026-07-04/26-sessao-expirada.png) | [26](screenshots/2026-07-05-pos-redesign/26-sessao-expirada.png) |
+| Falha temporária | [27](screenshots/2026-07-04/27-falha-temporaria.png) | [27](screenshots/2026-07-05-pos-redesign/27-falha-temporaria.png) |
+| Acesso negado | [28](screenshots/2026-07-04/28-acesso-negado.png) | [28](screenshots/2026-07-05-pos-redesign/28-acesso-negado.png) |
+| Configuração operacional | [29](screenshots/2026-07-04/29-configuracao-operacional.png) | [29](screenshots/2026-07-05-pos-redesign/29-configuracao-operacional.png) |
+| Página não encontrada | [30](screenshots/2026-07-04/30-nao-encontrada.png) | [30](screenshots/2026-07-05-pos-redesign/30-nao-encontrada.png) |
+
+### Cobertura pós-redesign ainda pendente
+
+- nova tarefa;
+- nova rotina;
+- novo deslocamento/custo;
+- as quatro seções de Administração;
+- detalhe e diálogo de correção de Assistência;
+- detalhe e tratamento de Importação;
+- detalhes e edições de Ocorrência, Tarefa, Rotina e Deslocamento/Custo.
+
+Os detalhes e edições dos módulos novos continuam sem registros reais. Criar
+massa visual descartável exige autorização explícita, pois altera o ambiente
+configurado. A execução de 05/07/2026 também foi interrompida quando o navegador
+interno deixou de responder; capturas presas em loading foram descartadas.

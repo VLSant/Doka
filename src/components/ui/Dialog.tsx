@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "./Button";
 import "./Dialog.css";
 
@@ -21,6 +21,8 @@ export function Dialog({
   onClose,
   size = "md",
 }: DialogProps) {
+  const titleId = useId();
+  const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(
     document.activeElement instanceof HTMLElement ? document.activeElement : null,
@@ -45,21 +47,23 @@ export function Dialog({
     const activeElement =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const returnFocus =
-      activeElement &&
-      activeElement !== document.body &&
-      !panelRef.current?.contains(activeElement)
+      activeElement && activeElement !== document.body && !panelRef.current?.contains(activeElement)
         ? activeElement
         : previousFocus.current;
     const initialControl =
       panelRef.current?.querySelector<HTMLElement>("[autofocus]") ??
-      panelRef.current?.querySelector<HTMLElement>("input:not(:disabled), select:not(:disabled), textarea:not(:disabled)") ??
+      panelRef.current?.querySelector<HTMLElement>(
+        "input:not(:disabled), select:not(:disabled), textarea:not(:disabled)",
+      ) ??
       panelRef.current?.querySelector<HTMLElement>("button:not(:disabled), a[href]");
     initialControl?.focus();
     function keydown(event: KeyboardEvent) {
       if (event.key === "Escape") onCloseRef.current();
       if (event.key !== "Tab" || !panelRef.current) return;
       const focusable = Array.from(
-        panelRef.current.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]"),
+        panelRef.current.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]",
+        ),
       );
       if (!focusable.length) return;
       const first = focusable[0];
@@ -82,20 +86,26 @@ export function Dialog({
   if (!open) return null;
 
   return (
-    <div className="doka-dialog-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <div
+      className="doka-dialog-backdrop"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    >
       <div
         ref={panelRef}
         className={`doka-dialog doka-dialog--${size}`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="doka-dialog-title"
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
       >
         <header className="doka-dialog__header">
           <div>
-            <h2 id="doka-dialog-title">{title}</h2>
-            {description ? <p>{description}</p> : null}
+            <h2 id={titleId}>{title}</h2>
+            {description ? <p id={descriptionId}>{description}</p> : null}
           </div>
-          <Button variant="ghost" size="sm" aria-label="Fechar diálogo" onClick={onClose}>×</Button>
+          <Button variant="ghost" size="sm" aria-label="Fechar diálogo" onClick={onClose}>
+            ×
+          </Button>
         </header>
         <div className="doka-dialog__body">{children}</div>
         {actions ? <footer className="doka-dialog__actions">{actions}</footer> : null}

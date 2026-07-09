@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Select, Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { validateOccurrenceInput } from "../occurrence-state";
 import type { OccurrenceCatalogs, OccurrenceInput } from "../types";
@@ -57,96 +58,78 @@ export function OccurrenceForm({
   return (
     <form className="occurrence-form" onSubmit={(event) => void submit(event)} noValidate>
       <div className="occurrence-form__grid">
-        <label>
-          Assistência <span aria-hidden="true">*</span>
-          <select
-            value={input.assistencia_id}
-            disabled={editing || saving}
-            aria-invalid={Boolean(errors.assistencia_id)}
-            onChange={(event) => {
-              const assistance = catalogs.assistencias.find(
-                (item) => item.id === event.target.value,
-              );
-              setInput((current) => ({
-                ...current,
-                assistencia_id: event.target.value,
-                posto_id: assistance?.posto_id ?? "",
-              }));
-              setErrors((current) => ({ ...current, assistencia_id: "" }));
-            }}
-          >
-            <option value="">Selecione</option>
-            {catalogs.assistencias.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.numero_assistencia} · {item.data_atividade}
-              </option>
-            ))}
-          </select>
-          {errors.assistencia_id ? <small role="alert">{errors.assistencia_id}</small> : null}
-        </label>
-        <label>
-          Posto
-          <input
-            value={
-              catalogs.postos.find((item) => item.id === selectedAssistance?.posto_id)?.nome ?? ""
-            }
-            disabled
-            placeholder="Definido pela assistência"
-          />
-        </label>
-        <label>
-          Tipo <span aria-hidden="true">*</span>
-          <select
-            value={input.tipo_ocorrencia_id}
-            disabled={saving}
-            aria-invalid={Boolean(errors.tipo_ocorrencia_id)}
-            onChange={(event) => change("tipo_ocorrencia_id", event.target.value)}
-          >
-            <option value="">Selecione</option>
-            {catalogs.tipos.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </select>
-          {errors.tipo_ocorrencia_id ? (
-            <small role="alert">{errors.tipo_ocorrencia_id}</small>
-          ) : null}
-        </label>
-        <label>
-          Prioridade <span aria-hidden="true">*</span>
-          <select
-            value={input.prioridade_id ?? ""}
-            disabled={saving}
-            aria-invalid={Boolean(errors.prioridade_id)}
-            onChange={(event) => change("prioridade_id", event.target.value || null)}
-          >
-            <option value="">Sem prioridade</option>
-            {catalogs.prioridades.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </select>
-          {errors.prioridade_id ? <small role="alert">{errors.prioridade_id}</small> : null}
-        </label>
-        <label>
-          Responsável <span aria-hidden="true">*</span>
-          <select
-            value={input.responsavel_id ?? ""}
-            disabled={saving}
-            aria-invalid={Boolean(errors.responsavel_id)}
-            onChange={(event) => change("responsavel_id", event.target.value || null)}
-          >
-            <option value="">Não definido</option>
-            {catalogs.usuarios.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </select>
-          {errors.responsavel_id ? <small role="alert">{errors.responsavel_id}</small> : null}
-        </label>
+        <Select
+          label="Assistência *"
+          value={input.assistencia_id}
+          disabled={editing || saving}
+          error={errors.assistencia_id}
+          onChange={(event) => {
+            const assistance = catalogs.assistencias.find((item) => item.id === event.target.value);
+            setInput((current) => ({
+              ...current,
+              assistencia_id: event.target.value,
+              posto_id: assistance?.posto_id ?? "",
+            }));
+            setErrors((current) => ({ ...current, assistencia_id: "" }));
+          }}
+        >
+          <option value="">Selecione</option>
+          {catalogs.assistencias.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.numero_assistencia} · {item.data_atividade}
+            </option>
+          ))}
+        </Select>
+        <Input
+          label="Posto"
+          value={
+            catalogs.postos.find((item) => item.id === selectedAssistance?.posto_id)?.nome ?? ""
+          }
+          disabled
+          placeholder="Definido pela assistência"
+        />
+        <Select
+          label="Tipo *"
+          value={input.tipo_ocorrencia_id}
+          disabled={saving}
+          error={errors.tipo_ocorrencia_id}
+          onChange={(event) => change("tipo_ocorrencia_id", event.target.value)}
+        >
+          <option value="">Selecione</option>
+          {catalogs.tipos.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.nome}
+            </option>
+          ))}
+        </Select>
+        <Select
+          label="Prioridade *"
+          value={input.prioridade_id ?? ""}
+          disabled={saving}
+          error={errors.prioridade_id}
+          onChange={(event) => change("prioridade_id", event.target.value || null)}
+        >
+          <option value="">Sem prioridade</option>
+          {catalogs.prioridades.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.nome}
+            </option>
+          ))}
+        </Select>
+        <Select
+          label="Responsável *"
+          value={input.responsavel_id ?? ""}
+          disabled={saving}
+          error={errors.responsavel_id}
+          onChange={(event) => change("responsavel_id", event.target.value || null)}
+        >
+          <option value="">Não definido</option>
+          {catalogs.usuarios.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.nome}
+            </option>
+          ))}
+        </Select>
         <Input
           label="Data de retorno *"
           type="date"
@@ -163,26 +146,21 @@ export function OccurrenceForm({
         error={errors.titulo}
         onChange={(event) => change("titulo", event.target.value)}
       />
-      <label>
-        Descrição <span aria-hidden="true">*</span>
-        <textarea
-          rows={5}
-          value={input.descricao ?? ""}
-          disabled={saving}
-          aria-invalid={Boolean(errors.descricao)}
-          onChange={(event) => change("descricao", event.target.value || null)}
-        />
-        {errors.descricao ? <small role="alert">{errors.descricao}</small> : null}
-      </label>
-      <label>
-        Observações
-        <textarea
-          rows={3}
-          value={input.observacoes ?? ""}
-          disabled={saving}
-          onChange={(event) => change("observacoes", event.target.value || null)}
-        />
-      </label>
+      <Textarea
+        label="Descrição *"
+        rows={5}
+        value={input.descricao ?? ""}
+        disabled={saving}
+        error={errors.descricao}
+        onChange={(event) => change("descricao", event.target.value || null)}
+      />
+      <Textarea
+        label="Observações"
+        rows={3}
+        value={input.observacoes ?? ""}
+        disabled={saving}
+        onChange={(event) => change("observacoes", event.target.value || null)}
+      />
       <div className="occurrence-actions">
         <Button type="submit" loading={saving}>
           Salvar ocorrência

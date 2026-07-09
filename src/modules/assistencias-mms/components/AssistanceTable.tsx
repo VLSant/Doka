@@ -11,7 +11,7 @@ export function AssistanceTable({
   returnSearch: string;
 }) {
   return (
-    <TableFrame className="assistance-table-wrap">
+    <TableFrame>
       <table className="assistance-table" aria-label="Assistências MMS">
         <thead>
           <tr>

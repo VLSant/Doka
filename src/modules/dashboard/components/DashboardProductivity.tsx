@@ -1,4 +1,5 @@
 import { Card } from "../../../components/ui/Card";
+import { TableFrame } from "../../../components/ui/Patterns";
 import type { DashboardAlerta, ProdutividadeTotais, ResumoPosto } from "../types";
 
 function percent(value: number | null) {
@@ -40,14 +41,32 @@ export function DashboardProductivity({
           <ProductivityCard title="Eficiência do período" totals={periodo} />
         </div>
         <Card padding="lg">
-          <h3>Início do dia × fechamento do período</h3>
+          <h3>Início do dia x fechamento do período</h3>
           <dl className="dashboard-comparison">
-            <div><dt>Previstas no início</dt><dd>{periodo.previstas}</dd></div>
-            <div><dt>Executadas</dt><dd>{periodo.executadas}</dd></div>
-            <div><dt>Não executadas</dt><dd>{periodo.naoExecutadas}</dd></div>
-            <div><dt>Pendentes</dt><dd>{periodo.pendentes}</dd></div>
-            <div><dt>Canceladas</dt><dd>{periodo.canceladas}</dd></div>
-            <div><dt>Removidas por nova importação</dt><dd>{periodo.removidas}</dd></div>
+            <div>
+              <dt>Previstas no início</dt>
+              <dd>{periodo.previstas}</dd>
+            </div>
+            <div>
+              <dt>Executadas</dt>
+              <dd>{periodo.executadas}</dd>
+            </div>
+            <div>
+              <dt>Não executadas</dt>
+              <dd>{periodo.naoExecutadas}</dd>
+            </div>
+            <div>
+              <dt>Pendentes</dt>
+              <dd>{periodo.pendentes}</dd>
+            </div>
+            <div>
+              <dt>Canceladas</dt>
+              <dd>{periodo.canceladas}</dd>
+            </div>
+            <div>
+              <dt>Removidas por nova importação</dt>
+              <dd>{periodo.removidas}</dd>
+            </div>
           </dl>
         </Card>
       </section>
@@ -57,35 +76,45 @@ export function DashboardProductivity({
         {porPosto.length === 0 ? (
           <p>Nenhum posto com produtividade no período.</p>
         ) : (
-          <div className="dashboard-table-wrap">
+          <TableFrame>
             <table className="dashboard-table">
               <thead>
                 <tr>
-                  <th>Posto</th><th>Previstas</th><th>Executadas</th>
-                  <th>Não executadas</th><th>Pendentes</th><th>Eficiência</th>
-                  <th>Meta</th><th>Margem</th>
+                  <th>Posto</th>
+                  <th data-numeric>Previstas</th>
+                  <th data-numeric>Executadas</th>
+                  <th data-numeric>Não executadas</th>
+                  <th data-numeric>Pendentes</th>
+                  <th data-numeric>Eficiência</th>
+                  <th data-numeric>Meta</th>
+                  <th data-numeric>Margem</th>
                 </tr>
               </thead>
               <tbody>
                 {porPosto.map((posto) => (
                   <tr key={posto.postoId}>
-                    <td>{posto.postoNome}</td><td>{posto.previstas}</td>
-                    <td>{posto.executadas}</td><td>{posto.naoExecutadas}</td>
-                    <td>{posto.pendentes}</td><td>{percent(posto.eficiencia)}</td>
-                    <td>{percent(posto.meta)}</td>
-                    <td>{posto.margemFrustracao ?? "Sem meta"}</td>
+                    <td>{posto.postoNome}</td>
+                    <td data-numeric>{posto.previstas}</td>
+                    <td data-numeric>{posto.executadas}</td>
+                    <td data-numeric>{posto.naoExecutadas}</td>
+                    <td data-numeric>{posto.pendentes}</td>
+                    <td data-numeric>{percent(posto.eficiencia)}</td>
+                    <td data-numeric>{percent(posto.meta)}</td>
+                    <td data-numeric>{posto.margemFrustracao ?? "Sem meta"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableFrame>
         )}
       </section>
 
       <section aria-labelledby="dashboard-alerts-title">
         <h2 id="dashboard-alerts-title">Alertas críticos</h2>
         {alertas.length === 0 ? (
-          <Card padding="md"><p>Nenhum alerta crítico nos dados consultados.</p></Card>
+          <Card padding="md">
+            <p>Nenhum alerta crítico nos dados consultados.</p>
+          </Card>
         ) : (
           <ul className="dashboard-alerts">
             {alertas.map((alerta) => (

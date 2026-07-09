@@ -600,6 +600,13 @@ Atualizar esta tabela ao iniciar ou concluir uma frente.
 | 04/07/2026 | Catálogo de screenshots                      | Parcial                | 29 capturas em 1440x900 catalogadas em `docs/auditoria-visual/README.md`; detalhes/edições sem dados não foram simulados                                                                                                        | Executar análise visual e decidir se será criada massa descartável para as lacunas |
 | 04/07/2026 | Redesign e consolidação do design system     | Concluída tecnicamente | Tokens reconciliados; componentes compartilhados aplicados; aliases, hex visual e tipografia numérica eliminados de `src/modules`; validações executadas sem browser/E2E                                                        | Homologar visualmente as rotas em etapa posterior                                  |
 | 04/07/2026 | Redesign de interação 2.0                    | Concluída tecnicamente | Shell colapsável, topbar contextual, listas search-first, filtros e formulários em Drawer, chips, skeletons, paginação, menus e toasts implementados; plano registrado em `docs/09-redesign-interacao-frontend.md`              | Homologar visualmente e decidir composição de detalhe de Assistência sobre a lista |
+| 05/07/2026 | Screenshots pós-redesign                     | Parcial                | 18 capturas válidas em 1440x900 adicionadas em `docs/auditoria-visual/screenshots/2026-07-05-pos-redesign`; capturas presas em loading foram descartadas e o navegador interno deixou de responder                                | Retomar as telas pendentes; decidir se pode ser criada massa visual para detalhes e edições sem registros |
+| 06/07/2026 | Padronização profissional de componentes     | Parcial                | Plano criado em `docs/10-plano-padronizacao-componentes-profissionais.md`; raios e tracking do design system ajustados; foco, teclado e ARIA reforçados em primitives compartilhados; lint/design-system, typecheck, build e teste unitário focado passaram | Continuar migração/revisão por tela e homologar visualmente quando a restrição de browser/E2E for removida |
+| 06/07/2026 | Migração UI de Tarefas/Rotinas               | Parcial                | Formulários migrados para `Input`, `Select`, `Textarea` e `Checkbox`; rotina/lista/detalhe usam `Page`, `PageHeader`, `TableFrame` e `StatusBadge`; CSS local de campos, tabela, status e media query antiga removido; typecheck, lint-design-system e testes focados passaram | Continuar nas próximas telas com controles nativos restantes, começando por Ocorrências e Lançamentos |
+| 06/07/2026 | Migração UI de Ocorrências                   | Parcial                | Formulário, detalhe e tabela migrados para primitives compartilhados; CSS local de controles/tabela/status removido; teste `tests/integration/occurrence-form.test.tsx` criado; testes focados de Ocorrências e design system passaram | Continuar pelos controles nativos restantes em Lançamentos e pontos específicos de Importações |
+| 06/07/2026 | Migração UI de Lançamentos                   | Parcial                | `RadioOption` criado; formulário, tabela e detalhe migrados para primitives compartilhados; CSS local de controles/tabela/status removido; testes focados de Lançamentos e design system passaram | Revisar controles restantes em Importações MMS, preservando `input[type=file]` como exceção permitida |
+| 06/07/2026 | Migração UI de Importações MMS               | Parcial                | `CorrectionEditor` migrado para `Input`; varredura de controles nativos em `src/modules` agora aponta somente o `input[type=file]` encapsulado em `FileDropzone`, exceção permitida; testes focados de correção e arquivo passaram | Executar validações finais e manter homologação visual para etapa permitida |
+| 06/07/2026 | Migração UI de Administração                 | Parcial                | Tabelas de usuários, postos, vínculos e metas migradas para `TableFrame`; CSS local de tabela/status/campo legado removido; `AdminFields.Field` removido; testes focados de Administração passaram | Continuar limpeza visual em Dashboard, Assistências e Importações, sem mexer em regras de negócio |
 
 ---
 
@@ -644,3 +651,48 @@ Os status operacionais continuam sendo enums oficiais do domínio, não cadastro
 livres, para preservar as transições e regras já protegidas no banco.
 Responsáveis continuam sendo usuários operacionais, evitando um cadastro
 paralelo sem função adicional.
+### Atualizacao de 06/07/2026 - Migracao UI de Assistencias MMS
+
+Estado parcial. `AssistanceTable` passou a delegar estrutura visual para
+`TableFrame`; badges locais foram substituidos por `StatusBadge`; o detalhe
+passou a usar `Page`; e o CSS local ficou restrito a composicao de filtros,
+cabecalho legado, grids de fatos/valores e historico. Testes focados de
+Assistencias MMS e design system passaram. Proximo passo: continuar limpeza
+visual em Dashboard e Importacoes, mantendo homologacao visual para etapa
+permitida.
+
+### Atualizacao de 06/07/2026 - Migracao UI do Dashboard
+
+Estado parcial. A tabela de produtividade por posto passou a usar `TableFrame`;
+colunas numericas foram marcadas com `data-numeric`; CSS legado de filtros
+nativos, tabela propria e counters antigos foi removido; e o CSS local ficou
+restrito a grids, links de metricas, comparativo de produtividade e alertas.
+Testes focados de Dashboard e design system passaram. Proximo passo: continuar
+limpeza visual em Importacoes MMS, preservando `input[type=file]` como excecao
+permitida.
+
+### Atualizacao de 06/07/2026 - Migracao UI de Importacoes MMS
+
+Estado parcial. `LotsTable` e as tabelas de erros/alertas do preview passaram a
+usar `TableFrame`; colunas numericas foram marcadas com `data-numeric`; CSS
+legado de tabela, tabs e inputs antigos foi removido; e o CSS local ficou
+restrito a filtros, resumo do lote, largura minima de tabelas e itens brutos.
+Testes focados de Importacoes MMS e design system passaram. O `input[type=file]`
+do `FileDropzone` permanece como excecao permitida.
+
+### Atualizacao de 06/07/2026 - Auditoria e refinamento do design system
+
+Estado parcial. Eventos da auditoria passaram a usar `Card`; CSS local da
+auditoria ficou restrito a timeline, filtros e comparacao JSON; e `Avatar`,
+`Button`, `Drawer` e `Input` foram ajustados para remover valores visuais
+literais remanescentes em favor dos tokens oficiais. `LoadingState` tambem foi
+normalizado para tokens de raio e borda. Testes focados de rotas protegidas,
+route guard e design system passaram.
+
+### Atualizacao de 06/07/2026 - Comportamento de DropdownMenu
+
+Estado parcial. `DropdownMenu` recebeu `aria-haspopup`, `aria-controls`, foco
+inicial no primeiro item, fechamento por Escape com retorno de foco ao
+disparador e navegacao por ArrowUp/ArrowDown/Home/End. Estados
+`focus-visible` foram adicionados ao disparador e aos itens. Teste unitario de
+design system passou a cobrir o contrato de teclado e foco do menu.

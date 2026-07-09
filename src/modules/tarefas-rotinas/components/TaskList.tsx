@@ -29,8 +29,8 @@ function dateLabel(value: string | null) {
 
 export function TaskList({ tasks }: { tasks: Task[] }) {
   return (
-    <TableFrame className="tasks-table-wrap">
-      <table className="tasks-table">
+    <TableFrame>
+      <table>
         <thead>
           <tr>
             <th>Tarefa</th>
@@ -45,13 +45,15 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             <tr key={task.id}>
               <td>
                 <Link to={`/app/tarefas-rotinas/${task.id}`}>{task.titulo}</Link>
-                {task.rotina_id ? <small>Gerada por rotina</small> : null}
+                {task.rotina_id ? (
+                  <small className="tasks-table__meta">Gerada por rotina</small>
+                ) : null}
               </td>
               <td>{task.responsaveis.map(({ nome }) => nome).join(", ") || "Não informado"}</td>
               <td>{task.posto?.nome ?? "Geral"}</td>
               <td className={isTaskLate(task) ? "tasks-table__late" : ""}>
                 {dateLabel(task.prazo_data)}
-                {isTaskLate(task) ? <small>Atrasada</small> : null}
+                {isTaskLate(task) ? <small className="tasks-table__meta">Atrasada</small> : null}
               </td>
               <td>
                 <StatusBadge tone={STATUS_TONE[task.status]}>

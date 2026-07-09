@@ -4,6 +4,7 @@ import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
 import { Drawer } from "../../../components/ui/Drawer";
+import { TableFrame } from "../../../components/ui/Patterns";
 import type { AdministrationService } from "../administration-service";
 import type {
   AdministrationSnapshot,
@@ -284,8 +285,8 @@ export function PostsSection({
       {data.postos.length === 0 ? (
         <p className="admin-empty">Nenhum posto cadastrado.</p>
       ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <TableFrame>
+          <table>
             <thead>
               <tr>
                 <th>Nome</th>
@@ -316,15 +317,15 @@ export function PostsSection({
               ))}
             </tbody>
           </table>
-        </div>
+        </TableFrame>
       )}
 
       <h3>Vínculos ativos</h3>
       {data.vinculos.length === 0 ? (
         <p className="admin-empty">Nenhum vínculo cadastrado.</p>
       ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <TableFrame>
+          <table>
             <thead>
               <tr>
                 <th>Usuário</th>
@@ -355,7 +356,7 @@ export function PostsSection({
               ))}
             </tbody>
           </table>
-        </div>
+        </TableFrame>
       )}
     </section>
   );

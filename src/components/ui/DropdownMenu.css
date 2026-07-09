@@ -19,6 +19,12 @@
   background: var(--surface-sunken);
 }
 
+.doka-dropdown > button:focus-visible,
+.doka-dropdown__menu button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
 .doka-dropdown__menu {
   position: absolute;
   top: calc(100% + var(--space-1));

@@ -28,3 +28,7 @@
   box-shadow: var(--shadow-md);
   transform: translateY(var(--hover-lift));
 }
+
+.doka-card--interactive:focus-within {
+  box-shadow: var(--ring), var(--shadow-md);
+}
