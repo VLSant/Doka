@@ -6,7 +6,7 @@ import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Tabs } from "../../../components/ui/Tabs";
-import { useToast } from "../../../components/ui/Toast";
+import { toast } from "sonner";
 import { useAuth } from "../../auth/AuthProvider";
 import {
   AdministrationError,
@@ -33,7 +33,6 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
   );
   const [section, setSection] = useState<Section>("usuarios");
   const [error, setError] = useState("");
-  const toast = useToast();
   const queryClient = useQueryClient();
   const snapshotQuery = useQuery({
     queryKey: queryKeys.administration.snapshot(),
@@ -50,18 +49,18 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
           ? cause.message
           : "Não foi possível concluir a operação.";
       setError(message);
-      toast(message, "error");
+      toast.error(message);
     },
-    [toast],
+    [],
   );
 
   const onChanged = useCallback(
     async (message: string) => {
       setError("");
-      toast(message, "success");
+      toast.success(message);
       await queryClient.invalidateQueries({ queryKey: queryKeys.administration.all });
     },
-    [queryClient, toast],
+    [queryClient],
   );
 
   if (state.name !== "autorizado") {

@@ -12,7 +12,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { UserContextPanel } from "./UserContextPanel";
 import { useAuth } from "../../modules/auth/AuthProvider";
-import { ToastProvider } from "../ui/Toast";
+import { Toaster } from "../shadcn/ui/sonner";
 import "./AppShell.css";
 
 export function AppShell() {
@@ -62,7 +62,8 @@ export function AppShell() {
           : null;
 
   return (
-    <ToastProvider>
+    <>
+      <Toaster position="bottom-right" richColors />
       <div className={`doka-app-shell${collapsed ? " doka-app-shell--collapsed" : ""}`}>
         {context ? (
           <Sidebar
@@ -92,6 +93,6 @@ export function AppShell() {
           </main>
         </div>
       </div>
-    </ToastProvider>
+    </>
   );
 }
