@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Copy, Edit3, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { queryKeys } from "../../../app/query-keys";
+import { runBatch } from "../../../lib/batch";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { OccurrenceFormModal } from "../components/OccurrenceFormModal";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
@@ -12,6 +15,7 @@ import { Input } from "../../../components/ui/Input";
 import { SearchInput } from "../../../components/ui/SearchInput";
 import { Select } from "../../../components/ui/FormControls";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
 import { occurrenceMatchesFilters, STATUS_LABELS } from "../occurrence-state";
 import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
@@ -34,8 +38,12 @@ const EMPTY_CATALOGS: OccurrenceCatalogs = {
 
 export function OccurrenceListPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<OccurrenceFilters>({ tab: "hoje" });
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
+  const [actionError, setActionError] = useState<Error | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const creating = searchParams.get("novo") === "1";
   const editingId = searchParams.get("editar");
@@ -56,6 +64,17 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
       (params) => {
         params.delete("novo");
         params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function openEdit(id: string) {
+    setSearchParams(
+      (params) => {
+        params.set("editar", id);
+        params.delete("novo");
         return params;
       },
       { replace: false },
@@ -83,6 +102,70 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
     () => items.filter((item) => occurrenceMatchesFilters(item, filters)),
     [filters, items],
   );
+  const selectedItems = visible.filter((item) => selectedIds.has(item.id));
+  const firstSelected = selectedItems[0];
+
+  const duplicateMutation = useMutation({
+    mutationFn: (item: (typeof visible)[number]) =>
+      service.create({
+        assistencia_id: item.assistencia_id,
+        posto_id: item.posto_id,
+        tipo_ocorrencia_id: item.tipo_ocorrencia_id,
+        prioridade_id: item.prioridade_id,
+        responsavel_id: item.responsavel_id,
+        titulo: `${item.titulo} (copia)`,
+        descricao: item.descricao,
+        observacoes: item.observacoes,
+        data_retorno: item.data_retorno,
+      }),
+    onSuccess: async () => {
+      setActionError(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.all });
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao duplicar ocorrencia.")),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: ({ ids, justification }: { ids: string[]; justification: string }) =>
+      runBatch(
+        ids,
+        (id) => service.remove(id, justification),
+        (failed, total) =>
+          `Falha ao remover ${failed} de ${total} ocorrência(s); as demais foram removidas.`,
+      ),
+    onSuccess: () => {
+      setRemoveTarget(null);
+      setSelectedIds(new Set());
+      setActionError(null);
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao remover ocorrencia.")),
+    onSettled: async () => {
+      // Invalida mesmo em falha parcial: itens já removidos saem da lista.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.all });
+    },
+  });
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllVisible() {
+    setSelectedIds((current) => {
+      const visibleIds = visible.map((item) => item.id);
+      const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => current.has(id));
+      const next = new Set(current);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
 
   function setFilter<K extends keyof OccurrenceFilters>(key: K, value: OccurrenceFilters[K]) {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -255,6 +338,13 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           actions={<Button onClick={reload}>Tentar novamente</Button>}
         />
       ) : null}
+      {actionError ? (
+        <FeedbackState
+          tone="error"
+          title="A acao nao foi concluida"
+          description={actionError.message}
+        />
+      ) : null}
       {!loading && !error && visible.length === 0 ? (
         <FeedbackState
           tone="empty"
@@ -265,8 +355,49 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
       ) : null}
       {!loading && !error && visible.length > 0 ? (
         <>
-          <OccurrenceTable items={visible} />
+          <OccurrenceTable
+            items={visible}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelected}
+            onToggleAll={toggleAllVisible}
+            onEdit={openEdit}
+            onDuplicate={(item) => duplicateMutation.mutate(item)}
+            onRemove={(id) => setRemoveTarget([id])}
+          />
         </>
+      ) : null}
+      {selectedItems.length > 0 ? (
+        <SidebarActionList
+          summary={
+            <>
+              <span>Selecionadas</span>
+              <strong>{selectedItems.length}</strong>
+              <span>{selectedItems.filter((item) => item.status !== "encerrada").length} ativas</span>
+            </>
+          }
+          onClear={() => setSelectedIds(new Set())}
+          items={[
+            {
+              label: "Editar primeira",
+              icon: <Edit3 size={15} aria-hidden="true" />,
+              disabled: !firstSelected,
+              onClick: () => firstSelected && openEdit(firstSelected.id),
+            },
+            {
+              label: "Duplicar primeira",
+              icon: <Copy size={15} aria-hidden="true" />,
+              disabled: !firstSelected || duplicateMutation.isPending,
+              onClick: () => firstSelected && duplicateMutation.mutate(firstSelected),
+            },
+            {
+              label: "Excluir selecionadas",
+              icon: <Trash2 size={15} aria-hidden="true" />,
+              variant: "destructive",
+              disabled: removeMutation.isPending,
+              onClick: () => setRemoveTarget(selectedItems.map((item) => item.id)),
+            },
+          ]}
+        />
       ) : null}
 
       {creating || editingId ? (
@@ -276,6 +407,19 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           service={injected}
         />
       ) : null}
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover ocorrencia"
+        description="Esta acao remove logicamente a ocorrencia e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={(justification) => {
+          if (removeTarget) removeMutation.mutate({ ids: removeTarget, justification });
+        }}
+      />
     </Page>
   );
 }

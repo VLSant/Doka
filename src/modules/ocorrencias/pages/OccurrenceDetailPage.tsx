@@ -8,6 +8,7 @@ import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { Select, Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
@@ -36,6 +37,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
   const [nextStatus, setNextStatus] = useState<OccurrenceStatus | "">("");
   const [justification, setJustification] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const detailQuery = useQuery({
     queryKey: queryKeys.occurrences.detail(ocorrenciaId),
@@ -93,9 +95,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     transitionMutation.mutate({ status: nextStatus, justification, returnDate });
   }
 
-  function remove() {
-    const reason = window.prompt("Justificativa para remover a ocorrencia:");
-    if (!reason?.trim()) return;
+  function remove(reason: string) {
     setError(null);
     removeMutation.mutate(reason);
   }
@@ -123,7 +123,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
             <ButtonLink variant="outline" to={`/app/ocorrencias/${occurrence.id}/editar`}>
               Editar
             </ButtonLink>
-            <Button variant="danger" disabled={isActing} onClick={() => void remove()}>
+            <Button variant="danger" disabled={isActing} onClick={() => setRemoveOpen(true)}>
               Remover
             </Button>
           </div>
@@ -248,6 +248,15 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
         )}
       </Card>
       <EntityHistory entityType="ocorrencias" entityId={occurrence.id} />
+      <RemovalAlertDialog
+        open={removeOpen}
+        title="Remover ocorrencia"
+        description="Esta acao remove logicamente a ocorrencia e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={setRemoveOpen}
+        onConfirm={(reason) => void remove(reason)}
+      />
     </Page>
   );
 }

@@ -1,0 +1,94 @@
+.doka-sidebar-actions {
+  position: fixed;
+  right: var(--space-6);
+  top: 172px;
+  z-index: 20;
+  width: min(280px, calc(100vw - var(--space-6) * 2));
+  overflow: hidden;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-panel);
+}
+
+.doka-sidebar-actions header,
+.doka-sidebar-actions__summary {
+  padding: var(--space-4);
+}
+
+.doka-sidebar-actions header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: var(--border-hairline);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.doka-sidebar-actions header button {
+  border: 0;
+  background: transparent;
+  color: var(--text-link);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.doka-sidebar-actions__summary {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.doka-sidebar-actions__summary strong {
+  color: var(--text-strong);
+  font-size: var(--text-lg);
+}
+
+.doka-sidebar-actions__items {
+  display: grid;
+}
+
+.doka-sidebar-actions__items button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border: 0;
+  border-top: var(--border-hairline);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  color: var(--text-body);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.doka-sidebar-actions__items button:hover {
+  background: var(--surface-sunken);
+}
+
+.doka-sidebar-actions__items button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.doka-sidebar-actions__items button.is-destructive {
+  color: var(--red-600);
+}
+
+.doka-sidebar-actions__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+@media (max-width: 960px) {
+  .doka-sidebar-actions {
+    inset: auto var(--space-4) var(--space-4) var(--space-4);
+    width: auto;
+  }
+}

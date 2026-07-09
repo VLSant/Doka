@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Copy, Edit3, Trash2 } from "lucide-react";
 import { queryKeys } from "../../../app/query-keys";
+import { runBatch } from "../../../lib/batch";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips, type FilterChip } from "../../../components/ui/FilterChips";
 import { Pagination } from "../../../components/ui/Pagination";
 import { SearchInput } from "../../../components/ui/SearchInput";
 import { Select } from "../../../components/ui/FormControls";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
 import type { CatalogService } from "../../../services/catalog-service";
 import { useAuth } from "../../auth/AuthProvider";
@@ -56,6 +60,9 @@ export function TaskCenterPage({
   const { catalogs } = useTaskCatalogs(catalogService);
   const [filters, setFilters] = useState<TaskFilters>({ slice: "hoje" });
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
+  const [actionError, setActionError] = useState<Error | null>(null);
   const [page, setPage] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const creating = searchParams.get("novo") === "1";
@@ -150,6 +157,82 @@ export function TaskCenterPage({
     );
   }
 
+  function openEdit(id: string) {
+    setSearchParams(
+      (params) => {
+        params.set("editar", id);
+        params.delete("novo");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  const selectedItems = visible.filter((task) => selectedIds.has(task.id));
+  const firstSelected = selectedItems[0];
+  const duplicateMutation = useMutation({
+    mutationFn: (task: (typeof visible)[number]) =>
+      service.createTask({
+        titulo: `${task.titulo} (copia)`,
+        descricao: task.descricao ?? undefined,
+        tipo: task.tipo === "rotina" ? "avulsa" : task.tipo,
+        postoId: task.posto_id ?? undefined,
+        cargoFuncaoId: task.cargo_funcao_id ?? undefined,
+        prioridadeId: task.prioridade_id ?? undefined,
+        prazoData: task.prazo_data ?? undefined,
+        horarioLimite: task.horario_limite ?? undefined,
+        exigeValidacao: task.exige_validacao,
+        observacoes: task.observacoes ?? undefined,
+        responsaveis: task.responsaveis.map((item) => item.id),
+      }),
+    onSuccess: async () => {
+      setActionError(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao duplicar tarefa.")),
+  });
+  const removeMutation = useMutation({
+    mutationFn: ({ ids, justification }: { ids: string[]; justification: string }) =>
+      runBatch(
+        ids,
+        (id) => service.removeTask(id, justification),
+        (failed, total) =>
+          `Falha ao remover ${failed} de ${total} tarefa(s); as demais foram removidas.`,
+      ),
+    onSuccess: () => {
+      setRemoveTarget(null);
+      setSelectedIds(new Set());
+      setActionError(null);
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao remover tarefa.")),
+    onSettled: async () => {
+      // Invalida mesmo em falha parcial: itens já removidos saem da lista.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllPaged() {
+    setSelectedIds((current) => {
+      const pageIds = paged.map((task) => task.id);
+      const allSelected = pageIds.length > 0 && pageIds.every((id) => current.has(id));
+      const next = new Set(current);
+      if (allSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
   if (!viewer) return null;
 
   return (
@@ -236,6 +319,13 @@ export function TaskCenterPage({
           actions={<Button onClick={() => void tasksQuery.refetch()}>Tentar novamente</Button>}
         />
       ) : null}
+      {actionError ? (
+        <FeedbackState
+          tone="error"
+          title="A acao nao foi concluida"
+          description={actionError.message}
+        />
+      ) : null}
       {!loading && !error && visible.length === 0 ? (
         <FeedbackState
           tone="empty"
@@ -246,9 +336,50 @@ export function TaskCenterPage({
       ) : null}
       {visible.length > 0 ? (
         <>
-          <TaskList tasks={paged} />
+          <TaskList
+            tasks={paged}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelected}
+            onToggleAll={toggleAllPaged}
+            onEdit={openEdit}
+            onDuplicate={(task) => duplicateMutation.mutate(task)}
+            onRemove={(id) => setRemoveTarget([id])}
+          />
           <Pagination page={page} pageSize={pageSize} total={visible.length} onChange={setPage} />
         </>
+      ) : null}
+      {selectedItems.length > 0 ? (
+        <SidebarActionList
+          summary={
+            <>
+              <span>Selecionadas</span>
+              <strong>{selectedItems.length}</strong>
+              <span>{selectedItems.filter((task) => task.status !== "validada").length} abertas</span>
+            </>
+          }
+          onClear={() => setSelectedIds(new Set())}
+          items={[
+            {
+              label: "Editar primeira",
+              icon: <Edit3 size={15} aria-hidden="true" />,
+              disabled: !firstSelected,
+              onClick: () => firstSelected && openEdit(firstSelected.id),
+            },
+            {
+              label: "Duplicar primeira",
+              icon: <Copy size={15} aria-hidden="true" />,
+              disabled: !firstSelected || duplicateMutation.isPending,
+              onClick: () => firstSelected && duplicateMutation.mutate(firstSelected),
+            },
+            {
+              label: "Excluir selecionadas",
+              icon: <Trash2 size={15} aria-hidden="true" />,
+              variant: "destructive",
+              disabled: removeMutation.isPending,
+              onClick: () => setRemoveTarget(selectedItems.map((task) => task.id)),
+            },
+          ]}
+        />
       ) : null}
       {creating || editingId ? (
         <TaskFormModal
@@ -259,6 +390,19 @@ export function TaskCenterPage({
           onClose={closeFormModal}
         />
       ) : null}
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover tarefa"
+        description="Esta acao remove logicamente a tarefa e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={(justification) => {
+          if (removeTarget) removeMutation.mutate({ ids: removeTarget, justification });
+        }}
+      />
     </Page>
   );
 }

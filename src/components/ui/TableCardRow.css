@@ -1,0 +1,158 @@
+.doka-card-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.doka-card-list__header,
+.doka-card-row {
+  display: grid;
+  align-items: center;
+  column-gap: var(--space-3);
+}
+
+.doka-card-list__header {
+  padding: 0 var(--space-4) var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.doka-card-list__header-cell {
+  min-width: 0;
+}
+
+.doka-card-list__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.doka-card-list__sort:hover {
+  color: var(--text-strong);
+}
+
+.doka-card-row {
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-card);
+  border-radius: var(--radius-card-row);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-base) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.doka-card-row:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+.doka-card-row--selected,
+.doka-card-row--highlighted {
+  border-color: var(--border-brand);
+}
+
+.doka-card-row__select {
+  display: flex;
+  justify-content: center;
+}
+
+.doka-card-row input[type="checkbox"],
+.doka-card-list__header input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-primary);
+}
+
+.doka-card-row__cell {
+  min-width: 0;
+  color: var(--text-body);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.doka-card-row__cell strong,
+.doka-card-row__value {
+  color: var(--text-strong);
+  font-weight: var(--fw-bold);
+}
+
+.doka-card-row__muted {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.doka-card-row__late {
+  color: var(--red-600);
+  font-weight: var(--fw-semibold);
+}
+
+.doka-card-row__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.doka-card-row__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.doka-card-list__cell--right {
+  text-align: right;
+}
+
+.doka-card-list__cell--center {
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .doka-card-list__header {
+    display: none;
+  }
+
+  .doka-card-row {
+    grid-template-columns: 28px minmax(0, 1fr) 36px !important;
+    gap: var(--space-3);
+    align-items: start;
+  }
+
+  .doka-card-row__cell {
+    grid-column: 2;
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .doka-card-row__cell::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+  }
+
+  .doka-card-row__select {
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: var(--space-1);
+  }
+
+  .doka-card-row__actions {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .doka-card-list__cell--right,
+  .doka-card-list__cell--center {
+    text-align: left;
+  }
+}

@@ -742,3 +742,24 @@ Validacao executada: `npm run typecheck`, `npm run lint`, `npm run test` e
 `npm run build` passaram. Proximo passo: homologar manualmente os fluxos modais
 e decidir se os formularios inline de cadastros auxiliares/metas devem ser
 movidos para modal em um acabamento administrativo separado.
+
+### Atualizacao de 09/07/2026 - Fase 4 de listas como card-rows Dracma
+
+Estado concluido tecnicamente. As listas principais de Ocorrencias,
+Tarefas, Rotinas, Lancamentos e Administracao foram migradas de `<table>` para
+card-rows responsivos com header solto, checkbox de selecao, sombra/radius
+Dracma, chips padronizados e menu de acoes por linha em DropdownMenu shadcn.
+Selecao em lote revela painel lateral de acoes nas listas operacionais, com
+resumo e acoes aplicaveis. Datas/prazos atrasados mantem destaque visual em
+vermelho; valores monetarios aparecem em bold alinhados a direita.
+
+Pendencias herdadas tambem foram tratadas: remocao de ocorrencia no detalhe
+agora usa `RemovalAlertDialog` com justificativa em vez de `window.prompt`;
+`TaskFormPage` e `RoutineFormPage` redirects mortos e seus lazy loaders foram
+removidos; `AdminAppModal` foi extraido para componente compartilhado; e
+`testTimeout` do Vitest foi aumentado para 15000.
+
+Validacao executada: `npm run typecheck`, `npm run lint`, `npm run build` e
+`npm run test` passaram. O lint permanece com avisos preexistentes de Fast
+Refresh, sem erros. Nao foi executado browser, Playwright, E2E ou homologacao
+visual, conforme restricao vigente.

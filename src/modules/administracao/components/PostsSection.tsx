@@ -1,19 +1,10 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
-import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
-import {
-  AppModal,
-  AppModalBody,
-  AppModalContent,
-  AppModalFooter,
-  AppModalHeader,
-  AppModalSubtitle,
-  AppModalTitle,
-} from "../../../components/shadcn/AppModal";
 import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
-import { TableFrame } from "../../../components/ui/Patterns";
+import { RowActionsMenu } from "../../../components/ui/RowActionsMenu";
+import { TableCardHeader, TableCardList, TableCardRow } from "../../../components/ui/TableCardRow";
 import type { AdministrationService } from "../administration-service";
 import type {
   AdministrationSnapshot,
@@ -21,6 +12,7 @@ import type {
   Posto,
   VinculoUsuarioPosto,
 } from "../types";
+import { AdminAppModal } from "./AdminAppModal";
 import { SelectField, StatusBadge, TextareaField } from "./AdminFields";
 
 interface PostsSectionProps {
@@ -46,35 +38,6 @@ const emptyLink = {
   posto_id: "",
   nivel_acesso: "operacional" as NivelAcessoPosto,
 };
-
-function AdminAppModal({
-  open,
-  title,
-  description,
-  footer,
-  children,
-  onClose,
-}: {
-  open: boolean;
-  title: string;
-  description: string;
-  footer: ReactNode;
-  children: ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <AppModal open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
-      <AppModalContent size="md">
-        <AppModalHeader>
-          <AppModalTitle>{title}</AppModalTitle>
-          <AppModalSubtitle>{description}</AppModalSubtitle>
-        </AppModalHeader>
-        <AppModalBody>{children}</AppModalBody>
-        <AppModalFooter>{footer}</AppModalFooter>
-      </AppModalContent>
-    </AppModal>
-  );
-}
 
 export function PostsSection({
   data,
@@ -126,7 +89,7 @@ export function PostsSection({
       await service.saveLink(link.id, link.usuario_id, link.posto_id, link.nivel_acesso, actorId);
       setLink(emptyLink);
       setLinkOpen(false);
-      await onChanged("Vínculo salvo.");
+      await onChanged("Vinculo salvo.");
     } catch (error) {
       onError(error);
     } finally {
@@ -160,7 +123,7 @@ export function PostsSection({
       if (kind === "post") await service.removePost(id, actorId);
       else await service.removeLink(id, actorId);
       setRemoveTarget(null);
-      await onChanged(kind === "post" ? "Posto removido." : "Vínculo removido.");
+      await onChanged(kind === "post" ? "Posto removido." : "Vinculo removido.");
     } catch (error) {
       onError(error);
     }
@@ -182,7 +145,7 @@ export function PostsSection({
                 setLinkOpen(true);
               }}
             >
-              Novo vínculo
+              Novo vinculo
             </Button>
             <Button
               onClick={() => {
@@ -231,12 +194,12 @@ export function PostsSection({
                 required
               />
               <Input
-                label="Código"
+                label="Codigo"
                 value={post.codigo}
                 onChange={(event) => setPost({ ...post, codigo: event.target.value })}
               />
               <TextareaField
-                label="Descrição"
+                label="Descricao"
                 value={post.descricao}
                 onChange={(event) => setPost({ ...post, descricao: event.target.value })}
               />
@@ -250,8 +213,8 @@ export function PostsSection({
 
           <AdminAppModal
             open={linkOpen}
-            title={link.id ? "Editar vínculo" : "Novo vínculo"}
-            description="Defina o escopo de acesso do usuário ao posto."
+            title={link.id ? "Editar vinculo" : "Novo vinculo"}
+            description="Defina o escopo de acesso do usuario ao posto."
             onClose={() => {
               setLinkOpen(false);
               setLink(emptyLink);
@@ -268,14 +231,14 @@ export function PostsSection({
                   Cancelar
                 </Button>
                 <Button type="submit" form="admin-link-form" loading={saving}>
-                  Salvar vínculo
+                  Salvar vinculo
                 </Button>
               </>
             }
           >
             <form id="admin-link-form" className="admin-form" onSubmit={submitLink}>
               <SelectField
-                label="Usuário"
+                label="Usuario"
                 value={link.usuario_id}
                 onChange={(event) => setLink({ ...link, usuario_id: event.target.value })}
                 disabled={Boolean(link.id)}
@@ -307,14 +270,14 @@ export function PostsSection({
                   ))}
               </SelectField>
               <SelectField
-                label="Nível"
+                label="Nivel"
                 value={link.nivel_acesso}
                 onChange={(event) =>
                   setLink({ ...link, nivel_acesso: event.target.value as NivelAcessoPosto })
                 }
               >
                 <option value="operacional">Operacional</option>
-                <option value="supervisao">Supervisão</option>
+                <option value="supervisao">Supervisao</option>
                 <option value="consulta">Consulta</option>
               </SelectField>
             </form>
@@ -326,84 +289,84 @@ export function PostsSection({
       {data.postos.length === 0 ? (
         <p className="admin-empty">Nenhum posto cadastrado.</p>
       ) : (
-        <TableFrame>
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Código</th>
-                <th>Estado</th>
-                {canEdit && <th>Ações</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {data.postos.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.nome}</td>
-                  <td>{item.codigo ?? "—"}</td>
-                  <td>
-                    <StatusBadge active={item.ativo} />
-                  </td>
-                  {canEdit && (
-                    <td className="admin-actions">
-                      <DropdownMenu>
-                        <DropdownMenuItem onClick={() => editPost(item)}>Editar</DropdownMenuItem>
-                        <DropdownMenuItem
-                          danger
-                          onClick={() => setRemoveTarget({ kind: "post", id: item.id })}
-                        >
-                          Remover
-                        </DropdownMenuItem>
-                      </DropdownMenu>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableFrame>
+        <TableCardList>
+          <TableCardHeader
+            selectable={false}
+            actions={canEdit}
+            columns={[
+              { key: "nome", label: "Nome", width: "minmax(180px, 1fr)" },
+              { key: "codigo", label: "Codigo", width: "120px" },
+              { key: "estado", label: "Estado", width: "90px" },
+            ]}
+          />
+          {data.postos.map((item) => (
+            <TableCardRow
+              key={item.id}
+              id={item.id}
+              selectable={false}
+              columns={[
+                { key: "nome", label: "Nome", width: "minmax(180px, 1fr)", value: <strong>{item.nome}</strong> },
+                { key: "codigo", label: "Codigo", width: "120px", value: item.codigo ?? "-" },
+                { key: "estado", label: "Estado", width: "90px", value: <StatusBadge active={item.ativo} /> },
+              ]}
+              actions={
+                canEdit ? (
+                  <RowActionsMenu
+                    onEdit={() => editPost(item)}
+                    onRemove={() => setRemoveTarget({ kind: "post", id: item.id })}
+                  />
+                ) : undefined
+              }
+            />
+          ))}
+        </TableCardList>
       )}
 
-      <h3>Vínculos ativos</h3>
+      <h3>Vinculos ativos</h3>
       {data.vinculos.length === 0 ? (
-        <p className="admin-empty">Nenhum vínculo cadastrado.</p>
+        <p className="admin-empty">Nenhum vinculo cadastrado.</p>
       ) : (
-        <TableFrame>
-          <table>
-            <thead>
-              <tr>
-                <th>Usuário</th>
-                <th>Posto</th>
-                <th>Nível</th>
-                {canEdit && <th>Ações</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {data.vinculos.map((item) => (
-                <tr key={item.id}>
-                  <td>{data.usuarios.find((user) => user.id === item.usuario_id)?.nome ?? "—"}</td>
-                  <td>
-                    {data.postos.find((postoItem) => postoItem.id === item.posto_id)?.nome ?? "—"}
-                  </td>
-                  <td>{item.nivel_acesso}</td>
-                  {canEdit && (
-                    <td className="admin-actions">
-                      <DropdownMenu>
-                        <DropdownMenuItem onClick={() => editLink(item)}>Editar</DropdownMenuItem>
-                        <DropdownMenuItem
-                          danger
-                          onClick={() => setRemoveTarget({ kind: "link", id: item.id })}
-                        >
-                          Remover
-                        </DropdownMenuItem>
-                      </DropdownMenu>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableFrame>
+        <TableCardList>
+          <TableCardHeader
+            selectable={false}
+            actions={canEdit}
+            columns={[
+              { key: "usuario", label: "Usuario", width: "minmax(180px, 1fr)" },
+              { key: "posto", label: "Posto", width: "minmax(160px, 1fr)" },
+              { key: "nivel", label: "Nivel", width: "130px" },
+            ]}
+          />
+          {data.vinculos.map((item) => (
+            <TableCardRow
+              key={item.id}
+              id={item.id}
+              selectable={false}
+              columns={[
+                {
+                  key: "usuario",
+                  label: "Usuario",
+                  width: "minmax(180px, 1fr)",
+                  value: <strong>{data.usuarios.find((user) => user.id === item.usuario_id)?.nome ?? "-"}</strong>,
+                },
+                {
+                  key: "posto",
+                  label: "Posto",
+                  width: "minmax(160px, 1fr)",
+                  value: data.postos.find((postoItem) => postoItem.id === item.posto_id)?.nome ?? "-",
+                },
+                { key: "nivel", label: "Nivel", width: "130px", value: item.nivel_acesso },
+              ]}
+              actions={
+                canEdit ? (
+                  <RowActionsMenu
+                    onEdit={() => editLink(item)}
+                    onRemove={() => setRemoveTarget({ kind: "link", id: item.id })}
+                  />
+                ) : undefined
+              }
+            />
+          ))}
+        </TableCardList>
       )}
       <RemovalAlertDialog
         open={Boolean(removeTarget)}
