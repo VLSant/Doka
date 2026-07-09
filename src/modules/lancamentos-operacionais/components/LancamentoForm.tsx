@@ -1,7 +1,9 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
-import { RadioOption, Select, Textarea } from "../../../components/ui/FormControls";
+import { RadioOption, Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import type { LancamentoFormOptions, LancamentoInput, TipoLancamento } from "../types";
 import { validateLancamentoInput } from "../types";
 
@@ -71,46 +73,41 @@ export function LancamentoForm({ initial, options, saving, onSubmit, onCancel }:
         </div>
       </fieldset>
 
-      <Select
+      <FormSelect
         label="Posto"
         value={draft.posto_id}
         disabled={saving}
         error={errors.posto_id}
-        onChange={(event) =>
-          setDraft({ ...draft, posto_id: event.target.value, assistencia_id: null })
+        onChange={(next) =>
+          setDraft({ ...draft, posto_id: next, assistencia_id: null })
         }
-      >
-        <option value="">Selecione</option>
-        {options.postos.map((posto) => (
-          <option key={posto.id} value={posto.id}>
-            {posto.nome}
-          </option>
-        ))}
-      </Select>
+        options={[
+          { value: "", label: "Selecione" },
+          ...options.postos.map((posto) => ({ value: posto.id, label: posto.nome })),
+        ]}
+      />
 
-      <Select
+      <FormSelect
         label={`Assistência ${draft.tipo === "custo_extra" ? "(obrigatória)" : "(opcional)"}`}
         value={draft.assistencia_id ?? ""}
         disabled={saving}
         error={errors.assistencia_id}
-        onChange={(event) => setDraft({ ...draft, assistencia_id: event.target.value || null })}
-      >
-        <option value="">Sem assistência</option>
-        {assistencias.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.numero}
-            {item.cliente ? ` · ${item.cliente}` : ""}
-          </option>
-        ))}
-      </Select>
+        onChange={(next) => setDraft({ ...draft, assistencia_id: next || null })}
+        options={[
+          { value: "", label: "Sem assistência" },
+          ...assistencias.map((item) => ({
+            value: item.id,
+            label: `${item.numero}${item.cliente ? ` · ${item.cliente}` : ""}`,
+          })),
+        ]}
+      />
 
-      <Input
+      <DatePickerField
         label="Data"
-        type="date"
         value={draft.data_lancamento}
         disabled={saving}
         error={errors.data_lancamento}
-        onChange={(event) => setDraft({ ...draft, data_lancamento: event.target.value })}
+        onChange={(next) => setDraft({ ...draft, data_lancamento: next })}
       />
       <Input
         label="Responsável / recurso"

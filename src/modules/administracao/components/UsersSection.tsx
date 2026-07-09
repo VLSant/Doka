@@ -164,7 +164,7 @@ export function UsersSection({
               <SelectField
                 label="Identidade Auth"
                 value={form.auth_user_id}
-                onChange={(event) => pickIdentity(event.target.value)}
+                onChange={(next) => pickIdentity(next)}
                 required
               >
                 <option value="">Selecione</option>
@@ -192,8 +192,8 @@ export function UsersSection({
             <SelectField
               label="Perfil"
               value={form.perfil}
-              onChange={(event) =>
-                setForm({ ...form, perfil: event.target.value as PerfilUsuario })
+              onChange={(next) =>
+                setForm({ ...form, perfil: next as PerfilUsuario })
               }
             >
               <option value="operador">Operador</option>
@@ -203,7 +203,7 @@ export function UsersSection({
             <SelectField
               label="Cargo/funcao"
               value={form.cargo_funcao_id}
-              onChange={(event) => setForm({ ...form, cargo_funcao_id: event.target.value })}
+              onChange={(next) => setForm({ ...form, cargo_funcao_id: next })}
             >
               <option value="">Sem cargo</option>
               {data.cargos

@@ -12,7 +12,7 @@ import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips, type FilterChip } from "../../../components/ui/FilterChips";
 import { Pagination } from "../../../components/ui/Pagination";
 import { SearchInput } from "../../../components/ui/SearchInput";
-import { Select } from "../../../components/ui/FormControls";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
@@ -254,21 +254,23 @@ export function TaskCenterPage({
           placeholder="Buscar tarefa…"
           onChange={(termo) => updateFilters({ ...filters, termo })}
         />
-        <Select
+        <FormSelect
           className="doka-list-toolbar__select"
+          fullWidth={false}
           aria-label="Status"
           value={filters.status ?? ""}
-          onChange={(event) =>
-            updateFilters({ ...filters, status: event.target.value as TaskFilters["status"] })
+          onChange={(next) =>
+            updateFilters({ ...filters, status: next as TaskFilters["status"] })
           }
-        >
-          <option value="">Todos os status</option>
-          <option value="pendente">Pendente</option>
-          <option value="em_andamento">Em andamento</option>
-          <option value="concluida">Concluída</option>
-          <option value="validada">Validada</option>
-          <option value="reaberta">Reaberta</option>
-        </Select>
+          options={[
+            { value: "", label: "Todos os status" },
+            { value: "pendente", label: "Pendente" },
+            { value: "em_andamento", label: "Em andamento" },
+            { value: "concluida", label: "Concluída" },
+            { value: "validada", label: "Validada" },
+            { value: "reaberta", label: "Reaberta" },
+          ]}
+        />
         <Button variant="outline" onClick={() => setFiltersOpen(true)}>
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>

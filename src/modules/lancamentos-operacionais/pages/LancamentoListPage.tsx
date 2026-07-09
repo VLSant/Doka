@@ -12,7 +12,7 @@ import { Card } from "../../../components/ui/Card";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
 import { SearchInput } from "../../../components/ui/SearchInput";
-import { Select } from "../../../components/ui/FormControls";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
@@ -190,21 +190,23 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
             setFilters((current) => ({ ...current, recurso: recurso || undefined }))
           }
         />
-        <Select
+        <FormSelect
           className="doka-list-toolbar__select"
+          fullWidth={false}
           aria-label="Status"
           value={filters.status ?? ""}
-          onChange={(event) =>
+          onChange={(next) =>
             setFilters((current) => ({
               ...current,
-              status: event.target.value as LancamentoFilters["status"],
+              status: next as LancamentoFilters["status"],
             }))
           }
-        >
-          <option value="">Todos os status</option>
-          <option value="pendente">Pendente</option>
-          <option value="validado">Validado</option>
-        </Select>
+          options={[
+            { value: "", label: "Todos os status" },
+            { value: "pendente", label: "Pendente" },
+            { value: "validado", label: "Validado" },
+          ]}
+        />
         <Button variant="outline" onClick={() => setFiltersOpen(true)}>
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>

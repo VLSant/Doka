@@ -5,6 +5,7 @@ import { Input } from "../../../components/ui/Input";
 import { RowActionsMenu } from "../../../components/ui/RowActionsMenu";
 import { TableCardHeader, TableCardList, TableCardRow } from "../../../components/ui/TableCardRow";
 import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot, MetaEficiencia } from "../types";
 import { SelectField, StatusBadge } from "./AdminFields";
@@ -97,7 +98,7 @@ export function EfficiencyTargetsSection({
           <SelectField
             label="Posto"
             value={form.posto_id}
-            onChange={(event) => setForm({ ...form, posto_id: event.target.value })}
+            onChange={(next) => setForm({ ...form, posto_id: next })}
             required
           >
             <option value="">Selecione</option>
@@ -127,19 +128,17 @@ export function EfficiencyTargetsSection({
             onChange={(event) => setForm({ ...form, meta_percentual: Number(event.target.value) })}
             required
           />
-          <Input
+          <DatePickerField
             label="Vigencia inicial"
-            type="date"
             value={form.vigencia_inicio}
-            onChange={(event) => setForm({ ...form, vigencia_inicio: event.target.value })}
+            onChange={(next) => setForm({ ...form, vigencia_inicio: next })}
             required
           />
-          <Input
+          <DatePickerField
             label="Vigencia final"
-            type="date"
             min={form.vigencia_inicio}
             value={form.vigencia_fim}
-            onChange={(event) => setForm({ ...form, vigencia_fim: event.target.value })}
+            onChange={(next) => setForm({ ...form, vigencia_fim: next })}
           />
           <Checkbox
             label="Meta ativa"

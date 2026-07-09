@@ -9,8 +9,9 @@ import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
-import { Select, Textarea } from "../../../components/ui/FormControls";
-import { Input } from "../../../components/ui/Input";
+import { Textarea } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { isOccurrenceOverdue, nextStatuses, STATUS_LABELS } from "../occurrence-state";
@@ -182,25 +183,24 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
 
         <Card padding="lg">
           <h2>Alterar status</h2>
-          <Select
+          <FormSelect
             label="Novo status"
             value={nextStatus}
             disabled={isActing}
-            onChange={(event) => setNextStatus(event.target.value as OccurrenceStatus | "")}
-          >
-            <option value="">Selecione</option>
-            {nextStatuses(occurrence.status).map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status]}
-              </option>
-            ))}
-          </Select>
+            onChange={(next) => setNextStatus(next as OccurrenceStatus | "")}
+            options={[
+              { value: "", label: "Selecione" },
+              ...nextStatuses(occurrence.status).map((status) => ({
+                value: status,
+                label: STATUS_LABELS[status],
+              })),
+            ]}
+          />
           {nextStatus === "aguardando_retorno" || nextStatus === "reaberta" ? (
-            <Input
+            <DatePickerField
               label="Data de retorno"
-              type="date"
               value={returnDate}
-              onChange={(event) => setReturnDate(event.target.value)}
+              onChange={(next) => setReturnDate(next)}
             />
           ) : null}
           {nextStatus === "reaberta" ? (

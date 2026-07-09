@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
-import { Checkbox, Select, Textarea } from "../../../components/ui/FormControls";
+import { Checkbox, Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import type { CatalogItem, PrioridadeItem, UsuarioItem } from "../../../services/catalog-service";
 import type { Routine, RoutineInput, TaskViewer } from "../types";
 
@@ -112,17 +114,18 @@ export function RoutineForm({
         disabled={saving}
         onChange={(event) => setDescricao(event.target.value)}
       />
-      <Select
+      <FormSelect
         label="Recorrência"
         value={recorrencia}
         disabled={saving}
-        onChange={(event) => setRecorrencia(event.target.value as RoutineInput["recorrencia"])}
-      >
-        <option value="diaria">Diária</option>
-        <option value="semanal">Semanal</option>
-        <option value="quinzenal">Quinzenal</option>
-        <option value="mensal">Mensal</option>
-      </Select>
+        onChange={(next) => setRecorrencia(next as RoutineInput["recorrencia"])}
+        options={[
+          { value: "diaria", label: "Diária" },
+          { value: "semanal", label: "Semanal" },
+          { value: "quinzenal", label: "Quinzenal" },
+          { value: "mensal", label: "Mensal" },
+        ]}
+      />
       {recorrencia === "semanal" ? (
         <fieldset className="tasks-form__wide">
           <legend>Dias da semana *</legend>
@@ -157,21 +160,19 @@ export function RoutineForm({
           onChange={(event) => setDiaMes(Number(event.target.value))}
         />
       ) : null}
-      <Input
+      <DatePickerField
         label="Data de início *"
-        type="date"
         value={dataInicio}
         disabled={saving}
         error={touched && !dataInicio ? "Informe a data de início." : undefined}
-        onChange={(event) => setDataInicio(event.target.value)}
+        onChange={(next) => setDataInicio(next)}
       />
-      <Input
+      <DatePickerField
         label="Data de término"
-        type="date"
         value={dataFim}
         min={dataInicio}
         disabled={saving}
-        onChange={(event) => setDataFim(event.target.value)}
+        onChange={(next) => setDataFim(next)}
       />
       <Input
         label="Horário limite"
@@ -180,55 +181,47 @@ export function RoutineForm({
         disabled={saving}
         onChange={(event) => setHorarioLimite(event.target.value)}
       />
-      <Select
+      <FormSelect
         label="Status"
         value={status}
         disabled={saving || !initial}
-        onChange={(event) => setStatus(event.target.value as Routine["status"])}
-      >
-        <option value="ativa">Ativa</option>
-        <option value="pausada">Pausada</option>
-        <option value="inativa">Inativa</option>
-      </Select>
-      <Select
+        onChange={(next) => setStatus(next as Routine["status"])}
+        options={[
+          { value: "ativa", label: "Ativa" },
+          { value: "pausada", label: "Pausada" },
+          { value: "inativa", label: "Inativa" },
+        ]}
+      />
+      <FormSelect
         label="Posto"
         value={postoId}
         disabled={saving}
-        onChange={(event) => setPostoId(event.target.value)}
-      >
-        <option value="">Geral / sem posto</option>
-        {postos.map((posto) => (
-          <option key={posto.id} value={posto.id}>
-            {posto.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => setPostoId(next)}
+        options={[
+          { value: "", label: "Geral / sem posto" },
+          ...postos.map((posto) => ({ value: posto.id, label: posto.nome })),
+        ]}
+      />
+      <FormSelect
         label="Prioridade"
         value={prioridadeId}
         disabled={saving}
-        onChange={(event) => setPrioridadeId(event.target.value)}
-      >
-        <option value="">Sem prioridade</option>
-        {prioridades.map((prioridade) => (
-          <option key={prioridade.id} value={prioridade.id}>
-            {prioridade.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => setPrioridadeId(next)}
+        options={[
+          { value: "", label: "Sem prioridade" },
+          ...prioridades.map((prioridade) => ({ value: prioridade.id, label: prioridade.nome })),
+        ]}
+      />
+      <FormSelect
         label="Cargo / função"
         value={cargoFuncaoId}
         disabled={saving}
-        onChange={(event) => setCargoFuncaoId(event.target.value)}
-      >
-        <option value="">Todos / não aplicável</option>
-        {cargos.map((cargo) => (
-          <option key={cargo.id} value={cargo.id}>
-            {cargo.nome}
-          </option>
-        ))}
-      </Select>
+        onChange={(next) => setCargoFuncaoId(next)}
+        options={[
+          { value: "", label: "Todos / não aplicável" },
+          ...cargos.map((cargo) => ({ value: cargo.id, label: cargo.nome })),
+        ]}
+      />
       <div className="tasks-form__wide tasks-form__responsibles">
         <span>Responsáveis *</span>
         <div className="tasks-checkbox-group" role="group" aria-label="Responsáveis">

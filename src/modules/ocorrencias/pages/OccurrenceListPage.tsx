@@ -13,7 +13,8 @@ import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
 import { Input } from "../../../components/ui/Input";
 import { SearchInput } from "../../../components/ui/SearchInput";
-import { Select } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
@@ -209,19 +210,17 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           placeholder="Buscar ocorrência…"
           onChange={(busca) => setFilter("busca", busca)}
         />
-        <Select
+        <FormSelect
           className="doka-list-toolbar__select"
+          fullWidth={false}
           aria-label="Status"
           value={filters.status ?? ""}
-          onChange={(event) => setFilter("status", event.target.value as OccurrenceStatus | "")}
-        >
-          <option value="">Todos os status</option>
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
+          onChange={(next) => setFilter("status", next as OccurrenceStatus | "")}
+          options={[
+            { value: "", label: "Todos os status" },
+            ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
+          ]}
+        />
         <Button variant="outline" onClick={() => setFiltersOpen(true)}>
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>
@@ -249,82 +248,68 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
         }
       >
         <div className="occurrence-filters">
-          <Select
+          <FormSelect
             label="Posto"
             value={filters.posto_id ?? ""}
-            onChange={(event) => setFilter("posto_id", event.target.value)}
-          >
-            <option value="">Todos</option>
-            {catalogs.postos.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("posto_id", next)}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.postos.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Responsável"
             value={filters.responsavel_id ?? ""}
-            onChange={(event) => setFilter("responsavel_id", event.target.value)}
-          >
-            <option value="">Todos</option>
-            {catalogs.usuarios.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("responsavel_id", next)}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.usuarios.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Tipo"
             value={filters.tipo_ocorrencia_id ?? ""}
-            onChange={(event) => setFilter("tipo_ocorrencia_id", event.target.value)}
-          >
-            <option value="">Todos</option>
-            {catalogs.tipos.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("tipo_ocorrencia_id", next)}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.tipos.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Prioridade"
             value={filters.prioridade_id ?? ""}
-            onChange={(event) => setFilter("prioridade_id", event.target.value)}
-          >
-            <option value="">Todas</option>
-            {catalogs.prioridades.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("prioridade_id", next)}
+            options={[
+              { value: "", label: "Todas" },
+              ...catalogs.prioridades.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Assistência"
             value={filters.assistencia_id ?? ""}
-            onChange={(event) => setFilter("assistencia_id", event.target.value)}
-          >
-            <option value="">Todas</option>
-            {catalogs.assistencias.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.numero_assistencia}
-              </option>
-            ))}
-          </Select>
+            onChange={(next) => setFilter("assistencia_id", next)}
+            options={[
+              { value: "", label: "Todas" },
+              ...catalogs.assistencias.map((item) => ({
+                value: item.id,
+                label: item.numero_assistencia,
+              })),
+            ]}
+          />
           <Input
             label="Montador / recurso"
             value={filters.montador ?? ""}
             onChange={(event) => setFilter("montador", event.target.value)}
           />
-          <Input
+          <DatePickerField
             label="Registrada de"
-            type="date"
             value={filters.data_de ?? ""}
-            onChange={(event) => setFilter("data_de", event.target.value)}
+            onChange={(next) => setFilter("data_de", next)}
           />
-          <Input
+          <DatePickerField
             label="Registrada até"
-            type="date"
             value={filters.data_ate ?? ""}
-            onChange={(event) => setFilter("data_ate", event.target.value)}
+            onChange={(next) => setFilter("data_ate", next)}
           />
         </div>
       </Drawer>

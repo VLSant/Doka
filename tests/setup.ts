@@ -3,6 +3,24 @@ import { createElement, type ReactElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
+// jsdom does not implement these APIs, but Radix UI primitives (Select,
+// Popover, Dropdown, etc.) call them during pointer interactions. Without
+// these no-op polyfills, userEvent.click on Radix triggers/items throws.
+if (typeof Element !== "undefined") {
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+}
+
 vi.mock("@testing-library/react", async () => {
   const actual = await vi.importActual<typeof import("@testing-library/react")>(
     "@testing-library/react",

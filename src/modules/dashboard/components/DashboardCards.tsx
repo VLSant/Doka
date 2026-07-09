@@ -1,5 +1,15 @@
+import type { ComponentType } from "react";
+import type { LucideProps } from "lucide-react";
+import { CalendarClock, ClipboardList, ClipboardCheck, Wrench } from "lucide-react";
 import { MetricCard } from "../../../components/ui/Patterns";
 import type { DashboardCounters } from "../types";
+
+const GROUP_ICONS: Record<string, ComponentType<LucideProps>> = {
+  Assistências: Wrench,
+  Ocorrências: ClipboardList,
+  Tarefas: ClipboardCheck,
+  "Deslocamentos e custos": CalendarClock,
+};
 
 const COUNTERS: Array<{
   key: keyof DashboardCounters;
@@ -58,6 +68,7 @@ export function DashboardCards({ counters }: { counters: DashboardCounters }) {
                     label={counter.label}
                     value={counters[counter.key].toLocaleString("pt-BR")}
                     tone={counter.attention && counters[counter.key] > 0 ? "attention" : "brand"}
+                    icon={GROUP_ICONS[counter.group]}
                   />
                 </a>
               );

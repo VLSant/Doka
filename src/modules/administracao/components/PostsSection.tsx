@@ -240,7 +240,7 @@ export function PostsSection({
               <SelectField
                 label="Usuario"
                 value={link.usuario_id}
-                onChange={(event) => setLink({ ...link, usuario_id: event.target.value })}
+                onChange={(next) => setLink({ ...link, usuario_id: next })}
                 disabled={Boolean(link.id)}
                 required
               >
@@ -256,7 +256,7 @@ export function PostsSection({
               <SelectField
                 label="Posto"
                 value={link.posto_id}
-                onChange={(event) => setLink({ ...link, posto_id: event.target.value })}
+                onChange={(next) => setLink({ ...link, posto_id: next })}
                 disabled={Boolean(link.id)}
                 required
               >
@@ -272,8 +272,8 @@ export function PostsSection({
               <SelectField
                 label="Nivel"
                 value={link.nivel_acesso}
-                onChange={(event) =>
-                  setLink({ ...link, nivel_acesso: event.target.value as NivelAcessoPosto })
+                onChange={(next) =>
+                  setLink({ ...link, nivel_acesso: next as NivelAcessoPosto })
                 }
               >
                 <option value="operacional">Operacional</option>

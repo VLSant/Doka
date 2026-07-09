@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { OccurrenceForm } from "../../src/modules/ocorrencias/components/OccurrenceForm";
 import type { OccurrenceCatalogs } from "../../src/modules/ocorrencias/types";
+import { pickCalendarDate, selectRadixOption } from "../helpers/radix-select";
 
 const catalogs: OccurrenceCatalogs = {
   assistencias: [
@@ -40,12 +41,12 @@ describe("OccurrenceForm", () => {
 
     render(<OccurrenceForm catalogs={catalogs} onSubmit={onSubmit} onCancel={() => undefined} />);
 
-    await user.selectOptions(screen.getByLabelText("Assistência *"), "assist-1");
+    await selectRadixOption(user, "Assistência *", "A-001 · 2026-07-06");
     expect(screen.getByLabelText("Posto")).toHaveValue("Posto 1");
-    await user.selectOptions(screen.getByLabelText("Tipo *"), "tipo-1");
-    await user.selectOptions(screen.getByLabelText("Prioridade *"), "prioridade-1");
-    await user.selectOptions(screen.getByLabelText("Responsável *"), "usuario-1");
-    await user.type(screen.getByLabelText("Data de retorno *"), "2026-07-10");
+    await selectRadixOption(user, "Tipo *", "Reclamacao");
+    await selectRadixOption(user, "Prioridade *", "Alta");
+    await selectRadixOption(user, "Responsável *", "Responsavel");
+    await pickCalendarDate(user, "Data de retorno *", "2026-07-10");
     await user.type(screen.getByLabelText("Título *"), "Ocorrência em aberto");
     await user.type(screen.getByLabelText("Descrição *"), "Cliente pediu acompanhamento.");
     await user.click(screen.getByRole("button", { name: "Salvar ocorrência" }));
