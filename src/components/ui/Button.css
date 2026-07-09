@@ -4,22 +4,33 @@
   justify-content: center;
   gap: var(--space-2);
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  border: var(--border-w) solid transparent;
   font-family: var(--font-sans);
   font-weight: var(--fw-bold);
   line-height: 1;
+  min-width: 0;
   white-space: nowrap;
   user-select: none;
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
     transform var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-base) var(--ease-standard);
+}
+
+a.doka-button:hover {
+  text-decoration: none;
 }
 
 .doka-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.doka-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
 }
 
 .doka-button:active:not(:disabled) {
@@ -32,20 +43,20 @@
 
 .doka-button--sm {
   height: var(--control-h-sm);
-  padding: 0 14px;
+  padding: 0 var(--space-3);
   font-size: var(--text-sm);
   border-radius: var(--radius-sm);
 }
 
 .doka-button--md {
   height: var(--control-h-md);
-  padding: 0 18px;
+  padding: 0 var(--space-4);
   font-size: var(--text-base);
 }
 
 .doka-button--lg {
   height: var(--control-h-lg);
-  padding: 0 24px;
+  padding: 0 var(--space-6);
   font-size: var(--text-md);
 }
 
@@ -60,7 +71,7 @@
 
 .doka-button--secondary {
   background: var(--purple-600);
-  color: #fff;
+  color: var(--text-on-brand);
 }
 .doka-button--secondary:hover:not(:disabled) {
   background: var(--purple-700);
@@ -73,6 +84,7 @@
 }
 .doka-button--outline:hover:not(:disabled) {
   background: var(--neutral-100);
+  border-color: var(--border-strong);
 }
 
 .doka-button--ghost {
@@ -85,7 +97,7 @@
 
 .doka-button--danger {
   background: var(--red-500);
-  color: #fff;
+  color: var(--text-on-brand);
 }
 .doka-button--danger:hover:not(:disabled) {
   background: var(--red-600);
@@ -94,11 +106,17 @@
 .doka-button__spinner {
   width: 14px;
   height: 14px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
+  border-radius: var(--radius-pill);
+  border: var(--border-w-strong) solid currentColor;
   border-top-color: transparent;
   display: inline-block;
   animation: doka-button-spin 0.6s linear infinite;
+}
+
+.doka-button__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes doka-button-spin {

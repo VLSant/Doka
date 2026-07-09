@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Dialog } from "../../../components/ui/Dialog";
 import type { TreatmentService } from "../treatment-service";
 
 export function ReprocessDialog({ lotId, version, service, onComplete }: {
@@ -23,13 +24,18 @@ export function ReprocessDialog({ lotId, version, service, onComplete }: {
     } finally { setWorking(false); }
   }
   return <>
-    <Button onClick={() => setOpen(true)}>Reprocessar</Button>
-    {open ? <div role="dialog" aria-modal="true" aria-labelledby="reprocess-title" className="mms-dialog">
-      <h2 id="reprocess-title">Confirmar reprocessamento</h2>
-      <p>O espelho operacional será atualizado atomicamente com a versão {version}.</p>
+    <Button variant="outline" onClick={() => setOpen(true)}>Reprocessar</Button>
+    <Dialog
+      open={open}
+      title="Confirmar reprocessamento"
+      description={`O espelho operacional será atualizado atomicamente com a versão ${version}.`}
+      onClose={() => !working && setOpen(false)}
+      actions={<>
+        <Button variant="outline" disabled={working} onClick={() => setOpen(false)}>Cancelar</Button>
+        <Button loading={working} onClick={confirm}>Confirmar reprocessamento</Button>
+      </>}
+    >
       {message ? <p role="alert">{message}</p> : null}
-      <Button variant="outline" disabled={working} onClick={() => setOpen(false)}>Cancelar</Button>
-      <Button loading={working} onClick={confirm}>Confirmar reprocessamento</Button>
-    </div> : null}
+    </Dialog>
   </>;
 }

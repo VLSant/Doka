@@ -1,8 +1,8 @@
 /* ===========================================================================
    Doka · Color tokens
-   Source of truth: official "Paleta Doka" — Orange #FF9800, Plum #642B60,
-   Purple #813271, Light gray #E6E6E6, Charcoal #3B3B3B. Ramps + semantics
-   are derived to harmonize with those anchors.
+   Source of truth: official "Paleta Doka" — Orange #F09018, Purple #602860,
+   Light gray #E6E6E6 and Charcoal #3B3B3B. Ramps + semantics are derived to
+   harmonize with those anchors.
    =========================================================================== */
 :root {
   /* ---- Brand: Orange (primary) — official #F09018 -------------------- */

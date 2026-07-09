@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page } from "../../../components/layout/Page";
 import { Card } from "../../../components/ui/Card";
 import { createAssistanceService, type AssistanceService } from "../assistance-service";
 import {
@@ -90,7 +91,7 @@ export function AssistanceDetailPage({ service: injected }: { service?: Assistan
   if (!assistance) return null;
 
   return (
-    <main className="assistance-detail">
+    <Page className="assistance-detail">
       <header className="assistance-detail__header">
         <Link to={returnTo}>Voltar para assistências</Link>
         <span>Assistências / MMS</span>
@@ -122,7 +123,7 @@ export function AssistanceDetailPage({ service: injected }: { service?: Assistan
           }}
         />
       ) : null}
-    </main>
+    </Page>
   );
 }
 

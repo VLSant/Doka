@@ -18,18 +18,20 @@ export function TemporaryFailurePage() {
   }
 
   return (
-    <FeedbackState
-      tone="error"
-      title="Nao foi possivel confirmar sua sessao"
-      description="Houve uma falha temporaria ao validar seu acesso. Tente novamente."
-      actions={
-        <>
-          <Button onClick={() => revalidate()}>Tentar novamente</Button>
-          <Button variant="outline" onClick={handleLogout}>
-            Sair
-          </Button>
-        </>
-      }
-    />
+    <div className="doka-public-state">
+      <FeedbackState
+        tone="error"
+        title="Não foi possível confirmar sua sessão"
+        description="Houve uma falha temporária ao validar seu acesso. Tente novamente."
+        actions={
+          <>
+            <Button onClick={() => revalidate()}>Tentar novamente</Button>
+            <Button variant="outline" onClick={handleLogout}>
+              Sair
+            </Button>
+          </>
+        }
+      />
+    </div>
   );
 }

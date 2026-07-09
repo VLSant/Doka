@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
+import { RadioOption, Select, Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import type { LancamentoFormOptions, LancamentoInput, TipoLancamento } from "../types";
 import { validateLancamentoInput } from "../types";
@@ -52,68 +53,56 @@ export function LancamentoForm({ initial, options, saving, onSubmit, onCancel }:
     <form className="lancamento-form" onSubmit={(event) => void submit(event)} noValidate>
       <fieldset disabled={saving}>
         <legend>Tipo de lançamento</legend>
-        <label className="lancamento-form__radio">
-          <input
-            type="radio"
+        <div className="lancamento-form__radio-group">
+          <RadioOption
+            label="Deslocamento"
             name="tipo"
             value="deslocamento"
             checked={draft.tipo === "deslocamento"}
             onChange={() => setTipo("deslocamento")}
           />
-          Deslocamento
-        </label>
-        <label className="lancamento-form__radio">
-          <input
-            type="radio"
+          <RadioOption
+            label="Custo extra"
             name="tipo"
             value="custo_extra"
             checked={draft.tipo === "custo_extra"}
             onChange={() => setTipo("custo_extra")}
           />
-          Custo extra
-        </label>
+        </div>
       </fieldset>
 
-      <label>
-        Posto
-        <select
-          value={draft.posto_id}
-          disabled={saving}
-          aria-invalid={Boolean(errors.posto_id)}
-          onChange={(event) =>
-            setDraft({ ...draft, posto_id: event.target.value, assistencia_id: null })
-          }
-        >
-          <option value="">Selecione</option>
-          {options.postos.map((posto) => (
-            <option key={posto.id} value={posto.id}>
-              {posto.nome}
-            </option>
-          ))}
-        </select>
-        {errors.posto_id ? <span className="lancamento-form__error">{errors.posto_id}</span> : null}
-      </label>
+      <Select
+        label="Posto"
+        value={draft.posto_id}
+        disabled={saving}
+        error={errors.posto_id}
+        onChange={(event) =>
+          setDraft({ ...draft, posto_id: event.target.value, assistencia_id: null })
+        }
+      >
+        <option value="">Selecione</option>
+        {options.postos.map((posto) => (
+          <option key={posto.id} value={posto.id}>
+            {posto.nome}
+          </option>
+        ))}
+      </Select>
 
-      <label>
-        Assistência {draft.tipo === "custo_extra" ? "(obrigatória)" : "(opcional)"}
-        <select
-          value={draft.assistencia_id ?? ""}
-          disabled={saving}
-          aria-invalid={Boolean(errors.assistencia_id)}
-          onChange={(event) => setDraft({ ...draft, assistencia_id: event.target.value || null })}
-        >
-          <option value="">Sem assistência</option>
-          {assistencias.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.numero}
-              {item.cliente ? ` · ${item.cliente}` : ""}
-            </option>
-          ))}
-        </select>
-        {errors.assistencia_id ? (
-          <span className="lancamento-form__error">{errors.assistencia_id}</span>
-        ) : null}
-      </label>
+      <Select
+        label={`Assistência ${draft.tipo === "custo_extra" ? "(obrigatória)" : "(opcional)"}`}
+        value={draft.assistencia_id ?? ""}
+        disabled={saving}
+        error={errors.assistencia_id}
+        onChange={(event) => setDraft({ ...draft, assistencia_id: event.target.value || null })}
+      >
+        <option value="">Sem assistência</option>
+        {assistencias.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.numero}
+            {item.cliente ? ` · ${item.cliente}` : ""}
+          </option>
+        ))}
+      </Select>
 
       <Input
         label="Data"
@@ -146,15 +135,13 @@ export function LancamentoForm({ initial, options, saving, onSubmit, onCancel }:
         error={errors.valor}
         onChange={(event) => setDraft({ ...draft, valor: Number(event.target.value) })}
       />
-      <label>
-        Observações
-        <textarea
-          value={draft.observacoes ?? ""}
-          disabled={saving}
-          rows={4}
-          onChange={(event) => setDraft({ ...draft, observacoes: event.target.value || null })}
-        />
-      </label>
+      <Textarea
+        label="Observações"
+        value={draft.observacoes ?? ""}
+        disabled={saving}
+        rows={4}
+        onChange={(event) => setDraft({ ...draft, observacoes: event.target.value || null })}
+      />
       <div className="lancamento-form__actions">
         <Button type="submit" loading={saving}>
           Salvar lançamento

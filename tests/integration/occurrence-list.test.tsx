@@ -18,7 +18,7 @@ const item: OccurrenceListItem = {
   descricao: null,
   observacoes: null,
   status: "aberta",
-  data_retorno: new Date().toISOString().slice(0, 10),
+  data_retorno: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bahia" }).format(new Date()),
   resolvida_em: null,
   encerrada_em: null,
   reaberta_em: null,
@@ -62,14 +62,11 @@ describe("lista de ocorrências", () => {
     expect(screen.getByText("Carregando ocorrências...")).toBeInTheDocument();
     expect(await screen.findByText("Retorno hoje")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Buscar"), "inexistente");
-    expect(screen.getByText("Nenhuma ocorrência neste recorte")).toBeInTheDocument();
+    expect(await screen.findByText("Nenhuma ocorrência neste recorte")).toBeInTheDocument();
   });
 
   it("oferece nova tentativa depois de erro", async () => {
-    const list = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("Sem conexão"))
-      .mockResolvedValueOnce([]);
+    const list = vi.fn().mockRejectedValueOnce(new Error("Sem conexão")).mockResolvedValueOnce([]);
     const user = userEvent.setup();
     render(
       <MemoryRouter>
@@ -82,4 +79,3 @@ describe("lista de ocorrências", () => {
     expect(await screen.findByText("Nenhuma ocorrência neste recorte")).toBeInTheDocument();
   });
 });
-

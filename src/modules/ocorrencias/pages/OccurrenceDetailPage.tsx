@@ -1,17 +1,28 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
+import { Select, Textarea } from "../../../components/ui/FormControls";
+import { Input } from "../../../components/ui/Input";
+import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { isOccurrenceOverdue, nextStatuses, STATUS_LABELS } from "../occurrence-state";
-import {
-  createOccurrenceService,
-  type OccurrenceService,
-} from "../occurrence-service";
+import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
 import type { OccurrenceDetail, OccurrenceStatus } from "../types";
 import "./Occurrences.css";
+
+const STATUS_TONE: Record<OccurrenceStatus, StatusTone> = {
+  aberta: "warning",
+  em_acompanhamento: "info",
+  aguardando_retorno: "warning",
+  resolvida: "success",
+  encerrada: "neutral",
+  reaberta: "warning",
+};
 
 export function OccurrenceDetailPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
@@ -66,12 +77,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
     setActing(true);
     setError(null);
     try {
-      await service.transition(
-        ocorrenciaId,
-        nextStatus,
-        justification,
-        returnDate || null,
-      );
+      await service.transition(ocorrenciaId, nextStatus, justification, returnDate || null);
       setNextStatus("");
       setJustification("");
       await load();
@@ -109,40 +115,66 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
   }
 
   return (
-    <main className="occurrences-page occurrences-page--narrow">
-      <header className="occurrences-header">
-        <div>
-          <span>Assistência {occurrence.assistencia?.numero_assistencia}</span>
-          <h1>{occurrence.titulo}</h1>
-          <p>
-            {STATUS_LABELS[occurrence.status]}
-            {isOccurrenceOverdue(occurrence) ? " · Atrasada" : ""}
-          </p>
-        </div>
-        <div className="occurrence-actions">
-          <Link className="occurrences-secondary-link" to={`/app/ocorrencias/${occurrence.id}/editar`}>
-            Editar
-          </Link>
-          <Button variant="danger" disabled={acting} onClick={() => void remove()}>
-            Remover
-          </Button>
-        </div>
-      </header>
+    <Page className="occurrences-page" width="narrow">
+      <PageHeader
+        eyebrow={`Assistência ${occurrence.assistencia?.numero_assistencia ?? ""}`.trim()}
+        title={occurrence.titulo}
+        description={occurrence.descricao || "Sem descrição."}
+        actions={
+          <div className="occurrence-actions">
+            <ButtonLink variant="outline" to={`/app/ocorrencias/${occurrence.id}/editar`}>
+              Editar
+            </ButtonLink>
+            <Button variant="danger" disabled={acting} onClick={() => void remove()}>
+              Remover
+            </Button>
+          </div>
+        }
+      />
+
+      <div className="occurrence-status-row">
+        <StatusBadge tone={STATUS_TONE[occurrence.status]}>
+          {STATUS_LABELS[occurrence.status]}
+        </StatusBadge>
+        {isOccurrenceOverdue(occurrence) ? <StatusBadge tone="danger">Atrasada</StatusBadge> : null}
+      </div>
 
       {error ? (
-        <FeedbackState tone="error" title="A operação não foi concluída" description={error.message} />
+        <FeedbackState
+          tone="error"
+          title="A operação não foi concluída"
+          description={error.message}
+        />
       ) : null}
 
       <div className="occurrence-detail-grid">
         <Card padding="lg">
           <h2>Dados principais</h2>
           <dl className="occurrence-data">
-            <div><dt>Tipo</dt><dd>{occurrence.tipo?.nome ?? "—"}</dd></div>
-            <div><dt>Prioridade</dt><dd>{occurrence.prioridade?.nome ?? "—"}</dd></div>
-            <div><dt>Posto</dt><dd>{occurrence.posto?.nome ?? "—"}</dd></div>
-            <div><dt>Responsável</dt><dd>{occurrence.responsavel?.nome ?? "Não definido"}</dd></div>
-            <div><dt>Retorno</dt><dd>{occurrence.data_retorno ?? "Sem data"}</dd></div>
-            <div><dt>Atualizada</dt><dd>{new Date(occurrence.updated_at).toLocaleString("pt-BR")}</dd></div>
+            <div>
+              <dt>Tipo</dt>
+              <dd>{occurrence.tipo?.nome ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Prioridade</dt>
+              <dd>{occurrence.prioridade?.nome ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Posto</dt>
+              <dd>{occurrence.posto?.nome ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Responsável</dt>
+              <dd>{occurrence.responsavel?.nome ?? "Não definido"}</dd>
+            </div>
+            <div>
+              <dt>Retorno</dt>
+              <dd>{occurrence.data_retorno ?? "Sem data"}</dd>
+            </div>
+            <div>
+              <dt>Atualizada</dt>
+              <dd>{new Date(occurrence.updated_at).toLocaleString("pt-BR")}</dd>
+            </div>
           </dl>
           <h3>Descrição</h3>
           <p>{occurrence.descricao || "Sem descrição."}</p>
@@ -152,30 +184,34 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
 
         <Card padding="lg">
           <h2>Alterar status</h2>
-          <label>
-            Novo status
-            <select
-              value={nextStatus}
-              disabled={acting}
-              onChange={(event) => setNextStatus(event.target.value as OccurrenceStatus | "")}
-            >
-              <option value="">Selecione</option>
-              {nextStatuses(occurrence.status).map((status) => (
-                <option key={status} value={status}>{STATUS_LABELS[status]}</option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Novo status"
+            value={nextStatus}
+            disabled={acting}
+            onChange={(event) => setNextStatus(event.target.value as OccurrenceStatus | "")}
+          >
+            <option value="">Selecione</option>
+            {nextStatuses(occurrence.status).map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </Select>
           {nextStatus === "aguardando_retorno" || nextStatus === "reaberta" ? (
-            <label>
-              Data de retorno
-              <input type="date" value={returnDate} onChange={(event) => setReturnDate(event.target.value)} />
-            </label>
+            <Input
+              label="Data de retorno"
+              type="date"
+              value={returnDate}
+              onChange={(event) => setReturnDate(event.target.value)}
+            />
           ) : null}
           {nextStatus === "reaberta" ? (
-            <label>
-              Justificativa *
-              <textarea rows={3} value={justification} onChange={(event) => setJustification(event.target.value)} />
-            </label>
+            <Textarea
+              label="Justificativa *"
+              rows={3}
+              value={justification}
+              onChange={(event) => setJustification(event.target.value)}
+            />
           ) : null}
           <Button disabled={!nextStatus} loading={acting} onClick={() => void transition()}>
             Confirmar mudança
@@ -186,16 +222,16 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
       <Card padding="lg">
         <h2>Comentários e acompanhamento</h2>
         <form className="occurrence-comment-form" onSubmit={(event) => void addComment(event)}>
-          <label>
-            Novo comentário
-            <textarea
-              rows={3}
-              value={comment}
-              disabled={acting}
-              onChange={(event) => setComment(event.target.value)}
-            />
-          </label>
-          <Button type="submit" disabled={!comment.trim()} loading={acting}>Adicionar</Button>
+          <Textarea
+            label="Novo comentário"
+            rows={3}
+            value={comment}
+            disabled={acting}
+            onChange={(event) => setComment(event.target.value)}
+          />
+          <Button type="submit" disabled={!comment.trim()} loading={acting}>
+            Adicionar
+          </Button>
         </form>
         {occurrence.comentarios.length === 0 ? (
           <p>Nenhum comentário registrado.</p>
@@ -204,7 +240,9 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
             {occurrence.comentarios.map((item) => (
               <li key={item.id}>
                 <strong>{item.usuario?.nome ?? "Usuário"}</strong>
-                <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString("pt-BR")}</time>
+                <time dateTime={item.created_at}>
+                  {new Date(item.created_at).toLocaleString("pt-BR")}
+                </time>
                 <p>{item.comentario}</p>
               </li>
             ))}
@@ -212,9 +250,8 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
         )}
       </Card>
       <EntityHistory entityType="ocorrencias" entityId={occurrence.id} />
-    </main>
+    </Page>
   );
 }
 
 export default OccurrenceDetailPage;
-

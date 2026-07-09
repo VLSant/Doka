@@ -13,11 +13,13 @@ export function AccessDeniedPage() {
   const navigate = useNavigate();
 
   return (
-    <FeedbackState
-      tone="neutral"
-      title="Acesso negado"
-      description="Voce nao tem acesso a esta area. Contate o administrador."
-      actions={<Button onClick={() => navigate("/app/dashboard", { replace: true })}>Voltar ao Dashboard</Button>}
-    />
+    <div className="doka-public-state">
+      <FeedbackState
+        tone="neutral"
+        title="Acesso negado"
+        description="Você não tem acesso a esta área. Contate o administrador."
+        actions={<Button onClick={() => navigate("/app/dashboard", { replace: true })}>Voltar ao Dashboard</Button>}
+      />
+    </div>
   );
 }

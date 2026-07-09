@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Card } from "../../../components/ui/Card";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LotItemsTabs } from "../components/LotItemsTabs";
 import { LotSummary } from "../components/LotSummary";
@@ -31,7 +32,7 @@ export function ImportDetailPage({ lotService: injectedLot, treatmentService: in
   if (error || !lot) return <FeedbackState tone="error" title="Lote indisponível" description={error || "Acesso negado."} />;
   return <main className="mms-management">
     <header className="mms-management__header"><div><Link to="/app/importacoes-mms">Voltar à central</Link><h1>Detalhe da importação</h1></div>
-      <div>{lot.capacidades.corrigir ? <Link className="doka-button doka-button--primary doka-button--md" to={`/app/importacoes-mms/${lot.lote_id}/tratamento`}>Tratar erros</Link> : null}</div>
+      <div>{lot.capacidades.corrigir ? <ButtonLink to={`/app/importacoes-mms/${lot.lote_id}/tratamento`}>Tratar erros</ButtonLink> : null}</div>
     </header>
     <Card padding="lg"><LotSummary lot={lot} onDownload={() => void lotService.downloadOriginal(lot)} /></Card>
     {lot.capacidades.analisar_desfazer ? <UndoImportDialog lotId={lot.lote_id} service={treatment} onComplete={load} /> : null}

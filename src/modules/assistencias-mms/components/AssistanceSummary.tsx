@@ -1,4 +1,5 @@
 import { Card } from "../../../components/ui/Card";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import type { AssistanceDetail, CorrectableField, EffectiveValue } from "../types";
 import { EffectiveValue as EffectiveValueView } from "./EffectiveValue";
 
@@ -17,13 +18,9 @@ export function AssistanceSummary({
           <span>Número da assistência</span>
           <strong>{assistance.numero_assistencia}</strong>
         </div>
-        <span
-          className={`assistance-badge ${
-            assistance.situacao === "removido" ? "assistance-badge--removed" : ""
-          }`}
-        >
+        <StatusBadge tone={assistance.situacao === "removido" ? "danger" : "success"}>
           {assistance.situacao === "removido" ? "Removida" : "Ativa"}
-        </span>
+        </StatusBadge>
       </div>
       <dl className="assistance-summary__facts">
         <div>

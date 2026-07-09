@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
-import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
+import { Drawer } from "../../../components/ui/Drawer";
+import { FilterChips } from "../../../components/ui/FilterChips";
+import { Input } from "../../../components/ui/Input";
+import { SearchInput } from "../../../components/ui/SearchInput";
+import { Select } from "../../../components/ui/FormControls";
+import { Skeleton } from "../../../components/ui/Skeleton";
+import { Tabs } from "../../../components/ui/Tabs";
 import { occurrenceMatchesFilters, STATUS_LABELS } from "../occurrence-state";
-import {
-  createOccurrenceService,
-  type OccurrenceService,
-} from "../occurrence-service";
+import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
 import { OccurrenceTable } from "../components/OccurrenceTable";
 import type {
   OccurrenceCatalogs,
@@ -34,6 +37,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
   const [filters, setFilters] = useState<OccurrenceFilters>({ tab: "hoje" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,130 +65,166 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
   function setFilter<K extends keyof OccurrenceFilters>(key: K, value: OccurrenceFilters[K]) {
     setFilters((current) => ({ ...current, [key]: value }));
   }
+  const advancedKeys: Array<keyof OccurrenceFilters> = [
+    "posto_id",
+    "responsavel_id",
+    "tipo_ocorrencia_id",
+    "prioridade_id",
+    "assistencia_id",
+    "montador",
+    "data_de",
+    "data_ate",
+  ];
+  const advancedCount = advancedKeys.filter((key) => filters[key]).length;
+  const chips = advancedKeys
+    .filter((key) => filters[key])
+    .map((key) => ({ id: key, label: `${key.replaceAll("_", " ")}: ${filters[key]}` }));
 
   return (
-    <main className="occurrences-page">
-      <header className="occurrences-header">
-        <div>
-          <span>Operação</span>
-          <h1>Ocorrências</h1>
-          <p>Acompanhe pendências, reclamações e retornos vinculados às assistências.</p>
-        </div>
-        <Link className="occurrences-primary-link" to="/app/ocorrencias/nova">
-          Nova ocorrência
-        </Link>
-      </header>
+    <Page className="occurrences-page">
+      <PageHeader
+        eyebrow="Operação"
+        title="Ocorrências"
+        description="Acompanhe pendências, reclamações e retornos vinculados às assistências."
+      />
 
-      <nav className="occurrence-tabs" aria-label="Recortes de ocorrências">
-        {(["hoje", "abertas", "atrasadas"] as OccurrenceTab[]).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            aria-current={filters.tab === tab ? "page" : undefined}
-            onClick={() => setFilter("tab", tab)}
-          >
-            {tab === "hoje" ? "Hoje" : tab === "abertas" ? "Abertas" : "Atrasadas"}
-          </button>
-        ))}
-      </nav>
+      <Tabs
+        label="Recortes de ocorrências"
+        value={filters.tab}
+        items={(["hoje", "abertas", "atrasadas"] as OccurrenceTab[]).map((tab) => ({
+          id: tab,
+          label: tab === "hoje" ? "Hoje" : tab === "abertas" ? "Abertas" : "Atrasadas",
+        }))}
+        onChange={(tab) => setFilter("tab", tab)}
+      />
 
-      <Card padding="lg">
+      <div className="doka-list-toolbar">
+        <SearchInput
+          value={filters.busca ?? ""}
+          placeholder="Buscar ocorrência…"
+          onChange={(busca) => setFilter("busca", busca)}
+        />
+        <Select
+          className="doka-list-toolbar__select"
+          aria-label="Status"
+          value={filters.status ?? ""}
+          onChange={(event) => setFilter("status", event.target.value as OccurrenceStatus | "")}
+        >
+          <option value="">Todos os status</option>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </Select>
+        <Button variant="outline" onClick={() => setFiltersOpen(true)}>
+          Filtros{advancedCount ? ` (${advancedCount})` : ""}
+        </Button>
+        <span className="doka-list-toolbar__spacer" />
+        <ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>
+      </div>
+      <FilterChips
+        items={chips}
+        onRemove={(id) => setFilter(id as keyof OccurrenceFilters, undefined)}
+        onClear={() =>
+          setFilters({ tab: filters.tab, busca: filters.busca, status: filters.status })
+        }
+      />
+      <Drawer
+        open={filtersOpen}
+        title="Filtros de ocorrências"
+        onClose={() => setFiltersOpen(false)}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setFilters({ tab: filters.tab })}>
+              Limpar
+            </Button>
+            <Button onClick={() => setFiltersOpen(false)}>Aplicar filtros</Button>
+          </>
+        }
+      >
         <div className="occurrence-filters">
-          <label>
-            Buscar
-            <input
-              type="search"
-              value={filters.busca ?? ""}
-              placeholder="Título ou assistência"
-              onChange={(event) => setFilter("busca", event.target.value)}
-            />
-          </label>
-          <label>
-            Posto
-            <select
-              value={filters.posto_id ?? ""}
-              onChange={(event) => setFilter("posto_id", event.target.value)}
-            >
-              <option value="">Todos</option>
-              {catalogs.postos.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Responsável
-            <select
-              value={filters.responsavel_id ?? ""}
-              onChange={(event) => setFilter("responsavel_id", event.target.value)}
-            >
-              <option value="">Todos</option>
-              {catalogs.usuarios.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Tipo
-            <select
-              value={filters.tipo_ocorrencia_id ?? ""}
-              onChange={(event) => setFilter("tipo_ocorrencia_id", event.target.value)}
-            >
-              <option value="">Todos</option>
-              {catalogs.tipos.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Prioridade
-            <select
-              value={filters.prioridade_id ?? ""}
-              onChange={(event) => setFilter("prioridade_id", event.target.value)}
-            >
-              <option value="">Todas</option>
-              {catalogs.prioridades.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Status
-            <select
-              value={filters.status ?? ""}
-              onChange={(event) =>
-                setFilter("status", event.target.value as OccurrenceStatus | "")
-              }
-            >
-              <option value="">Todos</option>
-              {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Assistência
-            <select value={filters.assistencia_id ?? ""} onChange={(event) => setFilter("assistencia_id", event.target.value)}>
-              <option value="">Todas</option>
-              {catalogs.assistencias.map((item) => <option key={item.id} value={item.id}>{item.numero_assistencia}</option>)}
-            </select>
-          </label>
-          <label>Montador / recurso<input value={filters.montador ?? ""} onChange={(event) => setFilter("montador", event.target.value)} /></label>
-          <label>Registrada de<input type="date" value={filters.data_de ?? ""} onChange={(event) => setFilter("data_de", event.target.value)} /></label>
-          <label>Registrada até<input type="date" value={filters.data_ate ?? ""} onChange={(event) => setFilter("data_ate", event.target.value)} /></label>
+          <Select
+            label="Posto"
+            value={filters.posto_id ?? ""}
+            onChange={(event) => setFilter("posto_id", event.target.value)}
+          >
+            <option value="">Todos</option>
+            {catalogs.postos.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Responsável"
+            value={filters.responsavel_id ?? ""}
+            onChange={(event) => setFilter("responsavel_id", event.target.value)}
+          >
+            <option value="">Todos</option>
+            {catalogs.usuarios.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Tipo"
+            value={filters.tipo_ocorrencia_id ?? ""}
+            onChange={(event) => setFilter("tipo_ocorrencia_id", event.target.value)}
+          >
+            <option value="">Todos</option>
+            {catalogs.tipos.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Prioridade"
+            value={filters.prioridade_id ?? ""}
+            onChange={(event) => setFilter("prioridade_id", event.target.value)}
+          >
+            <option value="">Todas</option>
+            {catalogs.prioridades.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Assistência"
+            value={filters.assistencia_id ?? ""}
+            onChange={(event) => setFilter("assistencia_id", event.target.value)}
+          >
+            <option value="">Todas</option>
+            {catalogs.assistencias.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.numero_assistencia}
+              </option>
+            ))}
+          </Select>
+          <Input
+            label="Montador / recurso"
+            value={filters.montador ?? ""}
+            onChange={(event) => setFilter("montador", event.target.value)}
+          />
+          <Input
+            label="Registrada de"
+            type="date"
+            value={filters.data_de ?? ""}
+            onChange={(event) => setFilter("data_de", event.target.value)}
+          />
+          <Input
+            label="Registrada até"
+            type="date"
+            value={filters.data_ate ?? ""}
+            onChange={(event) => setFilter("data_ate", event.target.value)}
+          />
         </div>
-      </Card>
+      </Drawer>
 
-      {loading ? <LoadingState message="Carregando ocorrências..." /> : null}
+      {loading ? <Skeleton message="Carregando ocorrências..." /> : null}
       {error ? (
         <FeedbackState
           tone="error"
@@ -198,17 +238,16 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           tone="empty"
           title="Nenhuma ocorrência neste recorte"
           description="Altere os filtros ou registre uma nova ocorrência."
+          actions={<ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>}
         />
       ) : null}
       {!loading && !error && visible.length > 0 ? (
         <>
-          <p role="status">{visible.length} ocorrência(s) exibida(s)</p>
           <OccurrenceTable items={visible} />
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 
 export default OccurrenceListPage;
-

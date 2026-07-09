@@ -1,4 +1,5 @@
 import { Button } from "../../../components/ui/Button";
+import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import type { EffectiveValue as EffectiveValueModel } from "../types";
 
 export function EffectiveValue({
@@ -16,6 +17,12 @@ export function EffectiveValue({
       : value.origem_vigente === "importacao"
         ? "Valor importado"
         : "Sem valor";
+  const originTone: StatusTone =
+    value.origem_vigente === "correcao"
+      ? "warning"
+      : value.origem_vigente === "importacao"
+        ? "info"
+        : "neutral";
 
   return (
     <div className="effective-value">
@@ -24,9 +31,7 @@ export function EffectiveValue({
           <span className="effective-value__label">{label}</span>
           <strong>{value.vigente || "Não informado"}</strong>
         </div>
-        <span className={`assistance-badge assistance-badge--${value.origem_vigente}`}>
-          {originLabel}
-        </span>
+        <StatusBadge tone={originTone}>{originLabel}</StatusBadge>
       </div>
       <details>
         <summary>Ver origem do valor</summary>

@@ -18,11 +18,13 @@ export function NotFoundPage() {
   const actionLabel = isAuthorized ? "Voltar ao Dashboard" : "Voltar ao login";
 
   return (
-    <FeedbackState
-      tone="empty"
-      title="Página não encontrada"
-      description="O endereço acessado não existe ou foi removido."
-      actions={<Button onClick={() => navigate(target, { replace: true })}>{actionLabel}</Button>}
-    />
+    <div className="doka-public-state">
+      <FeedbackState
+        tone="empty"
+        title="Página não encontrada"
+        description="O endereço acessado não existe ou foi removido."
+        actions={<Button onClick={() => navigate(target, { replace: true })}>{actionLabel}</Button>}
+      />
+    </div>
   );
 }

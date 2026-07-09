@@ -5,13 +5,13 @@
 }
 
 .doka-avatar__circle {
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--purple-500);
-  color: #fff;
+  color: var(--text-on-brand);
   font-family: var(--font-display);
   font-weight: var(--fw-semibold);
   width: 100%;
@@ -58,7 +58,7 @@
   height: 28%;
   min-width: 8px;
   min-height: 8px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   border: 2px solid var(--surface-card);
 }
 

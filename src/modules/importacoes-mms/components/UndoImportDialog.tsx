@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { Button } from "../../../components/ui/Button";
+import { Dialog } from "../../../components/ui/Dialog";
+import { Textarea } from "../../../components/ui/FormControls";
 import type { TreatmentService } from "../treatment-service";
 import type { UndoAnalysis } from "../types";
 
@@ -29,15 +31,22 @@ export function UndoImportDialog({ lotId, service, onComplete }: {
   }
   return <div className="mms-undo">
     <Button variant="outline" loading={working && !analysis} onClick={analyze}>Analisar desfazer</Button>
-    {analysis ? <div role="dialog" aria-modal="true" aria-labelledby="undo-title" className="mms-dialog">
-      <h2 id="undo-title">{analysis.elegivel ? "Desfazer importação" : "Importação não pode ser desfeita"}</h2>
+    <Dialog
+      open={Boolean(analysis)}
+      title={analysis?.elegivel ? "Desfazer importação" : "Importação não pode ser desfeita"}
+      onClose={() => !working && setAnalysis(null)}
+      actions={analysis?.elegivel ? <>
+        <Button variant="outline" disabled={working} onClick={() => setAnalysis(null)}>Cancelar</Button>
+        <Button variant="danger" loading={working} onClick={undo}>Confirmar desfazer</Button>
+      </> : <Button variant="outline" onClick={() => setAnalysis(null)}>Fechar</Button>}
+    >
+      {analysis ? <>
       {!analysis.elegivel ? <ul>{analysis.motivos_bloqueio.map((reasonCode) => <li key={reasonCode}>{reasonCode}</li>)}</ul> : <>
         <p>Esta operação restaura o predecessor de cada posto/data sem excluir evidências.</p>
-        <label>Justificativa <textarea value={reason} onChange={(e) => setReason(e.target.value)} /></label>
-        <Button loading={working} onClick={undo}>Confirmar desfazer</Button>
+        <Textarea label="Justificativa" value={reason} onChange={(e) => setReason(e.target.value)} />
       </>}
-      <Button variant="outline" onClick={() => setAnalysis(null)}>Fechar</Button>
-    </div> : null}
+      </> : null}
+    </Dialog>
     {message ? <p role="alert">{message}</p> : null}
   </div>;
 }

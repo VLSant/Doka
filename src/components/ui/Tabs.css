@@ -1,0 +1,57 @@
+.doka-tabs {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+}
+
+.doka-tabs__tab {
+  min-height: var(--control-h-md);
+  padding: 0 var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.doka-tabs__tab:hover {
+  color: var(--text-strong);
+}
+
+.doka-tabs__tab:focus-visible {
+  outline: none;
+  box-shadow: inset var(--ring);
+}
+
+.doka-tabs--underline {
+  border-bottom: var(--border-hairline);
+}
+
+.doka-tabs--underline .doka-tabs__tab {
+  border-bottom: 3px solid transparent;
+}
+
+.doka-tabs--underline .doka-tabs__tab[aria-selected="true"] {
+  border-bottom-color: var(--brand-primary);
+  color: var(--text-strong);
+}
+
+.doka-tabs--segmented {
+  width: fit-content;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.doka-tabs--segmented .doka-tabs__tab[aria-selected="true"] {
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-xs);
+}

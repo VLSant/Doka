@@ -1,5 +1,6 @@
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import type { AssistancePart, CorrectableField, EffectiveValue } from "../types";
 import { EffectiveValue as EffectiveValueView } from "./EffectiveValue";
 
@@ -43,7 +44,7 @@ export function AssistanceParts({
                 <h3>{part.parte_conjunto}</h3>
               </div>
               {part.situacao === "removido" ? (
-                <span className="assistance-badge assistance-badge--removed">Removida</span>
+                <StatusBadge tone="danger">Removida</StatusBadge>
               ) : null}
             </div>
             <dl className="assistance-summary__facts">

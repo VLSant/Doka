@@ -13,8 +13,8 @@
 .doka-loading-state__spinner {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  border: 3px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  border: var(--space-1) solid var(--border-subtle);
   border-top-color: var(--brand-primary);
   animation: doka-loading-spin 0.7s linear infinite;
 }

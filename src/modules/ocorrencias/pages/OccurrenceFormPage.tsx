@@ -3,12 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
+import { Drawer } from "../../../components/ui/Drawer";
 import { OccurrenceForm } from "../components/OccurrenceForm";
-import {
-  createOccurrenceService,
-  type OccurrenceService,
-} from "../occurrence-service";
+import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
 import type { OccurrenceCatalogs, OccurrenceInput } from "../types";
 import "./Occurrences.css";
 
@@ -82,15 +79,15 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
     }
   }
 
+  const closeTarget = ocorrenciaId ? `/app/ocorrencias/${ocorrenciaId}` : "/app/ocorrencias";
   return (
-    <main className="occurrences-page occurrences-page--narrow">
-      <header className="occurrences-header">
-        <div>
-          <span>Ocorrências</span>
-          <h1>{editing ? "Editar ocorrência" : "Nova ocorrência"}</h1>
-          <p>A assistência é obrigatória e define automaticamente o posto.</p>
-        </div>
-      </header>
+    <Drawer
+      open
+      size="lg"
+      title={editing ? "Editar ocorrência" : "Nova ocorrência"}
+      description="A assistência define automaticamente o posto."
+      onClose={() => navigate(closeTarget)}
+    >
       {loading ? <LoadingState message="Carregando formulário..." /> : null}
       {error ? (
         <FeedbackState
@@ -103,18 +100,16 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
         />
       ) : null}
       {!loading && catalogs ? (
-        <Card padding="lg">
-          <OccurrenceForm
-            catalogs={catalogs}
-            initial={initial}
-            editing={editing}
-            saving={saving}
-            onSubmit={submit}
-            onCancel={() => navigate(ocorrenciaId ? `/app/ocorrencias/${ocorrenciaId}` : "/app/ocorrencias")}
-          />
-        </Card>
+        <OccurrenceForm
+          catalogs={catalogs}
+          initial={initial}
+          editing={editing}
+          saving={saving}
+          onSubmit={submit}
+          onCancel={() => navigate(closeTarget)}
+        />
       ) : null}
-    </main>
+    </Drawer>
   );
 }
 

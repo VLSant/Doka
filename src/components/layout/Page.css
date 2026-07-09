@@ -1,0 +1,55 @@
+.doka-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.doka-page--default {
+  max-width: var(--container-max);
+}
+
+.doka-page--narrow {
+  max-width: 960px;
+}
+
+.doka-page--wide {
+  max-width: none;
+}
+
+.doka-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.doka-page-header__copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.doka-page-header__eyebrow {
+  color: var(--brand-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.doka-page-header__title {
+  font-size: var(--text-2xl);
+}
+
+.doka-page-header__description {
+  max-width: 72ch;
+  color: var(--text-muted);
+}
+
+.doka-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+}

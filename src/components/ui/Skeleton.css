@@ -1,0 +1,28 @@
+.doka-skeleton {
+  overflow: hidden;
+  border: var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+
+.doka-skeleton__row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.8fr 0.6fr;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border-bottom: var(--border-hairline);
+}
+
+.doka-skeleton__row span {
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--neutral-100), var(--neutral-200), var(--neutral-100));
+  background-size: 220% 100%;
+  animation: doka-skeleton-wave 1.3s var(--ease-standard) infinite;
+}
+
+@keyframes doka-skeleton-wave {
+  to {
+    background-position: -220% 0;
+  }
+}

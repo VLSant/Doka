@@ -1,4 +1,6 @@
 import type { CatalogItem, UsuarioItem } from "../../../services/catalog-service";
+import { Input } from "../../../components/ui/Input";
+import { Select } from "../../../components/ui/FormControls";
 import type { TaskFilters } from "../types";
 
 export function TaskFiltersForm({
@@ -18,79 +20,72 @@ export function TaskFiltersForm({
 }) {
   return (
     <div className="tasks-filters" aria-label="Filtros de tarefas">
-      <label>
-        Buscar
-        <input
-          type="search"
-          value={value.termo ?? ""}
-          disabled={disabled}
-          placeholder="Título ou descrição"
-          onChange={(event) => onChange({ ...value, termo: event.target.value })}
-        />
-      </label>
-      <label>
-        Status
-        <select
-          value={value.status ?? ""}
-          disabled={disabled}
-          onChange={(event) =>
-            onChange({ ...value, status: event.target.value as TaskFilters["status"] })
-          }
-        >
-          <option value="">Todos</option>
-          <option value="pendente">Pendente</option>
-          <option value="em_andamento">Em andamento</option>
-          <option value="concluida">Concluída</option>
-          <option value="validada">Validada</option>
-          <option value="reaberta">Reaberta</option>
-        </select>
-      </label>
-      <label>
-        Posto
-        <select
-          value={value.postoId ?? ""}
-          disabled={disabled}
-          onChange={(event) => onChange({ ...value, postoId: event.target.value })}
-        >
-          <option value="">Todos</option>
-          {postos.map((posto) => (
-            <option key={posto.id} value={posto.id}>
-              {posto.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Responsável
-        <select
-          value={value.responsavelId ?? ""}
-          disabled={disabled}
-          onChange={(event) => onChange({ ...value, responsavelId: event.target.value })}
-        >
-          <option value="">Todos</option>
-          {usuarios.map((usuario) => (
-            <option key={usuario.id} value={usuario.id}>
-              {usuario.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Prioridade
-        <select value={value.prioridadeId ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, prioridadeId: event.target.value })}>
-          <option value="">Todas</option>
-          {prioridades.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-        </select>
-      </label>
-      <label>
-        Tipo
-        <select value={value.tipo ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, tipo: event.target.value as TaskFilters["tipo"] })}>
-          <option value="">Todos</option><option value="avulsa">Avulsa</option>
-          <option value="estrategia">Estratégia</option><option value="rotina">Rotina</option>
-        </select>
-      </label>
-      <label>Prazo de<input type="date" value={value.prazoDe ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, prazoDe: event.target.value })} /></label>
-      <label>Prazo até<input type="date" value={value.prazoAte ?? ""} disabled={disabled} onChange={(event) => onChange({ ...value, prazoAte: event.target.value })} /></label>
+      <Select
+        label="Posto"
+        value={value.postoId ?? ""}
+        disabled={disabled}
+        onChange={(event) => onChange({ ...value, postoId: event.target.value })}
+      >
+        <option value="">Todos</option>
+        {postos.map((posto) => (
+          <option key={posto.id} value={posto.id}>
+            {posto.nome}
+          </option>
+        ))}
+      </Select>
+      <Select
+        label="Responsável"
+        value={value.responsavelId ?? ""}
+        disabled={disabled}
+        onChange={(event) => onChange({ ...value, responsavelId: event.target.value })}
+      >
+        <option value="">Todos</option>
+        {usuarios.map((usuario) => (
+          <option key={usuario.id} value={usuario.id}>
+            {usuario.nome}
+          </option>
+        ))}
+      </Select>
+      <Select
+        label="Prioridade"
+        value={value.prioridadeId ?? ""}
+        disabled={disabled}
+        onChange={(event) => onChange({ ...value, prioridadeId: event.target.value })}
+      >
+        <option value="">Todas</option>
+        {prioridades.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.nome}
+          </option>
+        ))}
+      </Select>
+      <Select
+        label="Tipo"
+        value={value.tipo ?? ""}
+        disabled={disabled}
+        onChange={(event) =>
+          onChange({ ...value, tipo: event.target.value as TaskFilters["tipo"] })
+        }
+      >
+        <option value="">Todos</option>
+        <option value="avulsa">Avulsa</option>
+        <option value="estrategia">Estratégia</option>
+        <option value="rotina">Rotina</option>
+      </Select>
+      <Input
+        label="Prazo de"
+        type="date"
+        value={value.prazoDe ?? ""}
+        disabled={disabled}
+        onChange={(event) => onChange({ ...value, prazoDe: event.target.value })}
+      />
+      <Input
+        label="Prazo até"
+        type="date"
+        value={value.prazoAte ?? ""}
+        disabled={disabled}
+        onChange={(event) => onChange({ ...value, prazoAte: event.target.value })}
+      />
     </div>
   );
 }

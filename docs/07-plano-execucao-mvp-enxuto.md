@@ -80,13 +80,13 @@ execução concluída.
 
 ### 2.4 Situação atual por módulo
 
-| Módulo | Banco | Frontend | Testes | Estado |
-|---|---|---|---|---|
-| Tarefas e Rotinas | Substancial | Não iniciado | Não iniciado | Parcial |
-| Ocorrências | Substancial | Não iniciado | Não iniciado | Parcial |
-| Deslocamentos e Custos | Substancial | Não iniciado | Não iniciado | Parcial |
-| Administração | Pequena base adicional | Não iniciado | Não iniciado | Inicial |
-| Dashboard | Sem implementação adicional | Placeholder | Não iniciado | Não iniciado |
+| Módulo                 | Banco                       | Frontend     | Testes       | Estado       |
+| ---------------------- | --------------------------- | ------------ | ------------ | ------------ |
+| Tarefas e Rotinas      | Substancial                 | Não iniciado | Não iniciado | Parcial      |
+| Ocorrências            | Substancial                 | Não iniciado | Não iniciado | Parcial      |
+| Deslocamentos e Custos | Substancial                 | Não iniciado | Não iniciado | Parcial      |
+| Administração          | Pequena base adicional      | Não iniciado | Não iniciado | Inicial      |
+| Dashboard              | Sem implementação adicional | Placeholder  | Não iniciado | Não iniciado |
 
 ### 2.5 Pendências técnicas já identificadas
 
@@ -489,24 +489,24 @@ principal:
 
 ### Onda 1
 
-| Frente | Responsabilidade |
-|---|---|
+| Frente           | Responsabilidade                                          |
+| ---------------- | --------------------------------------------------------- |
 | Agente principal | Fase 0, migrations, contratos compartilhados e integração |
-| Agente 1 | Frontend de Tarefas e Rotinas |
-| Agente 2 | Frontend de Ocorrências |
-| Agente 3 | Frontend de Deslocamentos e Custos |
+| Agente 1         | Frontend de Tarefas e Rotinas                             |
+| Agente 2         | Frontend de Ocorrências                                   |
+| Agente 3         | Frontend de Deslocamentos e Custos                        |
 
 Os agentes de módulo podem começar após o agente principal confirmar os schemas
 e contratos mínimos. Correções de migration permanecem centralizadas.
 
 ### Onda 2
 
-| Frente | Responsabilidade |
-|---|---|
-| Agente principal | Integração das três frentes, router e regressões |
-| Agente 1 | Administração mínima |
-| Agente 2 | Dashboard |
-| Agente 3 | Testes de banco e revisão de segurança dos módulos novos |
+| Frente           | Responsabilidade                                         |
+| ---------------- | -------------------------------------------------------- |
+| Agente principal | Integração das três frentes, router e regressões         |
+| Agente 1         | Administração mínima                                     |
+| Agente 2         | Dashboard                                                |
+| Agente 3         | Testes de banco e revisão de segurança dos módulos novos |
 
 ### Regras de coordenação
 
@@ -581,21 +581,32 @@ visual será feita posteriormente pelo usuário.
 
 Atualizar esta tabela ao iniciar ou concluir uma frente.
 
-| Data | Frente | Estado | Resultado/evidência | Próximo passo |
-|---|---|---|---|---|
-| 03/07/2026 | Auditoria inicial do trabalho do Fable | Concluída | Quatro migrations remotas confirmadas; frontend não integrado | Estabilizar migrations |
-| 03/07/2026 | Plano vivo de execução | Concluído | Documento criado; nenhum código alterado | Iniciar Fase 0 |
-| 03/07/2026 | Reconciliação nominal de migrations | Concluída | Arquivos locais renomeados para as versões remotas já aplicadas | Revisar contratos e permissões |
-| 03/07/2026 | Execução paralela dos módulos operacionais | Concluída | Tarefas, Ocorrências e Lançamentos implementados e publicados em PRs empilhados | Validar integração final |
-| 03/07/2026 | Fundação frontend | Concluída | Rotas, navegação e contratos compartilhados integrados | Manter enxuta |
-| 03/07/2026 | Tarefas e Rotinas | Concluída | CRUD, permissões, telas e testes essenciais implementados; PR #14 | Homologação operacional |
-| 03/07/2026 | Ocorrências | Concluída | CRUD, escopo por posto, responsável validado e testes essenciais; PR #15 | Homologação operacional |
-| 03/07/2026 | Deslocamentos e Custos | Concluída | Tipos reunidos no mesmo módulo, CRUD manual e testes essenciais; PR #16 | Homologação operacional |
-| 03/07/2026 | Administração | Concluída | Usuários, postos, vínculos e cadastros auxiliares mínimos; PR #17 | Homologação administrativa |
-| 03/07/2026 | Dashboard | Concluída | Indicadores e listas operacionais conectados aos dados reais; PR #18 | Homologação operacional |
-| 03/07/2026 | Fechamento técnico | Concluído | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros | Publicar PR final e homologar manualmente |
-| 03/07/2026 | Testes SQL dos módulos novos no banco remoto | Concluída | 4 arquivos em `supabase/tests/*_fluxo.sql` executados com sucesso no projeto Doka (com rollback): permissões por perfil/posto, transições, recorrência idempotente, acúmulo, validação de lançamentos, último admin e auditoria | Homologação manual das telas pelo usuário |
-| 03/07/2026 | Complementação do PRD fundador | Concluída | Produtividade/eficiência, metas, Dashboard gerencial, auditoria central, históricos, filtros e obrigatoriedades integrados; migration remota `20260703061153` reconciliada localmente | Homologação manual dos fluxos ampliados |
+| Data       | Frente                                       | Estado                 | Resultado/evidência                                                                                                                                                                                                             | Próximo passo                                                                      |
+| ---------- | -------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 03/07/2026 | Auditoria inicial do trabalho do Fable       | Concluída              | Quatro migrations remotas confirmadas; frontend não integrado                                                                                                                                                                   | Estabilizar migrations                                                             |
+| 03/07/2026 | Plano vivo de execução                       | Concluído              | Documento criado; nenhum código alterado                                                                                                                                                                                        | Iniciar Fase 0                                                                     |
+| 03/07/2026 | Reconciliação nominal de migrations          | Concluída              | Arquivos locais renomeados para as versões remotas já aplicadas                                                                                                                                                                 | Revisar contratos e permissões                                                     |
+| 03/07/2026 | Execução paralela dos módulos operacionais   | Concluída              | Tarefas, Ocorrências e Lançamentos implementados e publicados em PRs empilhados                                                                                                                                                 | Validar integração final                                                           |
+| 03/07/2026 | Fundação frontend                            | Concluída              | Rotas, navegação e contratos compartilhados integrados                                                                                                                                                                          | Manter enxuta                                                                      |
+| 03/07/2026 | Tarefas e Rotinas                            | Concluída              | CRUD, permissões, telas e testes essenciais implementados; PR #14                                                                                                                                                               | Homologação operacional                                                            |
+| 03/07/2026 | Ocorrências                                  | Concluída              | CRUD, escopo por posto, responsável validado e testes essenciais; PR #15                                                                                                                                                        | Homologação operacional                                                            |
+| 03/07/2026 | Deslocamentos e Custos                       | Concluída              | Tipos reunidos no mesmo módulo, CRUD manual e testes essenciais; PR #16                                                                                                                                                         | Homologação operacional                                                            |
+| 03/07/2026 | Administração                                | Concluída              | Usuários, postos, vínculos e cadastros auxiliares mínimos; PR #17                                                                                                                                                               | Homologação administrativa                                                         |
+| 03/07/2026 | Dashboard                                    | Concluída              | Indicadores e listas operacionais conectados aos dados reais; PR #18                                                                                                                                                            | Homologação operacional                                                            |
+| 03/07/2026 | Fechamento técnico                           | Concluído              | 55 arquivos/223 testes, typecheck e build aprovados; lint sem erros                                                                                                                                                             | Publicar PR final e homologar manualmente                                          |
+| 03/07/2026 | Testes SQL dos módulos novos no banco remoto | Concluída              | 4 arquivos em `supabase/tests/*_fluxo.sql` executados com sucesso no projeto Doka (com rollback): permissões por perfil/posto, transições, recorrência idempotente, acúmulo, validação de lançamentos, último admin e auditoria | Homologação manual das telas pelo usuário                                          |
+| 03/07/2026 | Complementação do PRD fundador               | Concluída              | Produtividade/eficiência, metas, Dashboard gerencial, auditoria central, históricos, filtros e obrigatoriedades integrados; migration remota `20260703061153` reconciliada localmente                                           | Homologação manual dos fluxos ampliados                                            |
+| 04/07/2026 | Validação da auditoria de design system      | Concluída              | Diagnóstico confrontado com o código e plano priorizado em `docs/08-plano-tarefas-auditoria-design-system.md`; nenhuma tela alterada                                                                                            | Executar a fundação mínima DS-001 a DS-004                                         |
+| 04/07/2026 | Catálogo de screenshots                      | Parcial                | 29 capturas em 1440x900 catalogadas em `docs/auditoria-visual/README.md`; detalhes/edições sem dados não foram simulados                                                                                                        | Executar análise visual e decidir se será criada massa descartável para as lacunas |
+| 04/07/2026 | Redesign e consolidação do design system     | Concluída tecnicamente | Tokens reconciliados; componentes compartilhados aplicados; aliases, hex visual e tipografia numérica eliminados de `src/modules`; validações executadas sem browser/E2E                                                        | Homologar visualmente as rotas em etapa posterior                                  |
+| 04/07/2026 | Redesign de interação 2.0                    | Concluída tecnicamente | Shell colapsável, topbar contextual, listas search-first, filtros e formulários em Drawer, chips, skeletons, paginação, menus e toasts implementados; plano registrado em `docs/09-redesign-interacao-frontend.md`              | Homologar visualmente e decidir composição de detalhe de Assistência sobre a lista |
+| 05/07/2026 | Screenshots pós-redesign                     | Parcial                | 18 capturas válidas em 1440x900 adicionadas em `docs/auditoria-visual/screenshots/2026-07-05-pos-redesign`; capturas presas em loading foram descartadas e o navegador interno deixou de responder                                | Retomar as telas pendentes; decidir se pode ser criada massa visual para detalhes e edições sem registros |
+| 06/07/2026 | Padronização profissional de componentes     | Parcial                | Plano criado em `docs/10-plano-padronizacao-componentes-profissionais.md`; raios e tracking do design system ajustados; foco, teclado e ARIA reforçados em primitives compartilhados; lint/design-system, typecheck, build e teste unitário focado passaram | Continuar migração/revisão por tela e homologar visualmente quando a restrição de browser/E2E for removida |
+| 06/07/2026 | Migração UI de Tarefas/Rotinas               | Parcial                | Formulários migrados para `Input`, `Select`, `Textarea` e `Checkbox`; rotina/lista/detalhe usam `Page`, `PageHeader`, `TableFrame` e `StatusBadge`; CSS local de campos, tabela, status e media query antiga removido; typecheck, lint-design-system e testes focados passaram | Continuar nas próximas telas com controles nativos restantes, começando por Ocorrências e Lançamentos |
+| 06/07/2026 | Migração UI de Ocorrências                   | Parcial                | Formulário, detalhe e tabela migrados para primitives compartilhados; CSS local de controles/tabela/status removido; teste `tests/integration/occurrence-form.test.tsx` criado; testes focados de Ocorrências e design system passaram | Continuar pelos controles nativos restantes em Lançamentos e pontos específicos de Importações |
+| 06/07/2026 | Migração UI de Lançamentos                   | Parcial                | `RadioOption` criado; formulário, tabela e detalhe migrados para primitives compartilhados; CSS local de controles/tabela/status removido; testes focados de Lançamentos e design system passaram | Revisar controles restantes em Importações MMS, preservando `input[type=file]` como exceção permitida |
+| 06/07/2026 | Migração UI de Importações MMS               | Parcial                | `CorrectionEditor` migrado para `Input`; varredura de controles nativos em `src/modules` agora aponta somente o `input[type=file]` encapsulado em `FileDropzone`, exceção permitida; testes focados de correção e arquivo passaram | Executar validações finais e manter homologação visual para etapa permitida |
+| 06/07/2026 | Migração UI de Administração                 | Parcial                | Tabelas de usuários, postos, vínculos e metas migradas para `TableFrame`; CSS local de tabela/status/campo legado removido; `AdminFields.Field` removido; testes focados de Administração passaram | Continuar limpeza visual em Dashboard, Assistências e Importações, sem mexer em regras de negócio |
 
 ---
 
@@ -615,8 +626,10 @@ Ao retomar:
    daquele módulo após revisar PRD, regras, migration e frontend existente.
 10. Atualizar o registro ao final de cada etapa, inclusive em caso de bloqueio.
 
-O próximo passo atual é iniciar a homologação manual dos módulos na ordem dos
-PRs. Ajustes secundários serão tratados a partir do uso real.
+O próximo passo atual é homologar manualmente o redesign nas rotas catalogadas
+em `docs/auditoria-visual/README.md`. A implementação técnica do plano
+`docs/08-plano-tarefas-auditoria-design-system.md` foi concluída sem browser,
+E2E ou homologação visual, conforme a restrição vigente do MVP.
 
 ### Complementação posterior do PRD fundador
 
@@ -638,3 +651,48 @@ Os status operacionais continuam sendo enums oficiais do domínio, não cadastro
 livres, para preservar as transições e regras já protegidas no banco.
 Responsáveis continuam sendo usuários operacionais, evitando um cadastro
 paralelo sem função adicional.
+### Atualizacao de 06/07/2026 - Migracao UI de Assistencias MMS
+
+Estado parcial. `AssistanceTable` passou a delegar estrutura visual para
+`TableFrame`; badges locais foram substituidos por `StatusBadge`; o detalhe
+passou a usar `Page`; e o CSS local ficou restrito a composicao de filtros,
+cabecalho legado, grids de fatos/valores e historico. Testes focados de
+Assistencias MMS e design system passaram. Proximo passo: continuar limpeza
+visual em Dashboard e Importacoes, mantendo homologacao visual para etapa
+permitida.
+
+### Atualizacao de 06/07/2026 - Migracao UI do Dashboard
+
+Estado parcial. A tabela de produtividade por posto passou a usar `TableFrame`;
+colunas numericas foram marcadas com `data-numeric`; CSS legado de filtros
+nativos, tabela propria e counters antigos foi removido; e o CSS local ficou
+restrito a grids, links de metricas, comparativo de produtividade e alertas.
+Testes focados de Dashboard e design system passaram. Proximo passo: continuar
+limpeza visual em Importacoes MMS, preservando `input[type=file]` como excecao
+permitida.
+
+### Atualizacao de 06/07/2026 - Migracao UI de Importacoes MMS
+
+Estado parcial. `LotsTable` e as tabelas de erros/alertas do preview passaram a
+usar `TableFrame`; colunas numericas foram marcadas com `data-numeric`; CSS
+legado de tabela, tabs e inputs antigos foi removido; e o CSS local ficou
+restrito a filtros, resumo do lote, largura minima de tabelas e itens brutos.
+Testes focados de Importacoes MMS e design system passaram. O `input[type=file]`
+do `FileDropzone` permanece como excecao permitida.
+
+### Atualizacao de 06/07/2026 - Auditoria e refinamento do design system
+
+Estado parcial. Eventos da auditoria passaram a usar `Card`; CSS local da
+auditoria ficou restrito a timeline, filtros e comparacao JSON; e `Avatar`,
+`Button`, `Drawer` e `Input` foram ajustados para remover valores visuais
+literais remanescentes em favor dos tokens oficiais. `LoadingState` tambem foi
+normalizado para tokens de raio e borda. Testes focados de rotas protegidas,
+route guard e design system passaram.
+
+### Atualizacao de 06/07/2026 - Comportamento de DropdownMenu
+
+Estado parcial. `DropdownMenu` recebeu `aria-haspopup`, `aria-controls`, foco
+inicial no primeiro item, fechamento por Escape com retorno de foco ao
+disparador e navegacao por ArrowUp/ArrowDown/Home/End. Estados
+`focus-visible` foram adicionados ao disparador e aos itens. Teste unitario de
+design system passou a cobrir o contrato de teclado e foco do menu.

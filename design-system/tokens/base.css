@@ -3,7 +3,11 @@
    Lightweight resets + default typographic rendering for product surfaces.
    =========================================================================== */
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -16,23 +20,43 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
   font-family: var(--font-display);
   font-weight: var(--fw-display);
   color: var(--text-strong);
   line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-normal);
   margin: 0;
 }
 
-p { margin: 0; text-wrap: pretty; }
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
 
-a { color: var(--text-link); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
-code, kbd, samp { font-family: var(--font-mono); font-size: 0.92em; }
+code,
+kbd,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
 
-::selection { background: var(--orange-200); color: var(--neutral-900); }
+::selection {
+  background: var(--orange-200);
+  color: var(--neutral-900);
+}
 
 /* Utility: uppercase eyebrow label */
 .doka-eyebrow {
@@ -45,7 +69,9 @@ code, kbd, samp { font-family: var(--font-mono); font-size: 0.92em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }

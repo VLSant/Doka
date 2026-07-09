@@ -1,11 +1,21 @@
 import { Link } from "react-router-dom";
+import { TableFrame } from "../../../components/ui/Patterns";
+import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { isOccurrenceOverdue, STATUS_LABELS } from "../occurrence-state";
 import type { OccurrenceListItem } from "../types";
 
 export function OccurrenceTable({ items }: { items: OccurrenceListItem[] }) {
+  const tone: Record<OccurrenceListItem["status"], StatusTone> = {
+    aberta: "warning",
+    em_acompanhamento: "info",
+    aguardando_retorno: "warning",
+    resolvida: "success",
+    encerrada: "neutral",
+    reaberta: "warning",
+  };
   return (
-    <div className="occurrence-table-wrap">
-      <table className="occurrence-table">
+    <TableFrame>
+      <table>
         <thead>
           <tr>
             <th>Assistência</th>
@@ -28,11 +38,9 @@ export function OccurrenceTable({ items }: { items: OccurrenceListItem[] }) {
               </td>
               <td>{item.tipo?.nome ?? "—"}</td>
               <td>
-                <span className={`occurrence-status occurrence-status--${item.status}`}>
-                  {STATUS_LABELS[item.status]}
-                </span>
+                <StatusBadge tone={tone[item.status]}>{STATUS_LABELS[item.status]}</StatusBadge>
                 {isOccurrenceOverdue(item) ? (
-                  <span className="occurrence-status occurrence-status--overdue">Atrasada</span>
+                  <StatusBadge tone="danger">Atrasada</StatusBadge>
                 ) : null}
               </td>
               <td>{item.prioridade?.nome ?? "—"}</td>
@@ -46,7 +54,6 @@ export function OccurrenceTable({ items }: { items: OccurrenceListItem[] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   );
 }
-

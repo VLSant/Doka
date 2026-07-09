@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
+import { Tabs } from "../../../components/ui/Tabs";
+import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../auth/AuthProvider";
 import {
   AdministrationError,
@@ -31,7 +34,7 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
   const [data, setData] = useState<AdministrationSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const toast = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,22 +66,25 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
     };
   }, [service]);
 
-  const onError = useCallback((cause: unknown) => {
-    setNotice("");
-    setError(
-      cause instanceof AdministrationError
-        ? cause.message
-        : "Não foi possível concluir a operação.",
-    );
-  }, []);
+  const onError = useCallback(
+    (cause: unknown) => {
+      const message =
+        cause instanceof AdministrationError
+          ? cause.message
+          : "Não foi possível concluir a operação.";
+      setError(message);
+      toast(message, "error");
+    },
+    [toast],
+  );
 
   const onChanged = useCallback(
     async (message: string) => {
-      setNotice(message);
       setError("");
+      toast(message, "success");
       await load();
     },
-    [load],
+    [load, toast],
   );
 
   if (state.name !== "autorizado") {
@@ -102,42 +108,34 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
   }
 
   return (
-    <main className="administration-page">
-      <header className="administration-page__header">
-        <div>
-          <p className="administration-page__eyebrow">Configuração operacional</p>
-          <h1>Administração</h1>
-          <p>
-            {canEdit
-              ? "Mantenha usuários, postos e cadastros essenciais."
-              : "Consulta dos cadastros autorizados para o seu escopo."}
-          </p>
-        </div>
-        <Button variant="outline" loading={loading} onClick={() => void load()}>
-          Atualizar
-        </Button>
-      </header>
+    <Page className="administration-page" width="wide">
+      <PageHeader
+        eyebrow="Configuração operacional"
+        title="Administração"
+        description={
+          canEdit
+            ? "Mantenha usuários, postos e cadastros essenciais."
+            : "Consulta dos cadastros autorizados para o seu escopo."
+        }
+        actions={
+          <Button variant="outline" loading={loading} onClick={() => void load()}>
+            Atualizar
+          </Button>
+        }
+      />
 
-      <nav className="administration-page__tabs" aria-label="Seções administrativas">
-        <Tab active={section === "usuarios"} onClick={() => setSection("usuarios")}>
-          Usuários
-        </Tab>
-        <Tab active={section === "postos"} onClick={() => setSection("postos")}>
-          Postos e vínculos
-        </Tab>
-        <Tab active={section === "cadastros"} onClick={() => setSection("cadastros")}>
-          Cadastros auxiliares
-        </Tab>
-        <Tab active={section === "metas"} onClick={() => setSection("metas")}>
-          Metas de eficiência
-        </Tab>
-      </nav>
+      <Tabs
+        label="Seções administrativas"
+        value={section}
+        items={[
+          { id: "usuarios", label: "Usuários" },
+          { id: "postos", label: "Postos e vínculos" },
+          { id: "cadastros", label: "Cadastros auxiliares" },
+          { id: "metas", label: "Metas de eficiência" },
+        ]}
+        onChange={setSection}
+      />
 
-      {notice && (
-        <p className="administration-page__notice" role="status">
-          {notice}
-        </p>
-      )}
       {error && (
         <div className="administration-page__error" role="alert">
           <span>{error}</span>
@@ -187,27 +185,6 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
           onError={onError}
         />
       )}
-    </main>
-  );
-}
-
-function Tab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: string;
-}) {
-  return (
-    <button
-      type="button"
-      className={`administration-page__tab${active ? " administration-page__tab--active" : ""}`}
-      aria-current={active ? "page" : undefined}
-      onClick={onClick}
-    >
-      {children}
-    </button>
+    </Page>
   );
 }

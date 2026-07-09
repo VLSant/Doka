@@ -1,0 +1,131 @@
+.doka-filter-bar,
+.doka-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.doka-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--control-h-lg);
+}
+
+.doka-list-toolbar__select {
+  width: 190px;
+}
+
+.doka-list-toolbar__spacer {
+  flex: 1;
+}
+
+.doka-filter-bar__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  grid-column: 1 / -1;
+}
+
+.doka-table-frame {
+  overflow-x: auto;
+  border: var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+
+.doka-table-frame table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.doka-table-frame th,
+.doka-table-frame td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-hairline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.doka-table-frame th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.doka-table-frame td[data-numeric],
+.doka-table-frame th[data-numeric] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.doka-table-frame tr[data-clickable="true"] {
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+
+.doka-table-frame tr[data-clickable="true"]:hover {
+  background: var(--surface-brand-soft);
+}
+
+.doka-form-section,
+.doka-details-panel {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
+}
+
+.doka-form-section header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.doka-form-section h2 {
+  font-size: var(--text-lg);
+}
+
+.doka-form-section header p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.doka-metric-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: var(--border-card);
+  border-left: 4px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
+}
+
+.doka-metric-card--brand {
+  border-left-color: var(--brand-secondary);
+}
+
+.doka-metric-card--attention {
+  border-left-color: var(--brand-primary);
+}
+
+.doka-metric-card span {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.doka-metric-card strong {
+  color: var(--text-strong);
+  font-size: var(--text-2xl);
+}

@@ -7,12 +7,18 @@
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
     transform var(--dur-fast) var(--ease-standard);
 }
 
 .doka-icon-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.doka-icon-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
 }
 
 .doka-icon-button:active:not(:disabled) {
@@ -50,7 +56,7 @@
 
 .doka-icon-button--primary {
   background: var(--brand-primary);
-  color: #fff;
+  color: var(--brand-on-primary);
 }
 .doka-icon-button--primary:hover:not(:disabled) {
   background: var(--brand-primary-hover);
@@ -63,4 +69,5 @@
 }
 .doka-icon-button--outline:hover:not(:disabled) {
   background: var(--neutral-100);
+  border-color: var(--border-strong);
 }

@@ -9,6 +9,9 @@
   border-right: var(--border-hairline);
   padding: var(--space-4);
   overflow-y: auto;
+  transition:
+    width var(--dur-base) var(--ease-out),
+    padding var(--dur-base) var(--ease-out);
 }
 
 .doka-sidebar__brand {
@@ -43,16 +46,18 @@
 .doka-sidebar__link {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   width: 100%;
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3) var(--space-2);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-weight: var(--fw-semibold);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--text-body);
   text-decoration: none;
-  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
 }
 
 .doka-sidebar__link:hover {
@@ -89,4 +94,39 @@
   font-weight: var(--fw-regular);
   color: var(--text-subtle);
   white-space: nowrap;
+}
+
+.doka-sidebar__toggle {
+  justify-content: flex-start;
+  color: var(--text-muted);
+}
+
+.doka-sidebar--collapsed {
+  width: 68px;
+  padding-inline: var(--space-2);
+}
+
+.doka-sidebar--collapsed .doka-sidebar__brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.doka-sidebar--collapsed .doka-sidebar__logo {
+  width: 30px;
+  height: 30px;
+}
+
+.doka-sidebar--collapsed .doka-sidebar__link {
+  justify-content: center;
+  padding-inline: var(--space-2);
+}
+
+.doka-sidebar--collapsed .doka-sidebar__label,
+.doka-sidebar--collapsed .doka-sidebar__unavailable,
+.doka-sidebar--collapsed .doka-sidebar__toggle span {
+  display: none;
+}
+
+.doka-sidebar--collapsed .doka-sidebar__toggle {
+  justify-content: center;
 }

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
-import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
+import { Drawer } from "../../../components/ui/Drawer";
+import { FilterChips } from "../../../components/ui/FilterChips";
+import { Input } from "../../../components/ui/Input";
+import { SearchInput } from "../../../components/ui/SearchInput";
+import { Select } from "../../../components/ui/FormControls";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { AuditEventList } from "../AuditEventList";
 import { createAuditHistoryService, type AuditService } from "../audit-service";
 import type { AuditCatalogs, AuditEvent, AuditFilters } from "../types";
@@ -16,62 +21,138 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
   const [catalogs, setCatalogs] = useState(EMPTY_CATALOGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filters, setFilters] = useState<AuditFilters>({});
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const load = useCallback(async (next: AuditFilters) => {
-    setLoading(true);
-    setError("");
-    try {
-      const [rows, options] = await Promise.all([service.list(next), service.catalogs()]);
-      setEvents(rows);
-      setCatalogs(options);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Histórico indisponível.");
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
+  const load = useCallback(
+    async (next: AuditFilters) => {
+      setLoading(true);
+      setError("");
+      try {
+        const [rows, options] = await Promise.all([service.list(next), service.catalogs()]);
+        setEvents(rows);
+        setCatalogs(options);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Histórico indisponível.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [service],
+  );
 
   // Initial Data API synchronization.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void load({}); }, [load]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load({});
+  }, [load]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const value = (name: string) => String(data.get(name) ?? "").trim() || undefined;
     const next: AuditFilters = {
-      usuarioId: value("usuarioId"), entidadeTipo: value("entidadeTipo"),
-      acao: value("acao"), postoId: value("postoId"),
-      dataDe: value("dataDe"), dataAte: value("dataAte"),
+      usuarioId: value("usuarioId"),
+      entidadeTipo: value("entidadeTipo"),
+      acao: value("acao"),
+      postoId: value("postoId"),
+      dataDe: value("dataDe"),
+      dataAte: value("dataAte"),
     };
+    setFilters(next);
+    void load(next);
+  }
+
+  function updateSearch(acao: string) {
+    const next = { ...filters, acao: acao || undefined };
+    setFilters(next);
     void load(next);
   }
 
   return (
-    <main className="audit-page">
-      <header><span>Governança</span><h1>Histórico e auditoria</h1>
-        <p>Consulte alterações e operações críticas dentro do seu escopo.</p></header>
-      <Card padding="lg">
+    <Page className="audit-page">
+      <PageHeader
+        eyebrow="Governança"
+        title="Histórico e auditoria"
+        description="Consulte alterações e operações críticas dentro do seu escopo."
+      />
+      <div className="doka-list-toolbar">
+        <SearchInput
+          value={filters.acao ?? ""}
+          placeholder="Buscar evento…"
+          onChange={updateSearch}
+        />
+        <Button variant="outline" onClick={() => setFiltersOpen(true)}>
+          Filtros
+          {Object.values(filters).filter(Boolean).length
+            ? ` (${Object.values(filters).filter(Boolean).length})`
+            : ""}
+        </Button>
+      </div>
+      <FilterChips
+        items={Object.entries(filters)
+          .filter(([key, value]) => key !== "acao" && value)
+          .map(([id, value]) => ({ id, label: `${id}: ${value}` }))}
+        onRemove={(id) => {
+          const next = { ...filters, [id]: undefined };
+          setFilters(next);
+          void load(next);
+        }}
+        onClear={() => {
+          const next = { acao: filters.acao };
+          setFilters(next);
+          void load(next);
+        }}
+      />
+      <Drawer open={filtersOpen} title="Filtros de auditoria" onClose={() => setFiltersOpen(false)}>
         <form className="audit-filters" onSubmit={submit}>
-          <label>Usuário<select name="usuarioId"><option value="">Todos</option>
-            {catalogs.usuarios.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-          </select></label>
-          <label>Módulo<select name="entidadeTipo"><option value="">Todos</option>
-            {["tarefas","rotinas","ocorrencias","lancamentos_operacionais","mms_assistencias","mms_lotes_importacao","usuarios","postos","metas_eficiencia"].map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}
-          </select></label>
-          <label>Evento<input name="acao" placeholder="Ex.: status alterado" /></label>
-          <label>Posto<select name="postoId"><option value="">Todos</option>
-            {catalogs.postos.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-          </select></label>
-          <label>De<input name="dataDe" type="date" /></label>
-          <label>Até<input name="dataAte" type="date" /></label>
-          <Button type="submit" disabled={loading}>Aplicar filtros</Button>
+          <Select label="Usuário" name="usuarioId" defaultValue={filters.usuarioId ?? ""}>
+            <option value="">Todos</option>
+            {catalogs.usuarios.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </Select>
+          <Select label="Módulo" name="entidadeTipo" defaultValue={filters.entidadeTipo ?? ""}>
+            <option value="">Todos</option>
+            {[
+              "tarefas",
+              "rotinas",
+              "ocorrencias",
+              "lancamentos_operacionais",
+              "mms_assistencias",
+              "mms_lotes_importacao",
+              "usuarios",
+              "postos",
+              "metas_eficiencia",
+            ].map((item) => (
+              <option key={item} value={item}>
+                {item.replaceAll("_", " ")}
+              </option>
+            ))}
+          </Select>
+          <Select label="Posto" name="postoId" defaultValue={filters.postoId ?? ""}>
+            <option value="">Todos</option>
+            {catalogs.postos.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </Select>
+          <Input label="De" name="dataDe" type="date" defaultValue={filters.dataDe} />
+          <Input label="Até" name="dataAte" type="date" defaultValue={filters.dataAte} />
+          <Button type="submit" disabled={loading} onClick={() => setFiltersOpen(false)}>
+            Aplicar filtros
+          </Button>
         </form>
-      </Card>
-      {loading ? <LoadingState message="Carregando histórico..." /> : null}
-      {error ? <FeedbackState tone="error" title="Histórico indisponível" description={error} /> : null}
+      </Drawer>
+      {loading ? <Skeleton /> : null}
+      {error ? (
+        <FeedbackState tone="error" title="Histórico indisponível" description={error} />
+      ) : null}
       {!loading && !error ? <AuditEventList events={events} /> : null}
-    </main>
+    </Page>
   );
 }
 

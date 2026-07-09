@@ -15,6 +15,28 @@
   font-size: var(--text-lg);
 }
 
+.doka-feedback-state__icon {
+  display: grid;
+  place-items: center;
+  width: var(--control-h-lg);
+  height: var(--control-h-lg);
+  border-radius: var(--radius-pill);
+  background: var(--surface-brand-soft);
+  color: var(--brand-primary-press);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+}
+
+.doka-feedback-state--error .doka-feedback-state__icon {
+  background: var(--status-exception-soft);
+  color: var(--red-600);
+}
+
+.doka-feedback-state--empty .doka-feedback-state__icon {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
 .doka-feedback-state__description {
   color: var(--text-muted);
   font-size: var(--text-sm);

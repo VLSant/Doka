@@ -1,8 +1,30 @@
-.mms-preview { display: grid; gap: var(--space-6); }
-.mms-preview__header { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
-.mms-preview__header div { display: grid; gap: var(--space-1); }
-.mms-preview__header span { color: var(--text-muted); font-size: var(--text-xs); }
-.mms-issue-table-wrap { overflow-x: auto; }
-.mms-issue-table { width: 100%; border-collapse: collapse; }
-.mms-issue-table th, .mms-issue-table td { padding: var(--space-3); text-align: left; border-bottom: var(--border-hairline); }
-@media (max-width: 900px) { .mms-preview__header { grid-template-columns: 1fr; } }
+.mms-preview {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.mms-preview__header {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.mms-preview__header div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.mms-preview__header span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.mms-issue-table {
+  min-width: 720px;
+}
+
+@media (max-width: 900px) {
+  .mms-preview__header {
+    grid-template-columns: 1fr;
+  }
+}

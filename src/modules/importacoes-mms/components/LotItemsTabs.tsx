@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Tabs } from "../../../components/ui/Tabs";
 import type { LotService } from "../lot-service";
 import type { LotCollection, LotItem } from "../types";
 
@@ -31,15 +33,9 @@ export function LotItemsTabs({ lotId, service }: { lotId: string; service: LotSe
 
   return (
     <section className="mms-lot-tabs">
-      <div role="tablist" aria-label="Dados do lote">
-        {COLLECTIONS.map((collection) => (
-          <button key={collection.id} role="tab" aria-selected={active === collection.id} onClick={() => setActive(collection.id)}>
-            {collection.label}
-          </button>
-        ))}
-      </div>
+      <Tabs label="Dados do lote" value={active} items={COLLECTIONS} onChange={setActive} />
       <div role="tabpanel">
-        {loading ? <p role="status">Carregando...</p> : null}
+        {loading ? <LoadingState message="Carregando dados do lote..." /> : null}
         {error ? <p role="alert">{error}</p> : null}
         {!loading && !error && items.length === 0 ? <p>Nenhum registro nesta coleção.</p> : null}
         {!loading && !error && items.length > 0 ? (

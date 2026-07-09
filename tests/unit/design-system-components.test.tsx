@@ -1,0 +1,158 @@
+import { useState } from "react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
+import { PageHeader } from "../../src/components/layout/Page";
+import { ButtonLink } from "../../src/components/ui/ButtonLink";
+import { Dialog } from "../../src/components/ui/Dialog";
+import { Drawer } from "../../src/components/ui/Drawer";
+import { DropdownMenu, DropdownMenuItem } from "../../src/components/ui/DropdownMenu";
+import { FilterChips } from "../../src/components/ui/FilterChips";
+import { Select, Textarea } from "../../src/components/ui/FormControls";
+import { Pagination } from "../../src/components/ui/Pagination";
+import { SearchInput } from "../../src/components/ui/SearchInput";
+import { StatusBadge } from "../../src/components/ui/StatusBadge";
+import { Tabs } from "../../src/components/ui/Tabs";
+
+describe("componentes compartilhados do design system", () => {
+  it("mantém navegação, campos e status semanticamente acessíveis", () => {
+    render(
+      <MemoryRouter>
+        <PageHeader
+          eyebrow="Operação"
+          title="Ocorrências"
+          description="Acompanhe o trabalho."
+          actions={<ButtonLink to="/nova">Nova ocorrência</ButtonLink>}
+        />
+        <Select label="Status" defaultValue="">
+          <option value="">Todos</option>
+        </Select>
+        <Textarea label="Justificativa" required />
+        <StatusBadge tone="warning">Pendente</StatusBadge>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Ocorrências" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Nova ocorrência" })).toHaveAttribute("href", "/nova");
+    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Justificativa" })).toBeRequired();
+    expect(screen.getByText("Pendente")).toHaveClass("doka-status-badge--warning");
+  });
+
+  it("altera a aba selecionada sem depender de estilo local", async () => {
+    const onChange = vi.fn();
+    const items: Array<{ id: "hoje" | "abertas"; label: string }> = [
+      { id: "hoje", label: "Hoje" },
+      { id: "abertas", label: "Abertas" },
+    ];
+    const { rerender } = render(
+      <Tabs label="Recortes" value="hoje" items={items} onChange={onChange} />,
+    );
+
+    expect(screen.getByRole("tab", { name: "Hoje" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Hoje" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("tab", { name: "Abertas" })).toHaveAttribute("tabindex", "-1");
+
+    screen.getByRole("tab", { name: "Hoje" }).focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(onChange).toHaveBeenCalledWith("abertas");
+
+    rerender(<Tabs label="Recortes" value="abertas" items={items} onChange={onChange} />);
+    expect(screen.getByRole("tab", { name: "Abertas" })).toHaveAttribute("tabindex", "0");
+
+    await userEvent.click(screen.getByRole("tab", { name: "Abertas" }));
+    expect(onChange).toHaveBeenCalledWith("abertas");
+  });
+
+  it("fecha o diálogo por Escape e devolve o foco ao controle que o abriu", async () => {
+    function DialogHarness() {
+      const [open, setOpen] = useState(false);
+
+      return (
+        <>
+          <button onClick={() => setOpen(true)}>Abrir diálogo</button>
+          <Dialog open={open} title="Confirmar operação" onClose={() => setOpen(false)}>
+            <button>Conteúdo</button>
+          </Dialog>
+        </>
+      );
+    }
+
+    render(<DialogHarness />);
+
+    const trigger = screen.getByRole("button", { name: "Abrir diálogo" });
+    await userEvent.click(trigger);
+    await userEvent.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("fecha o drawer por Escape e mantém filtros removíveis", async () => {
+    const onClose = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <>
+        <Drawer open title="Filtros" onClose={onClose}>
+          <button>Aplicar</button>
+        </Drawer>
+        <FilterChips
+          items={[{ id: "posto", label: "Posto: Salvador" }]}
+          onRemove={onRemove}
+          onClear={vi.fn()}
+        />
+      </>,
+    );
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledOnce();
+    await userEvent.click(screen.getByRole("button", { name: /Posto: Salvador/ }));
+    expect(onRemove).toHaveBeenCalledWith("posto");
+  });
+
+  it("oferece busca com limpeza e paginação compacta", async () => {
+    const onSearch = vi.fn();
+    const onPage = vi.fn();
+    const { rerender } = render(<SearchInput value="" onChange={onSearch} debounceMs={0} />);
+    await userEvent.type(screen.getByRole("searchbox", { name: "Buscar" }), "tarefa");
+    expect(onSearch).toHaveBeenCalled();
+    rerender(
+      <>
+        <SearchInput value="tarefa" onChange={onSearch} />
+        <Pagination page={1} pageSize={25} total={40} onChange={onPage} />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Limpar busca" }));
+    expect(onSearch).toHaveBeenLastCalledWith("");
+    await userEvent.click(screen.getByRole("button", { name: "Próxima" }));
+    expect(onPage).toHaveBeenCalledWith(2);
+  });
+  it("opera menus por foco e teclado", async () => {
+    const edit = vi.fn();
+    render(
+      <DropdownMenu label="Acoes da linha">
+        <DropdownMenuItem onClick={edit}>Editar</DropdownMenuItem>
+        <DropdownMenuItem>Remover</DropdownMenuItem>
+      </DropdownMenu>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Acoes da linha" });
+    await userEvent.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Editar" })).toHaveFocus();
+
+    await userEvent.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Remover" })).toHaveFocus();
+
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Editar" }));
+    expect(edit).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+});

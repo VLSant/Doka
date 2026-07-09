@@ -11,6 +11,7 @@
  * `buildMenuForProfile`, before this component ever renders them.
  */
 import { NavLink } from "react-router-dom";
+import { Button } from "../ui/Button";
 import { Icon, type IconName } from "../ui/Icon";
 import { buildMenuForProfile } from "../../modules/navigation/menu-config";
 import type { PerfilUsuario } from "../../modules/access/types";
@@ -18,15 +19,28 @@ import "./Sidebar.css";
 
 export interface SidebarProps {
   perfil: PerfilUsuario;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ perfil }: SidebarProps) {
+export function Sidebar({ perfil, collapsed = false, onToggle }: SidebarProps) {
   const items = buildMenuForProfile(perfil);
 
   return (
-    <aside className="doka-sidebar" aria-label="Navegação principal">
+    <aside
+      className={`doka-sidebar${collapsed ? " doka-sidebar--collapsed" : ""}`}
+      aria-label="Navegação principal"
+    >
       <div className="doka-sidebar__brand">
-        <img className="doka-sidebar__logo" src="/design-system/logos/doka-logo-full.png" alt="Doka" />
+        <img
+          className="doka-sidebar__logo"
+          src={
+            collapsed
+              ? "/design-system/logos/doka-icon-orange.png"
+              : "/design-system/logos/doka-logo-full.png"
+          }
+          alt="Doka"
+        />
       </div>
       <nav className="doka-sidebar__nav">
         <ul className="doka-sidebar__list">
@@ -45,11 +59,9 @@ export function Sidebar({ perfil }: SidebarProps) {
               ) : (
                 <NavLink
                   to={item.path}
+                  title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    [
-                      "doka-sidebar__link",
-                      isActive ? "doka-sidebar__link--active" : "",
-                    ]
+                    ["doka-sidebar__link", isActive ? "doka-sidebar__link--active" : ""]
                       .filter(Boolean)
                       .join(" ")
                   }
@@ -62,6 +74,16 @@ export function Sidebar({ perfil }: SidebarProps) {
           ))}
         </ul>
       </nav>
+      <Button
+        className="doka-sidebar__toggle"
+        variant="ghost"
+        size="sm"
+        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+        onClick={onToggle}
+      >
+        <Icon name="panel-left" size={18} />
+        <span>{collapsed ? "" : "Recolher"}</span>
+      </Button>
     </aside>
   );
 }

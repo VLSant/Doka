@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
-import { LoadingState } from "../../../components/feedback/LoadingState";
-import { Card } from "../../../components/ui/Card";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
+import { Drawer } from "../../../components/ui/Drawer";
+import { FilterChips } from "../../../components/ui/FilterChips";
+import { SearchInput } from "../../../components/ui/SearchInput";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { createAssistanceService, type AssistanceService } from "../assistance-service";
 import { AssistanceFiltersForm } from "../components/AssistanceFilters";
 import { AssistanceTable } from "../components/AssistanceTable";
@@ -25,6 +28,7 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
   const [cursor, setCursor] = useState<AssistanceCursor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<PageError | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const load = useCallback(
     async (nextCursor: AssistanceCursor | null, append = false) => {
@@ -60,24 +64,49 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
   }
 
   const emptyState = emptyStateFor(filters);
+  const advancedEntries = Object.entries(filters).filter(
+    ([key, value]) => key !== "numero_assistencia" && value && value !== "ativo",
+  );
   return (
-    <main className="assistance-management">
-      <header className="assistance-management__header">
-        <div>
-          <span>Assistências / MMS</span>
-          <h1>Assistências MMS</h1>
-          <p>Consulte serviços, partes, correções e origem dentro do seu escopo.</p>
-        </div>
-      </header>
-      <Card padding="lg">
+    <Page className="assistance-management">
+      <PageHeader
+        eyebrow="Assistências / MMS"
+        title="Assistências MMS"
+        description="Consulte serviços, partes, correções e origem dentro do seu escopo."
+      />
+      <div className="doka-list-toolbar">
+        <SearchInput
+          value={filters.numero_assistencia ?? ""}
+          placeholder="Buscar por assistência…"
+          onChange={(numero_assistencia) =>
+            applyFilters({ ...filters, numero_assistencia: numero_assistencia || undefined })
+          }
+        />
+        <Button variant="outline" onClick={() => setFiltersOpen(true)}>
+          Filtros{advancedEntries.length ? ` (${advancedEntries.length})` : ""}
+        </Button>
+      </div>
+      <FilterChips
+        items={advancedEntries.map(([id, value]) => ({
+          id,
+          label: `${id.replaceAll("_", " ")}: ${value}`,
+        }))}
+        onRemove={(id) => applyFilters({ ...filters, [id]: undefined })}
+        onClear={() => applyFilters({ numero_assistencia: filters.numero_assistencia })}
+      />
+      <Drawer
+        open={filtersOpen}
+        title="Filtros de assistências"
+        onClose={() => setFiltersOpen(false)}
+      >
         <AssistanceFiltersForm
           key={searchParams.toString()}
           value={filters}
           disabled={loading}
           onChange={applyFilters}
         />
-      </Card>
-      {loading && items.length === 0 ? <LoadingState message="Carregando assistências..." /> : null}
+      </Drawer>
+      {loading && items.length === 0 ? <Skeleton message="Carregando assistências..." /> : null}
       {error ? (
         <FeedbackState
           tone="error"
@@ -116,9 +145,6 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
       ) : null}
       {items.length > 0 ? (
         <>
-          <p role="status">
-            {items.length} assistência(s) exibida(s){loading ? " · Atualizando..." : ""}
-          </p>
           <AssistanceTable items={items} returnSearch={searchParams.toString()} />
           {cursor ? (
             <Button variant="outline" loading={loading} onClick={() => void load(cursor, true)}>
@@ -127,7 +153,7 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
           ) : null}
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 

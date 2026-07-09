@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
+import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
+import { Textarea } from "../../../components/ui/FormControls";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { useAuth } from "../../auth/AuthProvider";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
@@ -77,16 +81,16 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
   }
 
   return (
-    <main className="lancamentos-page">
-      <header className="lancamentos-page__header">
-        <div>
-          <span>Deslocamentos e custos extras</span>
-          <h1>Detalhe do lançamento</h1>
-        </div>
-        <Button variant="outline" onClick={() => navigate("/app/custos-extras")}>
-          Voltar
-        </Button>
-      </header>
+    <Page className="lancamentos-page">
+      <PageHeader
+        eyebrow="Deslocamentos e custos extras"
+        title="Detalhe do lançamento"
+        actions={
+          <Button variant="outline" onClick={() => navigate("/app/custos-extras")}>
+            Voltar
+          </Button>
+        }
+      />
       {loading ? <LoadingState message="Carregando lançamento..." /> : null}
       {error ? (
         <FeedbackState
@@ -109,7 +113,11 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
               </div>
               <div>
                 <dt>Status</dt>
-                <dd>{item.status === "pendente" ? "Pendente" : "Validado"}</dd>
+                <dd>
+                  <StatusBadge tone={item.status === "pendente" ? "warning" : "success"}>
+                    {item.status === "pendente" ? "Pendente" : "Validado"}
+                  </StatusBadge>
+                </dd>
               </div>
               <div>
                 <dt>Data</dt>
@@ -155,12 +163,9 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
             <h2>Ações</h2>
             <div className="lancamento-actions__row">
               {item.status === "pendente" ? (
-                <Link
-                  className="lancamentos-link-button lancamentos-link-button--outline"
-                  to={`/app/custos-extras/${id}/editar`}
-                >
+                <ButtonLink variant="outline" to={`/app/custos-extras/${id}/editar`}>
                   Editar
-                </Link>
+                </ButtonLink>
               ) : null}
               {canManage && item.status === "pendente" ? (
                 <Button loading={working} onClick={() => void validate()}>
@@ -174,10 +179,9 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
               ) : null}
             </div>
             {removing ? (
-              <div>
-                <label htmlFor="remove-reason">Justificativa da remoção</label>
-                <textarea
-                  id="remove-reason"
+              <div className="lancamento-remove">
+                <Textarea
+                  label="Justificativa da remoção"
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                 />
@@ -200,7 +204,7 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
           <EntityHistory entityType="lancamentos_operacionais" entityId={item.id} />
         </>
       ) : null}
-    </main>
+    </Page>
   );
 }
 

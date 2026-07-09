@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { TableFrame } from "../../../components/ui/Patterns";
+import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { isTaskLate } from "../task-state";
 import type { Task } from "../types";
 
@@ -10,6 +12,14 @@ const STATUS_LABEL: Record<Task["status"], string> = {
   reaberta: "Reaberta",
 };
 
+const STATUS_TONE: Record<Task["status"], StatusTone> = {
+  pendente: "neutral",
+  em_andamento: "info",
+  concluida: "success",
+  validada: "success",
+  reaberta: "warning",
+};
+
 function dateLabel(value: string | null) {
   if (!value) return "Sem prazo";
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(
@@ -19,8 +29,8 @@ function dateLabel(value: string | null) {
 
 export function TaskList({ tasks }: { tasks: Task[] }) {
   return (
-    <div className="tasks-table-wrap">
-      <table className="tasks-table">
+    <TableFrame>
+      <table>
         <thead>
           <tr>
             <th>Tarefa</th>
@@ -35,23 +45,25 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             <tr key={task.id}>
               <td>
                 <Link to={`/app/tarefas-rotinas/${task.id}`}>{task.titulo}</Link>
-                {task.rotina_id ? <small>Gerada por rotina</small> : null}
+                {task.rotina_id ? (
+                  <small className="tasks-table__meta">Gerada por rotina</small>
+                ) : null}
               </td>
               <td>{task.responsaveis.map(({ nome }) => nome).join(", ") || "Não informado"}</td>
               <td>{task.posto?.nome ?? "Geral"}</td>
               <td className={isTaskLate(task) ? "tasks-table__late" : ""}>
                 {dateLabel(task.prazo_data)}
-                {isTaskLate(task) ? <small>Atrasada</small> : null}
+                {isTaskLate(task) ? <small className="tasks-table__meta">Atrasada</small> : null}
               </td>
               <td>
-                <span className={`tasks-status tasks-status--${task.status}`}>
+                <StatusBadge tone={STATUS_TONE[task.status]}>
                   {STATUS_LABEL[task.status]}
-                </span>
+                </StatusBadge>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   );
 }
