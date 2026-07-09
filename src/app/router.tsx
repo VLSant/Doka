@@ -6,7 +6,7 @@
  * outcome is exactly `autorizado`.
  */
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet, useParams } from "react-router-dom";
 import { FeedbackState } from "../components/feedback/FeedbackState";
 import { AppShell } from "../components/layout/AppShell";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -37,8 +37,13 @@ const TaskDetailPage = lazy(lazyLoaders.taskDetail);
 const RoutineListPage = lazy(lazyLoaders.routineList);
 const RoutineFormPage = lazy(lazyLoaders.routineForm);
 const OccurrenceListPage = lazy(lazyLoaders.occurrenceList);
-const OccurrenceFormPage = lazy(lazyLoaders.occurrenceForm);
 const OccurrenceDetailPage = lazy(lazyLoaders.occurrenceDetail);
+
+/** Deep-links antigos de formulário viram lista com o modal aberto (plano 4.1). */
+function RedirectOccurrenceEdit() {
+  const { ocorrenciaId } = useParams();
+  return <Navigate to={`/app/ocorrencias?editar=${ocorrenciaId}`} replace />;
+}
 const LancamentoListPage = lazy(lazyLoaders.lancamentoList);
 const LancamentoFormPage = lazy(lazyLoaders.lancamentoForm);
 const LancamentoDetailPage = lazy(lazyLoaders.lancamentoDetail);
@@ -158,11 +163,11 @@ export const router = createBrowserRouter([
           })),
           {
             path: "ocorrencias/nova",
-            element: protectedLazy("ocorrencias", "Carregando formulario...", <OccurrenceFormPage />),
+            element: <Navigate to="/app/ocorrencias?novo=1" replace />,
           },
           {
             path: "ocorrencias/:ocorrenciaId/editar",
-            element: protectedLazy("ocorrencias", "Carregando formulario...", <OccurrenceFormPage />),
+            element: <RedirectOccurrenceEdit />,
           },
           {
             path: "ocorrencias/:ocorrenciaId",

@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { queryKeys } from "../../../app/query-keys";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
-import { ButtonLink } from "../../../components/ui/ButtonLink";
+import { OccurrenceFormModal } from "../components/OccurrenceFormModal";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
 import { Input } from "../../../components/ui/Input";
@@ -35,6 +36,31 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
   const [filters, setFilters] = useState<OccurrenceFilters>({ tab: "hoje" });
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("novo") === "1";
+  const editingId = searchParams.get("editar");
+
+  function openCreate() {
+    setSearchParams(
+      (params) => {
+        params.set("novo", "1");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function closeFormModal() {
+    setSearchParams(
+      (params) => {
+        params.delete("novo");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
 
   const occurrencesQuery = useQuery({
     queryKey: queryKeys.occurrences.list(),
@@ -117,7 +143,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>
         <span className="doka-list-toolbar__spacer" />
-        <ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>
+        <Button onClick={openCreate}>Nova ocorrência</Button>
       </div>
       <FilterChips
         items={chips}
@@ -234,13 +260,21 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           tone="empty"
           title="Nenhuma ocorrência neste recorte"
           description="Altere os filtros ou registre uma nova ocorrência."
-          actions={<ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>}
+          actions={<Button onClick={openCreate}>Nova ocorrência</Button>}
         />
       ) : null}
       {!loading && !error && visible.length > 0 ? (
         <>
           <OccurrenceTable items={visible} />
         </>
+      ) : null}
+
+      {creating || editingId ? (
+        <OccurrenceFormModal
+          ocorrenciaId={editingId ?? undefined}
+          onClose={closeFormModal}
+          service={injected}
+        />
       ) : null}
     </Page>
   );
