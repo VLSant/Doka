@@ -696,3 +696,16 @@ inicial no primeiro item, fechamento por Escape com retorno de foco ao
 disparador e navegacao por ArrowUp/ArrowDown/Home/End. Estados
 `focus-visible` foram adicionados ao disparador e aos itens. Teste unitario de
 design system passou a cobrir o contrato de teclado e foco do menu.
+
+### Atualizacao de 09/07/2026 - Fundacao Tailwind v4 e shadcn/ui
+
+Estado parcial. Tailwind CSS v4 foi adicionado de forma aditiva via
+`@tailwindcss/vite`, sem preflight, preservando o CSS puro existente. A base
+shadcn/ui foi isolada em `src/components/shadcn/ui`, com `components.json`,
+alias `@/`, `cn()` em `src/lib/utils.ts` e tokens shadcn mapeados para as
+variaveis oficiais Doka. A rota lazy `/app/design-system` foi criada como spec
+viva inicial dos componentes tematizados. O lint do design system passou a
+ignorar explicitamente diretorios shadcn, mantendo a protecao do CSS legado.
+`npm run typecheck`, `npm run lint` e `npm run build` passaram; o build usa
+`vite --configLoader native` para evitar falha do bundler de configuracao do
+Vite com o binario nativo do Tailwind no Windows.

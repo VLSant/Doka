@@ -6,11 +6,18 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const moduleRoot = fileURLToPath(new URL("../src/modules/", import.meta.url));
 const tokenRoot = fileURLToPath(new URL("../design-system/tokens/", import.meta.url));
 const bundlePath = fileURLToPath(new URL("../src/styles/design-system.css", import.meta.url));
+const ignoredStyleRoots = [
+  fileURLToPath(new URL("../src/components/shadcn/", import.meta.url)),
+  fileURLToPath(new URL("../src/components/ui/shadcn/", import.meta.url)),
+];
 const violations = [];
 
 function filesBelow(directory, extension) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
+    if (ignoredStyleRoots.some((ignoredRoot) => path.startsWith(ignoredRoot))) {
+      return [];
+    }
     return entry.isDirectory() ? filesBelow(path, extension) : path.endsWith(extension) ? [path] : [];
   });
 }

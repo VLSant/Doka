@@ -8,6 +8,81 @@
    (see `src/components/ui/*.css`).
    =========================================================================== */
 @import "./design-system.css";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: var(--neutral-100);
+  --foreground: var(--neutral-900);
+  --card: var(--neutral-0);
+  --card-foreground: var(--neutral-900);
+  --popover: var(--neutral-0);
+  --popover-foreground: var(--neutral-900);
+  --primary: var(--purple-600);
+  --primary-foreground: var(--neutral-0);
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--neutral-900);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  --accent: var(--orange-500);
+  --accent-foreground: var(--neutral-900);
+  --destructive: var(--red-500);
+  --destructive-foreground: var(--neutral-0);
+  --border: var(--neutral-200);
+  --input: var(--neutral-200);
+  --ring: var(--orange-500);
+  --sidebar: var(--purple-700);
+  --sidebar-foreground: var(--neutral-0);
+  --sidebar-primary: var(--orange-400);
+  --sidebar-primary-foreground: var(--purple-900);
+  --sidebar-accent: color-mix(in srgb, var(--neutral-0) 10%, transparent);
+  --sidebar-accent-foreground: var(--orange-400);
+  --sidebar-border: color-mix(in srgb, var(--neutral-0) 12%, transparent);
+  --sidebar-ring: var(--orange-400);
+  --radius: 12px;
+  --radius-chip: 5px;
+  --radius-control-shadcn: 8px;
+  --radius-card-row: 15px;
+}
+
+@theme inline {
+  --font-sans: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Poppins", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: var(--radius-chip);
+  --radius-md: var(--radius-control-shadcn);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius-card-row);
+}
 
 #root {
   min-height: 100vh;

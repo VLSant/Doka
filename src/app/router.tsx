@@ -56,6 +56,7 @@ const LancamentoFormPage = lazy(() => import("../modules/lancamentos-operacionai
 const LancamentoDetailPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoDetailPage"));
 const AdministrationPage = lazy(() => import("../modules/administracao/pages/AdministrationPage").then((module) => ({ default: module.AdministrationPage })));
 const AuditHistoryPage = lazy(() => import("../modules/auditoria/pages/AuditHistoryPage"));
+const ShadcnDesignSystemPage = lazy(() => import("../modules/design-system/pages/ShadcnDesignSystemPage"));
 
 function RootLayout() {
   const navigation = useNavigation();
@@ -239,6 +240,10 @@ export const router = createBrowserRouter([
           {
             path: "importacoes-mms/:loteId/tratamento",
             element: <ProtectedRoute routeId="importacoes-mms"><Suspense fallback={<LoadingState message="Carregando tratamento..." />}><ImportTreatmentPage /></Suspense></ProtectedRoute>,
+          },
+          {
+            path: "design-system",
+            element: <ProtectedRoute routeId="dashboard"><Suspense fallback={<LoadingState message="Carregando design system..." />}><ShadcnDesignSystemPage /></Suspense></ProtectedRoute>,
           },
         ],
       },
