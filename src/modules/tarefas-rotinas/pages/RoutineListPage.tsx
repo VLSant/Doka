@@ -1,15 +1,15 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../../../app/query-keys";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
-import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { TableFrame } from "../../../components/ui/Patterns";
 import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { useAuth } from "../../auth/AuthProvider";
+import { RoutineFormModal } from "../components/RoutineFormModal";
 import { createTaskService, type TaskService } from "../task-service";
 import type { Routine, TaskViewer } from "../types";
 import "../tasks.css";
@@ -41,7 +41,9 @@ export function RoutineListPage({
   viewer?: TaskViewer;
 }) {
   const auth = useAuth();
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("nova") === "1";
+  const editingId = searchParams.get("editar");
   const viewer =
     injectedViewer ??
     (auth.state.name === "autorizado"
@@ -60,6 +62,39 @@ export function RoutineListPage({
   const loading = routinesQuery.isPending;
   const error = routinesQuery.error?.message;
 
+  function openCreate() {
+    setSearchParams(
+      (params) => {
+        params.set("nova", "1");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function openEdit(id: string) {
+    setSearchParams(
+      (params) => {
+        params.set("editar", id);
+        params.delete("nova");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function closeFormModal() {
+    setSearchParams(
+      (params) => {
+        params.delete("nova");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
   if (!viewer) return null;
   if (viewer.perfil === "operador")
     return (
@@ -75,7 +110,7 @@ export function RoutineListPage({
         eyebrow="Operação"
         title="Rotinas recorrentes"
         description="Atividades geradas automaticamente conforme a frequência configurada."
-        actions={<ButtonLink to="/app/tarefas-rotinas/rotinas/nova">Nova rotina</ButtonLink>}
+        actions={<Button onClick={openCreate}>Nova rotina</Button>}
       />
       <Link to="/app/tarefas-rotinas">Voltar para tarefas</Link>
       {loading ? <Skeleton message="Carregando rotinas..." /> : null}
@@ -92,7 +127,7 @@ export function RoutineListPage({
           tone="empty"
           title="Nenhuma rotina cadastrada"
           description="Crie uma rotina para gerar tarefas recorrentes."
-          actions={<ButtonLink to="/app/tarefas-rotinas/rotinas/nova">Nova rotina</ButtonLink>}
+          actions={<Button onClick={openCreate}>Nova rotina</Button>}
         />
       ) : null}
       {routines.length ? (
@@ -127,7 +162,7 @@ export function RoutineListPage({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/app/tarefas-rotinas/rotinas/${routine.id}/editar`)}
+                      onClick={() => openEdit(routine.id)}
                     >
                       Editar
                     </Button>
@@ -137,6 +172,14 @@ export function RoutineListPage({
             </tbody>
           </table>
         </TableFrame>
+      ) : null}
+      {creating || editingId ? (
+        <RoutineFormModal
+          rotinaId={editingId ?? undefined}
+          viewer={viewer}
+          service={injected}
+          onClose={closeFormModal}
+        />
       ) : null}
     </Page>
   );

@@ -1,9 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
-import { Drawer } from "../../../components/ui/Drawer";
+import {
+  AppModal,
+  AppModalBody,
+  AppModalContent,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalSubtitle,
+  AppModalTitle,
+} from "../../../components/shadcn/AppModal";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { TableFrame } from "../../../components/ui/Patterns";
 import type { AdministrationService } from "../administration-service";
 import type {
@@ -38,6 +47,35 @@ const emptyLink = {
   nivel_acesso: "operacional" as NivelAcessoPosto,
 };
 
+function AdminAppModal({
+  open,
+  title,
+  description,
+  footer,
+  children,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  footer: ReactNode;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <AppModal open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
+      <AppModalContent size="md">
+        <AppModalHeader>
+          <AppModalTitle>{title}</AppModalTitle>
+          <AppModalSubtitle>{description}</AppModalSubtitle>
+        </AppModalHeader>
+        <AppModalBody>{children}</AppModalBody>
+        <AppModalFooter>{footer}</AppModalFooter>
+      </AppModalContent>
+    </AppModal>
+  );
+}
+
 export function PostsSection({
   data,
   service,
@@ -51,6 +89,9 @@ export function PostsSection({
   const [saving, setSaving] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<{ kind: "post" | "link"; id: string } | null>(
+    null,
+  );
 
   async function submitPost(event: FormEvent) {
     event.preventDefault();
@@ -115,10 +156,10 @@ export function PostsSection({
   }
 
   async function remove(kind: "post" | "link", id: string) {
-    if (!window.confirm("Confirma a remoção lógica deste registro?")) return;
     try {
       if (kind === "post") await service.removePost(id, actorId);
       else await service.removeLink(id, actorId);
+      setRemoveTarget(null);
       await onChanged(kind === "post" ? "Posto removido." : "Vínculo removido.");
     } catch (error) {
       onError(error);
@@ -157,7 +198,7 @@ export function PostsSection({
 
       {canEdit && (
         <>
-          <Drawer
+          <AdminAppModal
             open={postOpen}
             title={post.id ? "Editar posto" : "Novo posto"}
             description="Identifique o posto operacional e o seu estado."
@@ -205,9 +246,9 @@ export function PostsSection({
                 onChange={(event) => setPost({ ...post, ativo: event.target.checked })}
               />
             </form>
-          </Drawer>
+          </AdminAppModal>
 
-          <Drawer
+          <AdminAppModal
             open={linkOpen}
             title={link.id ? "Editar vínculo" : "Novo vínculo"}
             description="Defina o escopo de acesso do usuário ao posto."
@@ -277,7 +318,7 @@ export function PostsSection({
                 <option value="consulta">Consulta</option>
               </SelectField>
             </form>
-          </Drawer>
+          </AdminAppModal>
         </>
       )}
 
@@ -307,7 +348,10 @@ export function PostsSection({
                     <td className="admin-actions">
                       <DropdownMenu>
                         <DropdownMenuItem onClick={() => editPost(item)}>Editar</DropdownMenuItem>
-                        <DropdownMenuItem danger onClick={() => void remove("post", item.id)}>
+                        <DropdownMenuItem
+                          danger
+                          onClick={() => setRemoveTarget({ kind: "post", id: item.id })}
+                        >
                           Remover
                         </DropdownMenuItem>
                       </DropdownMenu>
@@ -346,7 +390,10 @@ export function PostsSection({
                     <td className="admin-actions">
                       <DropdownMenu>
                         <DropdownMenuItem onClick={() => editLink(item)}>Editar</DropdownMenuItem>
-                        <DropdownMenuItem danger onClick={() => void remove("link", item.id)}>
+                        <DropdownMenuItem
+                          danger
+                          onClick={() => setRemoveTarget({ kind: "link", id: item.id })}
+                        >
                           Remover
                         </DropdownMenuItem>
                       </DropdownMenu>
@@ -358,6 +405,17 @@ export function PostsSection({
           </table>
         </TableFrame>
       )}
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover registro"
+        description="Esta acao remove logicamente o registro administrativo selecionado."
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={() => {
+          if (removeTarget) void remove(removeTarget.kind, removeTarget.id);
+        }}
+      />
     </section>
   );
 }

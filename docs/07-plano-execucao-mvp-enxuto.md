@@ -726,3 +726,19 @@ Validacao executada: `npm run typecheck`, `npm run lint`, `npm run test` e
 threads` para contornar bloqueios de `spawn` no Windows; o teste de segredo do
 bundle ignora apenas o subpasso interno de build quando o proprio ambiente
 bloqueia `spawnSync cmd.exe`, mantendo `npm run build` como validacao separada.
+
+### Atualizacao de 09/07/2026 - Fase 3b de modais Dracma
+
+Estado concluido tecnicamente para os fluxos principais. Tarefas, Rotinas e
+Lancamentos passaram a abrir criacao/edicao em `AppModal` sobre as listas por
+query params; as rotas antigas de formulario redirecionam para os modais sem
+quebrar deep-links; e as paginas antigas de formulario viraram redirects leves.
+
+Na Administracao, os fluxos de usuario, posto e vinculo que usavam Drawer foram
+encapsulados em `AppModal`. As remocoes dos modulos alvo passaram a usar
+`AlertDialog` shadcn, sem `window.confirm` ou `window.prompt`.
+
+Validacao executada: `npm run typecheck`, `npm run lint`, `npm run test` e
+`npm run build` passaram. Proximo passo: homologar manualmente os fluxos modais
+e decidir se os formularios inline de cadastros auxiliares/metas devem ser
+movidos para modal em um acabamento administrativo separado.

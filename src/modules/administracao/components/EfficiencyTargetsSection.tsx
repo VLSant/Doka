@@ -4,6 +4,7 @@ import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
 import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
 import { TableFrame } from "../../../components/ui/Patterns";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot, MetaEficiencia } from "../types";
 import { SelectField, StatusBadge } from "./AdminFields";
@@ -34,6 +35,7 @@ export function EfficiencyTargetsSection({
   onError: (error: unknown) => void;
 }) {
   const [form, setForm] = useState(empty);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -73,9 +75,9 @@ export function EfficiencyTargetsSection({
   }
 
   async function remove(id: string) {
-    if (!window.confirm("Confirma a remoção lógica desta meta?")) return;
     try {
       await service.removeEfficiencyTarget(id, actorId);
+      setRemoveTarget(null);
       await onChanged("Meta removida.");
     } catch (error) {
       onError(error);
@@ -182,7 +184,7 @@ export function EfficiencyTargetsSection({
                   <td className="admin-actions">
                     <DropdownMenu>
                       <DropdownMenuItem onClick={() => edit(item)}>Editar</DropdownMenuItem>
-                      <DropdownMenuItem danger onClick={() => void remove(item.id)}>
+                      <DropdownMenuItem danger onClick={() => setRemoveTarget(item.id)}>
                         Remover
                       </DropdownMenuItem>
                     </DropdownMenu>
@@ -193,6 +195,17 @@ export function EfficiencyTargetsSection({
           </tbody>
         </table>
       </TableFrame>
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover meta"
+        description="Esta acao remove logicamente a meta de eficiencia selecionada."
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={() => {
+          if (removeTarget) void remove(removeTarget);
+        }}
+      />
     </section>
   );
 }

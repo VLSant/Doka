@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
@@ -61,6 +62,8 @@ export function TaskDetailPage({
   const service = useMemo(() => injected ?? createTaskService(), [injected]);
   const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const taskQuery = useQuery({
     queryKey: queryKeys.tasks.detail(tarefaId),
@@ -93,10 +96,7 @@ export function TaskDetailPage({
 
   const actions = availableTaskActions(task, viewer);
 
-  function transition(action: TaskAction) {
-    const justification =
-      action === "reabrir" ? window.prompt("Justificativa da reabertura:")?.trim() : undefined;
-    if (action === "reabrir" && !justification) return;
+  function transition(action: TaskAction, justification?: string) {
     setError(undefined);
     transitionMutation.mutate({ action, justification });
   }
@@ -151,7 +151,7 @@ export function TaskDetailPage({
                 key={action}
                 loading={acting}
                 variant={action === "reabrir" ? "outline" : "primary"}
-                onClick={() => void transition(action)}
+                onClick={() => (action === "reabrir" ? setReopenOpen(true) : void transition(action))}
               >
                 {ACTION_LABEL[action]}
               </Button>
@@ -195,18 +195,37 @@ export function TaskDetailPage({
         </Card>
       </section>
       {viewer.perfil !== "operador" ? (
-        <Button
-          variant="danger"
-          onClick={() => {
-            const justification = window.prompt("Justificativa da remocao:")?.trim();
-            if (!justification) return;
-            setError(undefined);
-            removeMutation.mutate(justification);
-          }}
-        >
+        <Button variant="danger" onClick={() => setRemoveOpen(true)}>
           Remover tarefa
         </Button>
       ) : null}
+      <RemovalAlertDialog
+        open={reopenOpen}
+        title="Reabrir tarefa"
+        description="Informe a justificativa para reabrir a tarefa. A acao sera registrada na auditoria."
+        confirmLabel="Reabrir"
+        justificationLabel="Justificativa da reabertura"
+        requireJustification
+        loading={transitionMutation.isPending}
+        onOpenChange={setReopenOpen}
+        onConfirm={(justification) => {
+          setError(undefined);
+          transition("reabrir", justification);
+          setReopenOpen(false);
+        }}
+      />
+      <RemovalAlertDialog
+        open={removeOpen}
+        title="Remover tarefa"
+        description="Esta acao remove logicamente a tarefa e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={setRemoveOpen}
+        onConfirm={(justification) => {
+          setError(undefined);
+          removeMutation.mutate(justification);
+        }}
+      />
       <EntityHistory entityType="tarefas" entityId={task.id} />
     </Page>
   );

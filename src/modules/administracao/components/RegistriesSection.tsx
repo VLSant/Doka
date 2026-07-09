@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot } from "../types";
 import { StatusBadge, TextareaField } from "./AdminFields";
@@ -314,10 +315,23 @@ function RegistryActions({ editing, onCancel }: { editing: boolean; onCancel: ()
 }
 
 function RemoveButton({ onClick }: { onClick: () => void }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Button size="sm" variant="ghost" onClick={onClick}>
-      Remover
-    </Button>
+    <>
+      <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>
+        Remover
+      </Button>
+      <RemovalAlertDialog
+        open={open}
+        title="Remover cadastro"
+        description="Esta acao remove logicamente o cadastro auxiliar selecionado."
+        onOpenChange={setOpen}
+        onConfirm={() => {
+          setOpen(false);
+          onClick();
+        }}
+      />
+    </>
   );
 }
 
@@ -326,7 +340,6 @@ async function remove(
   onChanged: (message: string) => Promise<void>,
   onError: (error: unknown) => void,
 ) {
-  if (!window.confirm("Confirma a remoção lógica deste cadastro?")) return;
   try {
     await operation();
     await onChanged("Cadastro removido.");

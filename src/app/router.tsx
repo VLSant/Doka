@@ -32,10 +32,8 @@ const ImportTreatmentPage = lazy(lazyLoaders.importTreatment);
 const AssistanceListPage = lazy(lazyLoaders.assistanceList);
 const AssistanceDetailPage = lazy(lazyLoaders.assistanceDetail);
 const TaskCenterPage = lazy(lazyLoaders.taskCenter);
-const TaskFormPage = lazy(lazyLoaders.taskForm);
 const TaskDetailPage = lazy(lazyLoaders.taskDetail);
 const RoutineListPage = lazy(lazyLoaders.routineList);
-const RoutineFormPage = lazy(lazyLoaders.routineForm);
 const OccurrenceListPage = lazy(lazyLoaders.occurrenceList);
 const OccurrenceDetailPage = lazy(lazyLoaders.occurrenceDetail);
 
@@ -44,8 +42,19 @@ function RedirectOccurrenceEdit() {
   const { ocorrenciaId } = useParams();
   return <Navigate to={`/app/ocorrencias?editar=${ocorrenciaId}`} replace />;
 }
+function RedirectTaskEdit() {
+  const { tarefaId } = useParams();
+  return <Navigate to={`/app/tarefas-rotinas?editar=${tarefaId}`} replace />;
+}
+function RedirectRoutineEdit() {
+  const { rotinaId } = useParams();
+  return <Navigate to={`/app/tarefas-rotinas/rotinas?editar=${rotinaId}`} replace />;
+}
+function RedirectLancamentoEdit() {
+  const { lancamentoId } = useParams();
+  return <Navigate to={`/app/custos-extras?editar=${lancamentoId}`} replace />;
+}
 const LancamentoListPage = lazy(lazyLoaders.lancamentoList);
-const LancamentoFormPage = lazy(lazyLoaders.lancamentoForm);
 const LancamentoDetailPage = lazy(lazyLoaders.lancamentoDetail);
 const AdministrationPage = lazy(lazyLoaders.administration);
 const AuditHistoryPage = lazy(lazyLoaders.auditHistory);
@@ -179,19 +188,19 @@ export const router = createBrowserRouter([
           },
           {
             path: "tarefas-rotinas/rotinas/nova",
-            element: protectedLazy("tarefas-rotinas", "Carregando formulario...", <RoutineFormPage />),
+            element: <Navigate to="/app/tarefas-rotinas/rotinas?nova=1" replace />,
           },
           {
             path: "tarefas-rotinas/rotinas/:rotinaId/editar",
-            element: protectedLazy("tarefas-rotinas", "Carregando formulario...", <RoutineFormPage />),
+            element: <RedirectRoutineEdit />,
           },
           {
             path: "tarefas-rotinas/nova",
-            element: protectedLazy("tarefas-rotinas", "Carregando formulario...", <TaskFormPage />),
+            element: <Navigate to="/app/tarefas-rotinas?novo=1" replace />,
           },
           {
             path: "tarefas-rotinas/:tarefaId/editar",
-            element: protectedLazy("tarefas-rotinas", "Carregando formulario...", <TaskFormPage />),
+            element: <RedirectTaskEdit />,
           },
           {
             path: "tarefas-rotinas/:tarefaId",
@@ -199,11 +208,11 @@ export const router = createBrowserRouter([
           },
           {
             path: "custos-extras/novo",
-            element: protectedLazy("custos-extras", "Carregando formulario...", <LancamentoFormPage />),
+            element: <Navigate to="/app/custos-extras?novo=1" replace />,
           },
           {
             path: "custos-extras/:lancamentoId/editar",
-            element: protectedLazy("custos-extras", "Carregando formulario...", <LancamentoFormPage />),
+            element: <RedirectLancamentoEdit />,
           },
           {
             path: "custos-extras/:lancamentoId",

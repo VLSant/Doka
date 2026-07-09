@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../../../app/query-keys";
+import { useSearchParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
-import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
@@ -13,6 +13,7 @@ import { Select } from "../../../components/ui/FormControls";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import { LancamentoFiltersForm } from "../components/LancamentoFilters";
+import { LancamentoFormModal } from "../components/LancamentoFormModal";
 import { LancamentoTable } from "../components/LancamentoTable";
 import type { LancamentoFilters } from "../types";
 import "../lancamentos-operacionais.css";
@@ -23,6 +24,9 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
   const service = useMemo(() => injected ?? createLancamentoService(), [injected]);
   const [filters, setFilters] = useState<LancamentoFilters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("novo") === "1";
+  const editingId = searchParams.get("editar");
 
   const listQuery = useQuery({
     queryKey: queryKeys.lancamentos.list(filters),
@@ -47,6 +51,28 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
   const advancedCount = Object.entries(filters).filter(
     ([key, value]) => !["recurso", "status"].includes(key) && Boolean(value),
   ).length;
+
+  function openCreate() {
+    setSearchParams(
+      (params) => {
+        params.set("novo", "1");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function closeFormModal() {
+    setSearchParams(
+      (params) => {
+        params.delete("novo");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
 
   return (
     <Page className="lancamentos-page">
@@ -83,7 +109,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>
         <span className="doka-list-toolbar__spacer" />
-        <ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>
+        <Button onClick={openCreate}>Novo lançamento</Button>
       </div>
       <FilterChips
         items={Object.entries(filters)
@@ -120,7 +146,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           tone="empty"
           title="Nenhum lançamento encontrado"
           description="Registre um lançamento ou ajuste os filtros."
-          actions={<ButtonLink to="/app/custos-extras/novo">Novo lançamento</ButtonLink>}
+          actions={<Button onClick={openCreate}>Novo lançamento</Button>}
         />
       ) : null}
 
@@ -144,6 +170,13 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           </section>
           <LancamentoTable items={items} />
         </>
+      ) : null}
+      {creating || editingId ? (
+        <LancamentoFormModal
+          lancamentoId={editingId ?? undefined}
+          service={injected}
+          onClose={closeFormModal}
+        />
       ) : null}
     </Page>
   );

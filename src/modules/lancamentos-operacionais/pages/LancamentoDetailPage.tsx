@@ -5,10 +5,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
-import { Textarea } from "../../../components/ui/FormControls";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { useAuth } from "../../auth/AuthProvider";
 import { EntityHistory } from "../../auditoria/EntityHistory";
@@ -31,7 +31,6 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
   const { state } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [reason, setReason] = useState("");
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const canManage = state.name === "autorizado" && podeGerenciarLancamento(state.context.perfil);
@@ -65,8 +64,7 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
     validateMutation.mutate();
   }
 
-  function remove() {
-    if (!reason.trim()) return;
+  function remove(reason: string) {
     setError(null);
     removeMutation.mutate(reason);
   }
@@ -169,29 +167,16 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
                 </Button>
               ) : null}
             </div>
-            {removing ? (
-              <div className="lancamento-remove">
-                <Textarea
-                  label="Justificativa da remoção"
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value)}
-                />
-                <div className="lancamento-actions__row">
-                  <Button
-                    variant="danger"
-                    loading={working}
-                    disabled={!reason.trim()}
-                    onClick={() => void remove()}
-                  >
-                    Confirmar remoção
-                  </Button>
-                  <Button variant="outline" disabled={working} onClick={() => setRemoving(false)}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : null}
           </Card>
+          <RemovalAlertDialog
+            open={removing}
+            title="Remover lançamento"
+            description="Esta acao remove logicamente o lancamento e exige justificativa para auditoria."
+            requireJustification
+            loading={working}
+            onOpenChange={setRemoving}
+            onConfirm={(justification) => void remove(justification)}
+          />
           <EntityHistory entityType="lancamentos_operacionais" entityId={item.id} />
         </>
       ) : null}

@@ -14,7 +14,9 @@ import { Skeleton } from "../../../components/ui/Skeleton";
 import { Tabs } from "../../../components/ui/Tabs";
 import type { CatalogService } from "../../../services/catalog-service";
 import { useAuth } from "../../auth/AuthProvider";
+import { useSearchParams } from "react-router-dom";
 import { TaskFiltersForm } from "../components/TaskFilters";
+import { TaskFormModal } from "../components/TaskFormModal";
 import { TaskList } from "../components/TaskList";
 import { createTaskService, type TaskService } from "../task-service";
 import { taskMatchesSlice } from "../task-state";
@@ -55,6 +57,9 @@ export function TaskCenterPage({
   const [filters, setFilters] = useState<TaskFilters>({ slice: "hoje" });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("novo") === "1";
+  const editingId = searchParams.get("editar");
   const pageSize = 25;
 
   const queryClient = useQueryClient();
@@ -123,6 +128,28 @@ export function TaskCenterPage({
     setPage(1);
   }, []);
 
+  function openCreate() {
+    setSearchParams(
+      (params) => {
+        params.set("novo", "1");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function closeFormModal() {
+    setSearchParams(
+      (params) => {
+        params.delete("novo");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
   if (!viewer) return null;
 
   return (
@@ -168,7 +195,7 @@ export function TaskCenterPage({
             Rotinas
           </ButtonLink>
         ) : null}
-        <ButtonLink to="/app/tarefas-rotinas/nova">Nova tarefa</ButtonLink>
+        <Button onClick={openCreate}>Nova tarefa</Button>
       </div>
       <FilterChips
         items={chips}
@@ -214,7 +241,7 @@ export function TaskCenterPage({
           tone="empty"
           title="Nenhuma tarefa encontrada"
           description="Não há tarefas neste recorte ou nos filtros selecionados."
-          actions={<ButtonLink to="/app/tarefas-rotinas/nova">Nova tarefa</ButtonLink>}
+          actions={<Button onClick={openCreate}>Nova tarefa</Button>}
         />
       ) : null}
       {visible.length > 0 ? (
@@ -222,6 +249,15 @@ export function TaskCenterPage({
           <TaskList tasks={paged} />
           <Pagination page={page} pageSize={pageSize} total={visible.length} onChange={setPage} />
         </>
+      ) : null}
+      {creating || editingId ? (
+        <TaskFormModal
+          tarefaId={editingId ?? undefined}
+          viewer={viewer}
+          service={injected}
+          catalogService={catalogService}
+          onClose={closeFormModal}
+        />
       ) : null}
     </Page>
   );

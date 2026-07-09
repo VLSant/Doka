@@ -1,10 +1,18 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
-import { Drawer } from "../../../components/ui/Drawer";
+import {
+  AppModal,
+  AppModalBody,
+  AppModalContent,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalSubtitle,
+  AppModalTitle,
+} from "../../../components/shadcn/AppModal";
 import { TableFrame } from "../../../components/ui/Patterns";
 import type { AdministrationService } from "../administration-service";
 import type {
@@ -32,6 +40,35 @@ const emptyForm = {
   cargo_funcao_id: "",
   ativo: true,
 };
+
+function AdminAppModal({
+  open,
+  title,
+  description,
+  footer,
+  children,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  footer: ReactNode;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <AppModal open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
+      <AppModalContent size="md">
+        <AppModalHeader>
+          <AppModalTitle>{title}</AppModalTitle>
+          <AppModalSubtitle>{description}</AppModalSubtitle>
+        </AppModalHeader>
+        <AppModalBody>{children}</AppModalBody>
+        <AppModalFooter>{footer}</AppModalFooter>
+      </AppModalContent>
+    </AppModal>
+  );
+}
 
 export function UsersSection({
   data,
@@ -137,7 +174,7 @@ export function UsersSection({
       </div>
 
       {canEdit && (
-        <Drawer
+        <AdminAppModal
           open={formOpen}
           title={form.id ? "Editar usuário" : "Novo usuário"}
           description="Associe uma identidade existente e defina perfil, cargo e estado."
@@ -223,7 +260,7 @@ export function UsersSection({
               onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
             />
           </form>
-        </Drawer>
+        </AdminAppModal>
       )}
 
       {filtered.length === 0 ? (
