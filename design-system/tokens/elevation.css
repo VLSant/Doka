@@ -10,6 +10,11 @@
   --shadow-lg:  0 12px 28px rgba(48, 19, 48, 0.12), 0 4px 10px rgba(48, 19, 48, 0.05);
   --shadow-xl:  0 24px 56px rgba(48, 19, 48, 0.16), 0 8px 18px rgba(48, 19, 48, 0.06);
 
+  /* Card shadows — Dracma formula (cool ink, soft spread) */
+  --shadow-card:       0 2px 8px rgba(17, 24, 39, 0.08);
+  --shadow-card-hover: 0 6px 14px rgba(17, 24, 39, 0.12);
+  --shadow-panel:      0 4px 12px rgba(17, 24, 39, 0.08);
+
   /* Brand glow — for primary CTAs on hover */
   --shadow-brand: 0 6px 18px rgba(240, 144, 24, 0.32);
 

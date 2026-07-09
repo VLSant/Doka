@@ -80,7 +80,7 @@
   --text-link:      var(--orange-800);
 
   /* Surfaces */
-  --surface-page:    var(--neutral-50);
+  --surface-page:    var(--neutral-100);
   --surface-card:    var(--neutral-0);
   --surface-sunken:  var(--neutral-100);
   --surface-raised:  var(--neutral-0);
@@ -94,6 +94,15 @@
   --border-strong:   var(--neutral-400);
   --border-brand:    var(--orange-500);
   --focus-ring:      color-mix(in srgb, var(--orange-500) 45%, transparent);
+
+  /* Sidebar — dark brand surface (Dracma formula: dark authority + warm accent) */
+  --sidebar-bg:              var(--purple-700);
+  --sidebar-item:            rgba(255, 255, 255, 0.8);
+  --sidebar-item-hover-bg:   rgba(255, 255, 255, 0.06);
+  --sidebar-item-active-bg:  rgba(255, 255, 255, 0.1);
+  --sidebar-item-active:     var(--orange-400);
+  --sidebar-divider:         rgba(255, 255, 255, 0.12);
+  --sidebar-muted:           rgba(255, 255, 255, 0.5);
 
   /* Status — fill / text / soft-bg triplets */
   --status-delivered:      var(--green-500);

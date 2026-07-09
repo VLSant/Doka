@@ -134,7 +134,7 @@
   --text-on-brand: #ffffff;
   --text-link: var(--orange-800);
 
-  --surface-page: var(--neutral-50);
+  --surface-page: var(--neutral-100);
   --surface-card: var(--neutral-0);
   --surface-sunken: var(--neutral-100);
   --surface-raised: var(--neutral-0);
@@ -159,6 +159,15 @@
   --status-pending: var(--neutral-500);
   --status-pending-soft: var(--neutral-100);
 
+  /* ---- Sidebar (dark brand surface) ---------------------------------------- */
+  --sidebar-bg: var(--purple-700);
+  --sidebar-item: rgba(255, 255, 255, 0.8);
+  --sidebar-item-hover-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-item-active-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-item-active: var(--orange-400);
+  --sidebar-divider: rgba(255, 255, 255, 0.12);
+  --sidebar-muted: rgba(255, 255, 255, 0.5);
+
   /* ---- Spacing, sizing & radius -------------------------------------------- */
   --space-0: 0;
   --space-1: 4px;
@@ -182,8 +191,10 @@
   --radius-xl: 12px;
   --radius-2xl: 16px;
   --radius-pill: 999px;
-  --radius-card: var(--radius-md);
-  --radius-control: var(--radius-sm);
+  --radius-chip: 5px;
+  --radius-card: var(--radius-xl);
+  --radius-card-row: 15px;
+  --radius-control: var(--radius-md);
 
   --control-h-sm: 32px;
   --control-h-md: 40px;
@@ -191,7 +202,7 @@
 
   --container-max: 1280px;
   --sidebar-w: 248px;
-  --topbar-h: 64px;
+  --topbar-h: 56px;
 
   /* ---- Typography ------------------------------------------------------- */
   --font-display: "Poppins", system-ui, sans-serif;
@@ -212,11 +223,13 @@
   --text-2xs: 11px;
   --text-xs: 12px;
   --text-sm: 13px;
-  --text-base: 15px;
-  --text-md: 17px;
+  --text-base: 13px;
+  --text-nav: 14px;
+  --text-md: 16px;
   --text-lg: 20px;
   --text-xl: 24px;
-  --text-2xl: 30px;
+  --text-modal: 28px;
+  --text-2xl: 32px;
   --text-3xl: 38px;
   --text-4xl: 48px;
   --text-5xl: 62px;
@@ -246,6 +259,9 @@
   --shadow-md: 0 4px 12px rgba(48, 19, 48, 0.08), 0 2px 4px rgba(48, 19, 48, 0.04);
   --shadow-lg: 0 12px 28px rgba(48, 19, 48, 0.12), 0 4px 10px rgba(48, 19, 48, 0.05);
   --shadow-xl: 0 24px 56px rgba(48, 19, 48, 0.16), 0 8px 18px rgba(48, 19, 48, 0.06);
+  --shadow-card: 0 2px 8px rgba(17, 24, 39, 0.08);
+  --shadow-card-hover: 0 6px 14px rgba(17, 24, 39, 0.12);
+  --shadow-panel: 0 4px 12px rgba(17, 24, 39, 0.08);
   --shadow-brand: 0 6px 18px rgba(240, 144, 24, 0.32);
 
   --ring-width: 3px;

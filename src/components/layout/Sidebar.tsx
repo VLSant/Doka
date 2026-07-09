@@ -38,8 +38,8 @@ export function Sidebar({ perfil, collapsed = false, onToggle }: SidebarProps) {
           className="doka-sidebar__logo"
           src={
             collapsed
-              ? "/design-system/logos/doka-icon-orange.png"
-              : "/design-system/logos/doka-logo-full.png"
+              ? "/design-system/logos/doka-icon-white.png"
+              : "/design-system/logos/doka-logo-orange.png"
           }
           alt="Doka"
         />

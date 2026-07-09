@@ -27,8 +27,11 @@
   --radius-xl: 12px;
   --radius-2xl: 16px;
   --radius-pill: 999px;
-  --radius-card: var(--radius-md);
-  --radius-control: var(--radius-sm);
+  /* Dracma scale: 5px chips · 8px controls · 12px cards/modais · 15px card-rows */
+  --radius-chip: 5px;
+  --radius-card: var(--radius-xl);
+  --radius-card-row: 15px;
+  --radius-control: var(--radius-md);
 
   /* Control heights */
   --control-h-sm: 32px;
@@ -38,5 +41,5 @@
   /* Layout */
   --container-max: 1280px;
   --sidebar-w: 248px;
-  --topbar-h: 64px;
+  --topbar-h: 56px;
 }

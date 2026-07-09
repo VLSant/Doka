@@ -22,15 +22,18 @@
   /* Tabular numerals for codes, KPIs, tables */
   --num-tabular: "tnum" 1, "lnum" 1; /* @kind other */
 
-  /* Type scale (tuned for product UI) */
+  /* Type scale (Dracma-dense: corpo 13, células/labels 12, card 16,
+     seção 20, modal 28, H1 32) */
   --text-2xs: 11px;
   --text-xs: 12px;
   --text-sm: 13px;
-  --text-base: 15px;
-  --text-md: 17px;
+  --text-base: 13px;
+  --text-nav: 14px;
+  --text-md: 16px;
   --text-lg: 20px;
   --text-xl: 24px;
-  --text-2xl: 30px;
+  --text-modal: 28px;
+  --text-2xl: 32px;
   --text-3xl: 38px;
   --text-4xl: 48px;
   --text-5xl: 62px;
