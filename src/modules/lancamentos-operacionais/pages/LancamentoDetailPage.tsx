@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
-import { Textarea } from "../../../components/ui/FormControls";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { useAuth } from "../../auth/AuthProvider";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
-import type { Lancamento } from "../types";
 import { podeGerenciarLancamento } from "../types";
 import "../lancamentos-operacionais.css";
 
@@ -29,55 +30,43 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
   const service = useMemo(() => injected ?? createLancamentoService(), [injected]);
   const { state } = useAuth();
   const navigate = useNavigate();
-  const [item, setItem] = useState<Lancamento | null>(null);
-  const [reason, setReason] = useState("");
+  const queryClient = useQueryClient();
   const [removing, setRemoving] = useState(false);
-  const [working, setWorking] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const canManage = state.name === "autorizado" && podeGerenciarLancamento(state.context.perfil);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setItem(await service.detail(id));
-    } catch (cause) {
-      setItem(null);
-      setError(cause instanceof Error ? cause : new Error("Falha ao carregar lançamento."));
-    } finally {
-      setLoading(false);
-    }
-  }, [id, service]);
+  const detailQuery = useQuery({
+    queryKey: queryKeys.lancamentos.detail(id),
+    queryFn: () => service.detail(id),
+    enabled: Boolean(id),
+  });
+  const item = detailQuery.data ?? null;
+  const loading = detailQuery.isPending;
+  const validateMutation = useMutation({
+    mutationFn: () => service.validate(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.lancamentos.all });
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause : new Error("Falha ao validar lancamento.")),
+  });
+  const removeMutation = useMutation({
+    mutationFn: (value: string) => service.remove(id, value),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.lancamentos.all });
+      navigate("/app/custos-extras", { replace: true });
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause : new Error("Falha ao remover lancamento.")),
+  });
+  const working = validateMutation.isPending || removeMutation.isPending;
 
-  // Remote synchronization for the route identifier.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
-
-  async function validate() {
-    setWorking(true);
+  function validate() {
     setError(null);
-    try {
-      await service.validate(id);
-      await load();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao validar lançamento."));
-    } finally {
-      setWorking(false);
-    }
+    validateMutation.mutate();
   }
 
-  async function remove() {
-    if (!reason.trim()) return;
-    setWorking(true);
+  function remove(reason: string) {
     setError(null);
-    try {
-      await service.remove(id, reason);
-      navigate("/app/custos-extras", { replace: true });
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao remover lançamento."));
-      setWorking(false);
-    }
+    removeMutation.mutate(reason);
   }
 
   return (
@@ -97,7 +86,7 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
           tone="error"
           title="Não foi possível concluir a operação"
           description={error.message}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={() => void detailQuery.refetch()}>Tentar novamente</Button>}
         />
       ) : null}
       {!loading && !error && !item ? (
@@ -178,29 +167,16 @@ export function LancamentoDetailPage({ service: injected, lancamentoId }: Props)
                 </Button>
               ) : null}
             </div>
-            {removing ? (
-              <div className="lancamento-remove">
-                <Textarea
-                  label="Justificativa da remoção"
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value)}
-                />
-                <div className="lancamento-actions__row">
-                  <Button
-                    variant="danger"
-                    loading={working}
-                    disabled={!reason.trim()}
-                    onClick={() => void remove()}
-                  >
-                    Confirmar remoção
-                  </Button>
-                  <Button variant="outline" disabled={working} onClick={() => setRemoving(false)}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : null}
           </Card>
+          <RemovalAlertDialog
+            open={removing}
+            title="Remover lançamento"
+            description="Esta acao remove logicamente o lancamento e exige justificativa para auditoria."
+            requireJustification
+            loading={working}
+            onOpenChange={setRemoving}
+            onConfirm={(justification) => void remove(justification)}
+          />
           <EntityHistory entityType="lancamentos_operacionais" entityId={item.id} />
         </>
       ) : null}

@@ -5,8 +5,8 @@
   height: 100vh;
   position: sticky;
   top: 0;
-  background: var(--surface-card);
-  border-right: var(--border-hairline);
+  background: var(--sidebar-bg);
+  border-right: none;
   padding: var(--space-4);
   overflow-y: auto;
   transition:
@@ -51,9 +51,9 @@
   padding: var(--space-3) var(--space-2);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
-  font-weight: var(--fw-semibold);
-  font-size: var(--text-sm);
-  color: var(--text-body);
+  font-weight: var(--fw-medium);
+  font-size: var(--text-nav);
+  color: var(--sidebar-item);
   text-decoration: none;
   transition:
     background var(--dur-fast) var(--ease-standard),
@@ -61,25 +61,31 @@
 }
 
 .doka-sidebar__link:hover {
-  background: var(--neutral-100);
-  color: var(--text-strong);
+  background: var(--sidebar-item-hover-bg);
+  color: var(--text-on-brand);
   text-decoration: none;
 }
 
 .doka-sidebar__link--active {
-  background: var(--surface-brand-soft);
-  color: var(--orange-700);
-  font-weight: var(--fw-bold);
+  background: var(--sidebar-item-active-bg);
+  color: var(--sidebar-item-active);
+  font-weight: var(--fw-semibold);
+}
+
+.doka-sidebar__link--active:hover {
+  background: var(--sidebar-item-active-bg);
+  color: var(--sidebar-item-active);
 }
 
 .doka-sidebar__link--disabled {
   cursor: not-allowed;
-  color: var(--text-subtle);
+  color: var(--sidebar-muted);
   opacity: 0.75;
 }
 
 .doka-sidebar__link--disabled:hover {
   background: transparent;
+  color: var(--sidebar-muted);
 }
 
 .doka-sidebar__label {
@@ -92,13 +98,22 @@
 .doka-sidebar__unavailable {
   font-size: var(--text-2xs);
   font-weight: var(--fw-regular);
-  color: var(--text-subtle);
+  color: var(--sidebar-muted);
   white-space: nowrap;
 }
 
-.doka-sidebar__toggle {
+/* Especificidade extra para vencer .doka-button--ghost(:hover) sobre o fundo escuro */
+.doka-sidebar .doka-sidebar__toggle {
   justify-content: flex-start;
-  color: var(--text-muted);
+  color: var(--sidebar-item);
+  border-top: 1px solid var(--sidebar-divider);
+  border-radius: 0;
+  padding-top: var(--space-3);
+}
+
+.doka-sidebar .doka-sidebar__toggle:hover:not(:disabled) {
+  background: var(--sidebar-item-hover-bg);
+  color: var(--text-on-brand);
 }
 
 .doka-sidebar--collapsed {

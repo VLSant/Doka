@@ -10,8 +10,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--purple-500);
-  color: var(--text-on-brand);
+  background: var(--orange-500);
+  color: var(--brand-on-primary);
   font-family: var(--font-display);
   font-weight: var(--fw-semibold);
   width: 100%;

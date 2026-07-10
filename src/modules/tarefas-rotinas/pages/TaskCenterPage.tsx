@@ -1,23 +1,33 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Copy, Edit3, Trash2 } from "lucide-react";
+import { queryKeys } from "../../../app/query-keys";
+import { runBatch } from "../../../lib/batch";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips, type FilterChip } from "../../../components/ui/FilterChips";
 import { Pagination } from "../../../components/ui/Pagination";
 import { SearchInput } from "../../../components/ui/SearchInput";
-import { Select } from "../../../components/ui/FormControls";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
 import type { CatalogService } from "../../../services/catalog-service";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { useAuth } from "../../auth/AuthProvider";
+import { useSearchParams } from "react-router-dom";
 import { TaskFiltersForm } from "../components/TaskFilters";
-import { TaskList } from "../components/TaskList";
+import { TaskFormModal } from "../components/TaskFormModal";
+import { TaskList, type TaskSortKey } from "../components/TaskList";
 import { createTaskService, type TaskService } from "../task-service";
 import { taskMatchesSlice } from "../task-state";
-import type { Task, TaskFilters, TaskViewer } from "../types";
+import type { TaskFilters, TaskViewer } from "../types";
 import { useTaskCatalogs } from "../use-task-catalogs";
+import { applySort, toggleSort, type SortState } from "../../../lib/sorting";
 import "../tasks.css";
 
 const SLICES: { id: TaskFilters["slice"]; label: string }[] = [
@@ -50,35 +60,105 @@ export function TaskCenterPage({
       : null);
   const service = useMemo(() => injected ?? createTaskService(), [injected]);
   const { catalogs } = useTaskCatalogs(catalogService);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [filters, setFilters] = useState<TaskFilters>({ slice: "hoje" });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
+  const [actionError, setActionError] = useState<Error | null>(null);
+  const [sort, setSort] = useState<SortState<TaskSortKey>>({ key: null, direction: "asc" });
   const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("novo") === "1";
+  const editingId = searchParams.get("editar");
   const pageSize = 25;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await service.generateRoutineTasks();
-      setTasks(await service.listTasks());
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Não foi possível carregar as tarefas."));
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
+  const queryClient = useQueryClient();
+  // A geração de tarefas de rotina é uma escrita: roda a cada visita à tela,
+  // fora da queryFn, para não ficar presa ao staleTime do cache de leitura.
+  useEffect(() => {
+    let cancelled = false;
+    service
+      .generateRoutineTasks()
+      .then(() => {
+        if (!cancelled) {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.tasks.list() });
+        }
+      })
+      .catch(() => {
+        // Falha na geração não bloqueia a listagem.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [service, queryClient]);
 
-  // Initial Data API synchronization.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const tasksQuery = useQuery({
+    queryKey: queryKeys.tasks.list(),
+    queryFn: () => service.listTasks(),
+  });
+  const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
+  const loading = tasksQuery.isPending;
+  const error = tasksQuery.error;
+  // O filtro global de posto (topbar) atua como default/estreitamento: só
+  // entra em jogo quando a página não tem um filtro local de posto explícito
+  // (`filters.postoId`), que sempre tem precedência.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo<TaskFilters>(
+    () => ({ ...filters, postoId: filters.postoId ?? globalPostoId ?? undefined }),
+    [filters, globalPostoId],
+  );
+  const filtered = useMemo(
+    () => tasks.filter((task) => taskMatchesSlice(task, effectiveFilters)),
+    [effectiveFilters, tasks],
+  );
   const visible = useMemo(
-    () => tasks.filter((task) => taskMatchesSlice(task, filters)),
-    [filters, tasks],
+    () =>
+      applySort(filtered, sort, (task, key) => {
+        if (key === "tarefa") return task.titulo;
+        return task.prazo_data;
+      }),
+    [filtered, sort],
   );
   const paged = visible.slice((page - 1) * pageSize, page * pageSize);
+
+  // Poda a seleção para a interseção com os ids da página informada,
+  // evitando que seleções ocultas por filtro/aba/página "reapareçam" depois.
+  function pruneSelectionToPage(pageIds: Set<string>) {
+    setSelectedIds((current) => {
+      if (current.size === 0) return current;
+      let changed = false;
+      const next = new Set<string>();
+      current.forEach((id) => {
+        if (pageIds.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : current;
+    });
+  }
+
+  function pageIdsFor(nextFilters: TaskFilters, nextPage: number, nextSort: SortState<TaskSortKey>) {
+    const nextEffectiveFilters: TaskFilters = {
+      ...nextFilters,
+      postoId: nextFilters.postoId ?? globalPostoId ?? undefined,
+    };
+    const nextFiltered = tasks.filter((task) => taskMatchesSlice(task, nextEffectiveFilters));
+    const nextVisible = applySort(nextFiltered, nextSort, (task, key) =>
+      key === "tarefa" ? task.titulo : task.prazo_data,
+    );
+    return new Set(nextVisible.slice((nextPage - 1) * pageSize, nextPage * pageSize).map((t) => t.id));
+  }
+
+  function handleSort(key: TaskSortKey) {
+    const nextSort = toggleSort(sort, key);
+    setSort(nextSort);
+    setPage(1);
+    pruneSelectionToPage(pageIdsFor(filters, 1, nextSort));
+  }
+
+  function changePage(nextPage: number) {
+    setPage(nextPage);
+    pruneSelectionToPage(pageIdsFor(filters, nextPage, sort));
+  }
   const advancedCount = [
     filters.postoId,
     filters.responsavelId,
@@ -108,10 +188,113 @@ export function TaskCenterPage({
     if (filters.prazoAte) result.push({ id: "prazoAte", label: `Prazo até ${filters.prazoAte}` });
     return result;
   }, [catalogs, filters]);
-  const updateFilters = useCallback((next: TaskFilters) => {
-    setFilters(next);
-    setPage(1);
-  }, []);
+  const updateFilters = useCallback(
+    (next: TaskFilters) => {
+      setFilters(next);
+      setPage(1);
+      pruneSelectionToPage(pageIdsFor(next, 1, sort));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tasks, sort, globalPostoId],
+  );
+
+  function openCreate() {
+    setSearchParams(
+      (params) => {
+        params.set("novo", "1");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function closeFormModal() {
+    setSearchParams(
+      (params) => {
+        params.delete("novo");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  function openEdit(id: string) {
+    setSearchParams(
+      (params) => {
+        params.set("editar", id);
+        params.delete("novo");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  const selectedItems = visible.filter((task) => selectedIds.has(task.id));
+  const firstSelected = selectedItems[0];
+  const duplicateMutation = useMutation({
+    mutationFn: (task: (typeof visible)[number]) =>
+      service.createTask({
+        titulo: `${task.titulo} (copia)`,
+        descricao: task.descricao ?? undefined,
+        tipo: task.tipo === "rotina" ? "avulsa" : task.tipo,
+        postoId: task.posto_id ?? undefined,
+        cargoFuncaoId: task.cargo_funcao_id ?? undefined,
+        prioridadeId: task.prioridade_id ?? undefined,
+        prazoData: task.prazo_data ?? undefined,
+        horarioLimite: task.horario_limite ?? undefined,
+        exigeValidacao: task.exige_validacao,
+        observacoes: task.observacoes ?? undefined,
+        responsaveis: task.responsaveis.map((item) => item.id),
+      }),
+    onSuccess: async () => {
+      setActionError(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao duplicar tarefa.")),
+  });
+  const removeMutation = useMutation({
+    mutationFn: ({ ids, justification }: { ids: string[]; justification: string }) =>
+      runBatch(
+        ids,
+        (id) => service.removeTask(id, justification),
+        (failed, total) =>
+          `Falha ao remover ${failed} de ${total} tarefa(s); as demais foram removidas.`,
+      ),
+    onSuccess: () => {
+      setRemoveTarget(null);
+      setSelectedIds(new Set());
+      setActionError(null);
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao remover tarefa.")),
+    onSettled: async () => {
+      // Invalida mesmo em falha parcial: itens já removidos saem da lista.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllPaged() {
+    setSelectedIds((current) => {
+      const pageIds = paged.map((task) => task.id);
+      const allSelected = pageIds.length > 0 && pageIds.every((id) => current.has(id));
+      const next = new Set(current);
+      if (allSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
 
   if (!viewer) return null;
 
@@ -126,7 +309,7 @@ export function TaskCenterPage({
         label="Recortes de tarefas"
         value={filters.slice}
         items={SLICES}
-        onChange={(slice) => setFilters((current) => ({ ...current, slice }))}
+        onChange={(slice) => updateFilters({ ...filters, slice })}
       />
       <div className="doka-list-toolbar">
         <SearchInput
@@ -134,21 +317,23 @@ export function TaskCenterPage({
           placeholder="Buscar tarefa…"
           onChange={(termo) => updateFilters({ ...filters, termo })}
         />
-        <Select
+        <FormSelect
           className="doka-list-toolbar__select"
+          fullWidth={false}
           aria-label="Status"
           value={filters.status ?? ""}
-          onChange={(event) =>
-            updateFilters({ ...filters, status: event.target.value as TaskFilters["status"] })
+          onChange={(next) =>
+            updateFilters({ ...filters, status: next as TaskFilters["status"] })
           }
-        >
-          <option value="">Todos os status</option>
-          <option value="pendente">Pendente</option>
-          <option value="em_andamento">Em andamento</option>
-          <option value="concluida">Concluída</option>
-          <option value="validada">Validada</option>
-          <option value="reaberta">Reaberta</option>
-        </Select>
+          options={[
+            { value: "", label: "Todos os status" },
+            { value: "pendente", label: "Pendente" },
+            { value: "em_andamento", label: "Em andamento" },
+            { value: "concluida", label: "Concluída" },
+            { value: "validada", label: "Validada" },
+            { value: "reaberta", label: "Reaberta" },
+          ]}
+        />
         <Button variant="outline" onClick={() => setFiltersOpen(true)}>
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>
@@ -158,7 +343,7 @@ export function TaskCenterPage({
             Rotinas
           </ButtonLink>
         ) : null}
-        <ButtonLink to="/app/tarefas-rotinas/nova">Nova tarefa</ButtonLink>
+        <Button onClick={openCreate}>Nova tarefa</Button>
       </div>
       <FilterChips
         items={chips}
@@ -196,7 +381,14 @@ export function TaskCenterPage({
           tone="error"
           title="Falha ao carregar tarefas"
           description={error.message}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={() => void tasksQuery.refetch()}>Tentar novamente</Button>}
+        />
+      ) : null}
+      {actionError ? (
+        <FeedbackState
+          tone="error"
+          title="A acao nao foi concluida"
+          description={actionError.message}
         />
       ) : null}
       {!loading && !error && visible.length === 0 ? (
@@ -204,15 +396,80 @@ export function TaskCenterPage({
           tone="empty"
           title="Nenhuma tarefa encontrada"
           description="Não há tarefas neste recorte ou nos filtros selecionados."
-          actions={<ButtonLink to="/app/tarefas-rotinas/nova">Nova tarefa</ButtonLink>}
+          actions={<Button onClick={openCreate}>Nova tarefa</Button>}
         />
       ) : null}
       {visible.length > 0 ? (
         <>
-          <TaskList tasks={paged} />
-          <Pagination page={page} pageSize={pageSize} total={visible.length} onChange={setPage} />
+          <TaskList
+            tasks={paged}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelected}
+            onToggleAll={toggleAllPaged}
+            onEdit={openEdit}
+            onDuplicate={(task) => duplicateMutation.mutate(task)}
+            onRemove={(id) => setRemoveTarget([id])}
+            sort={sort}
+            onSort={handleSort}
+          />
+          <Pagination page={page} pageSize={pageSize} total={visible.length} onChange={changePage} />
         </>
       ) : null}
+      {selectedItems.length > 0 ? (
+        <SidebarActionList
+          summary={
+            <>
+              <span>Selecionadas</span>
+              <strong>{selectedItems.length}</strong>
+              <span>{selectedItems.filter((task) => task.status !== "validada").length} abertas</span>
+            </>
+          }
+          onClear={() => setSelectedIds(new Set())}
+          items={[
+            {
+              label: "Editar primeira",
+              icon: <Edit3 size={15} aria-hidden="true" />,
+              disabled: !firstSelected,
+              onClick: () => firstSelected && openEdit(firstSelected.id),
+            },
+            {
+              label: "Duplicar primeira",
+              icon: <Copy size={15} aria-hidden="true" />,
+              disabled: !firstSelected || duplicateMutation.isPending,
+              onClick: () => firstSelected && duplicateMutation.mutate(firstSelected),
+            },
+            {
+              label: "Excluir selecionadas",
+              icon: <Trash2 size={15} aria-hidden="true" />,
+              variant: "destructive",
+              disabled: removeMutation.isPending,
+              onClick: () => setRemoveTarget(selectedItems.map((task) => task.id)),
+            },
+          ]}
+        />
+      ) : null}
+      {creating || editingId ? (
+        <TaskFormModal
+          tarefaId={editingId ?? undefined}
+          viewer={viewer}
+          service={injected}
+          catalogService={catalogService}
+          onClose={closeFormModal}
+        />
+      ) : null}
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover tarefa"
+        description="Esta acao remove logicamente a tarefa e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={(justification) => {
+          if (removeTarget) removeMutation.mutate({ ids: removeTarget, justification });
+        }}
+      />
     </Page>
   );
 }

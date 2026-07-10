@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
-import { Drawer } from "../../../components/ui/Drawer";
-import { TableFrame } from "../../../components/ui/Patterns";
+import { RowActionsMenu } from "../../../components/ui/RowActionsMenu";
+import { TableCardHeader, TableCardList, TableCardRow } from "../../../components/ui/TableCardRow";
 import type { AdministrationService } from "../administration-service";
-import type {
-  AdministrationSnapshot,
-  IdentidadeAuth,
-  PerfilUsuario,
-  UsuarioOperacional,
-} from "../types";
+import type { AdministrationSnapshot, PerfilUsuario, UsuarioOperacional } from "../types";
+import { AdminAppModal } from "./AdminAppModal";
 import { SelectField, StatusBadge } from "./AdminFields";
 
 interface UsersSectionProps {
@@ -42,14 +40,14 @@ export function UsersSection({
 }: UsersSectionProps) {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
-  const [identities, setIdentities] = useState<IdentidadeAuth[]>([]);
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-
-  useEffect(() => {
-    if (!canEdit) return;
-    void service.listAvailableIdentities().then(setIdentities).catch(onError);
-  }, [canEdit, onError, service]);
+  const identitiesQuery = useQuery({
+    queryKey: queryKeys.administration.identities(),
+    queryFn: () => service.listAvailableIdentities(),
+    enabled: canEdit,
+  });
+  const identities = identitiesQuery.data ?? [];
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -102,7 +100,7 @@ export function UsersSection({
       );
       setForm(emptyForm);
       setFormOpen(false);
-      await onChanged("Usuário salvo.");
+      await onChanged("Usuario salvo.");
     } catch (error) {
       onError(error);
     } finally {
@@ -114,11 +112,11 @@ export function UsersSection({
     <section className="admin-section" aria-labelledby="admin-users-title">
       <div className="admin-section__header">
         <div>
-          <h2 id="admin-users-title">Usuários operacionais</h2>
-          <p>Associação de identidades existentes, perfil, cargo e estado operacional.</p>
+          <h2 id="admin-users-title">Usuarios operacionais</h2>
+          <p>Associacao de identidades existentes, perfil, cargo e estado operacional.</p>
         </div>
         <Input
-          label="Pesquisar usuário"
+          label="Pesquisar usuario"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Nome ou e-mail"
@@ -130,15 +128,15 @@ export function UsersSection({
               setFormOpen(true);
             }}
           >
-            Novo usuário
+            Novo usuario
           </Button>
         ) : null}
       </div>
 
       {canEdit && (
-        <Drawer
+        <AdminAppModal
           open={formOpen}
-          title={form.id ? "Editar usuário" : "Novo usuário"}
+          title={form.id ? "Editar usuario" : "Novo usuario"}
           description="Associe uma identidade existente e defina perfil, cargo e estado."
           onClose={() => {
             setFormOpen(false);
@@ -156,7 +154,7 @@ export function UsersSection({
                 Cancelar
               </Button>
               <Button type="submit" form="admin-user-form" loading={saving}>
-                {form.id ? "Atualizar" : "Associar usuário"}
+                {form.id ? "Atualizar" : "Associar usuario"}
               </Button>
             </>
           }
@@ -166,7 +164,7 @@ export function UsersSection({
               <SelectField
                 label="Identidade Auth"
                 value={form.auth_user_id}
-                onChange={(event) => pickIdentity(event.target.value)}
+                onChange={(next) => pickIdentity(next)}
                 required
               >
                 <option value="">Selecione</option>
@@ -194,18 +192,18 @@ export function UsersSection({
             <SelectField
               label="Perfil"
               value={form.perfil}
-              onChange={(event) =>
-                setForm({ ...form, perfil: event.target.value as PerfilUsuario })
+              onChange={(next) =>
+                setForm({ ...form, perfil: next as PerfilUsuario })
               }
             >
               <option value="operador">Operador</option>
-              <option value="supervisao">Supervisão</option>
-              <option value="direcao_admin">Direção/Administração</option>
+              <option value="supervisao">Supervisao</option>
+              <option value="direcao_admin">Direcao/Administracao</option>
             </SelectField>
             <SelectField
-              label="Cargo/função"
+              label="Cargo/funcao"
               value={form.cargo_funcao_id}
-              onChange={(event) => setForm({ ...form, cargo_funcao_id: event.target.value })}
+              onChange={(next) => setForm({ ...form, cargo_funcao_id: next })}
             >
               <option value="">Sem cargo</option>
               {data.cargos
@@ -217,53 +215,65 @@ export function UsersSection({
                 ))}
             </SelectField>
             <Checkbox
-              label="Usuário ativo"
+              label="Usuario ativo"
               checked={form.ativo}
               onChange={(event) => setForm({ ...form, ativo: event.target.checked })}
             />
           </form>
-        </Drawer>
+        </AdminAppModal>
       )}
 
       {filtered.length === 0 ? (
-        <p className="admin-empty">Nenhum usuário encontrado.</p>
+        <p className="admin-empty">Nenhum usuario encontrado.</p>
       ) : (
-        <TableFrame>
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfil</th>
-                <th>Cargo</th>
-                <th>Estado</th>
-                {canEdit && <th>Ações</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.nome}</td>
-                  <td>{user.email}</td>
-                  <td>{user.perfil.replace("_", " / ")}</td>
-                  <td>
-                    {data.cargos.find((cargo) => cargo.id === user.cargo_funcao_id)?.nome ?? "—"}
-                  </td>
-                  <td>
-                    <StatusBadge active={user.ativo} />
-                  </td>
-                  {canEdit && (
-                    <td>
-                      <Button size="sm" variant="outline" onClick={() => edit(user)}>
-                        Editar
-                      </Button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableFrame>
+        <TableCardList>
+          <TableCardHeader
+            selectable={false}
+            actions={canEdit}
+            columns={[
+              { key: "nome", label: "Nome", width: "minmax(170px, 1.2fr)" },
+              { key: "email", label: "E-mail", width: "minmax(190px, 1.3fr)" },
+              { key: "perfil", label: "Perfil", width: "140px" },
+              { key: "cargo", label: "Cargo", width: "150px" },
+              { key: "estado", label: "Estado", width: "95px" },
+            ]}
+          />
+          {filtered.map((user) => (
+            <TableCardRow
+              key={user.id}
+              id={user.id}
+              selectable={false}
+              columns={[
+                {
+                  key: "nome",
+                  label: "Nome",
+                  width: "minmax(170px, 1.2fr)",
+                  value: <strong>{user.nome}</strong>,
+                },
+                { key: "email", label: "E-mail", width: "minmax(190px, 1.3fr)", value: user.email },
+                {
+                  key: "perfil",
+                  label: "Perfil",
+                  width: "140px",
+                  value: user.perfil.replace("_", " / "),
+                },
+                {
+                  key: "cargo",
+                  label: "Cargo",
+                  width: "150px",
+                  value: data.cargos.find((cargo) => cargo.id === user.cargo_funcao_id)?.nome ?? "-",
+                },
+                {
+                  key: "estado",
+                  label: "Estado",
+                  width: "95px",
+                  value: <StatusBadge active={user.ativo} />,
+                },
+              ]}
+              actions={canEdit ? <RowActionsMenu onEdit={() => edit(user)} /> : undefined}
+            />
+          ))}
+        </TableCardList>
       )}
     </section>
   );

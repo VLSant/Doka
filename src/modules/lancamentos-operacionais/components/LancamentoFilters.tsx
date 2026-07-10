@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
-import { Select } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import type { AssistenciaCatalogoItem, LancamentoCatalogoItem, LancamentoFilters } from "../types";
 
 interface Props {
@@ -22,71 +23,67 @@ export function LancamentoFiltersForm({ value, postos, assistencias, disabled, o
 
   return (
     <form className="lancamentos-filters" onSubmit={submit}>
-      <Input
+      <DatePickerField
         label="Data inicial"
-        type="date"
         value={draft.data_de ?? ""}
         disabled={disabled}
-        onChange={(event) => setDraft({ ...draft, data_de: event.target.value })}
+        onChange={(next) => setDraft({ ...draft, data_de: next })}
       />
-      <Input
+      <DatePickerField
         label="Data final"
-        type="date"
         value={draft.data_ate ?? ""}
         disabled={disabled}
-        onChange={(event) => setDraft({ ...draft, data_ate: event.target.value })}
+        onChange={(next) => setDraft({ ...draft, data_ate: next })}
       />
-      <Select
+      <FormSelect
         label="Posto"
         value={draft.posto_id ?? ""}
         disabled={disabled}
-        onChange={(event) => setDraft({ ...draft, posto_id: event.target.value })}
-      >
-        <option value="">Todos</option>
-        {postos.map((posto) => (
-          <option key={posto.id} value={posto.id}>
-            {posto.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => setDraft({ ...draft, posto_id: next })}
+        options={[
+          { value: "", label: "Todos" },
+          ...postos.map((posto) => ({ value: posto.id, label: posto.nome })),
+        ]}
+      />
+      <FormSelect
         label="Tipo"
         value={draft.tipo ?? ""}
         disabled={disabled}
-        onChange={(event) =>
-          setDraft({ ...draft, tipo: event.target.value as LancamentoFilters["tipo"] })
+        onChange={(next) =>
+          setDraft({ ...draft, tipo: next as LancamentoFilters["tipo"] })
         }
-      >
-        <option value="">Todos</option>
-        <option value="deslocamento">Deslocamento</option>
-        <option value="custo_extra">Custo extra</option>
-      </Select>
-      <Select
+        options={[
+          { value: "", label: "Todos" },
+          { value: "deslocamento", label: "Deslocamento" },
+          { value: "custo_extra", label: "Custo extra" },
+        ]}
+      />
+      <FormSelect
         label="Status"
         value={draft.status ?? ""}
         disabled={disabled}
-        onChange={(event) =>
-          setDraft({ ...draft, status: event.target.value as LancamentoFilters["status"] })
+        onChange={(next) =>
+          setDraft({ ...draft, status: next as LancamentoFilters["status"] })
         }
-      >
-        <option value="">Todos</option>
-        <option value="pendente">Pendente</option>
-        <option value="validado">Validado</option>
-      </Select>
-      <Select
+        options={[
+          { value: "", label: "Todos" },
+          { value: "pendente", label: "Pendente" },
+          { value: "validado", label: "Validado" },
+        ]}
+      />
+      <FormSelect
         label="Assistência"
         value={draft.assistencia_id ?? ""}
         disabled={disabled}
-        onChange={(event) => setDraft({ ...draft, assistencia_id: event.target.value })}
-      >
-        <option value="">Todas</option>
-        {assistencias.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.numero}
-            {item.cliente ? ` · ${item.cliente}` : ""}
-          </option>
-        ))}
-      </Select>
+        onChange={(next) => setDraft({ ...draft, assistencia_id: next })}
+        options={[
+          { value: "", label: "Todas" },
+          ...assistencias.map((item) => ({
+            value: item.id,
+            label: `${item.numero}${item.cliente ? ` · ${item.cliente}` : ""}`,
+          })),
+        ]}
+      />
       <Input
         label="Responsável / recurso"
         value={draft.recurso ?? ""}

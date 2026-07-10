@@ -1,22 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Copy, Edit3, Trash2 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { queryKeys } from "../../../app/query-keys";
+import { runBatch } from "../../../lib/batch";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
-import { ButtonLink } from "../../../components/ui/ButtonLink";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
+import { OccurrenceFormModal } from "../components/OccurrenceFormModal";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
 import { Input } from "../../../components/ui/Input";
 import { SearchInput } from "../../../components/ui/SearchInput";
-import { Select } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { occurrenceMatchesFilters, STATUS_LABELS } from "../occurrence-state";
 import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
-import { OccurrenceTable } from "../components/OccurrenceTable";
+import { OccurrenceTable, type OccurrenceSortKey } from "../components/OccurrenceTable";
+import { applySort, toggleSort, type SortState } from "../../../lib/sorting";
 import type {
   OccurrenceCatalogs,
   OccurrenceFilters,
-  OccurrenceListItem,
   OccurrenceStatus,
   OccurrenceTab,
 } from "../types";
@@ -32,38 +41,182 @@ const EMPTY_CATALOGS: OccurrenceCatalogs = {
 
 export function OccurrenceListPage({ service: injected }: { service?: OccurrenceService }) {
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
-  const [items, setItems] = useState<OccurrenceListItem[]>([]);
-  const [catalogs, setCatalogs] = useState(EMPTY_CATALOGS);
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<OccurrenceFilters>({ tab: "hoje" });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
+  const [actionError, setActionError] = useState<Error | null>(null);
+  const [sort, setSort] = useState<SortState<OccurrenceSortKey>>({ key: null, direction: "asc" });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const creating = searchParams.get("novo") === "1";
+  const editingId = searchParams.get("editar");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [occurrences, options] = await Promise.all([service.list(), service.catalogs()]);
-      setItems(occurrences);
-      setCatalogs(options);
-    } catch (cause) {
-      setItems([]);
-      setError(cause instanceof Error ? cause : new Error("Falha ao carregar ocorrências."));
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
+  function openCreate() {
+    setSearchParams(
+      (params) => {
+        params.set("novo", "1");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  function closeFormModal() {
+    setSearchParams(
+      (params) => {
+        params.delete("novo");
+        params.delete("editar");
+        return params;
+      },
+      { replace: false },
+    );
+  }
 
-  const visible = useMemo(
-    () => items.filter((item) => occurrenceMatchesFilters(item, filters)),
-    [filters, items],
+  function openEdit(id: string) {
+    setSearchParams(
+      (params) => {
+        params.set("editar", id);
+        params.delete("novo");
+        return params;
+      },
+      { replace: false },
+    );
+  }
+
+  const occurrencesQuery = useQuery({
+    queryKey: queryKeys.occurrences.list(),
+    queryFn: () => service.list(),
+  });
+  const catalogsQuery = useQuery({
+    queryKey: queryKeys.occurrences.catalogs(),
+    queryFn: () => service.catalogs(),
+  });
+  const items = useMemo(() => occurrencesQuery.data ?? [], [occurrencesQuery.data]);
+  const catalogs = catalogsQuery.data ?? EMPTY_CATALOGS;
+  const loading = occurrencesQuery.isPending || catalogsQuery.isPending;
+  const error = occurrencesQuery.error ?? catalogsQuery.error;
+  const reload = () => {
+    void occurrencesQuery.refetch();
+    void catalogsQuery.refetch();
+  };
+
+  // O filtro global de posto (topbar) atua como default/estreitamento: só
+  // entra em jogo quando a página não tem um filtro local de posto explícito
+  // (`filters.posto_id`), que sempre tem precedência.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo<OccurrenceFilters>(
+    () => ({ ...filters, posto_id: filters.posto_id ?? globalPostoId ?? undefined }),
+    [filters, globalPostoId],
   );
+  const filtered = useMemo(
+    () => items.filter((item) => occurrenceMatchesFilters(item, effectiveFilters)),
+    [effectiveFilters, items],
+  );
+  const visible = useMemo(
+    () =>
+      applySort(filtered, sort, (item, key) => {
+        if (key === "assistencia") return item.assistencia?.numero_assistencia ?? "";
+        if (key === "ocorrencia") return item.titulo;
+        return item.data_retorno;
+      }),
+    [filtered, sort],
+  );
+  const selectedItems = visible.filter((item) => selectedIds.has(item.id));
+  const firstSelected = selectedItems[0];
+
+  // Poda a seleção para a interseção com os itens visíveis, evitando que
+  // seleções ocultas por um filtro/aba "reapareçam" depois.
+  function pruneSelection(nextVisibleIds: Set<string>) {
+    setSelectedIds((current) => {
+      if (current.size === 0) return current;
+      let changed = false;
+      const next = new Set<string>();
+      current.forEach((id) => {
+        if (nextVisibleIds.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : current;
+    });
+  }
+
+  function handleSort(key: OccurrenceSortKey) {
+    setSort((current) => toggleSort(current, key));
+  }
+
+  const duplicateMutation = useMutation({
+    mutationFn: (item: (typeof visible)[number]) =>
+      service.create({
+        assistencia_id: item.assistencia_id,
+        posto_id: item.posto_id,
+        tipo_ocorrencia_id: item.tipo_ocorrencia_id,
+        prioridade_id: item.prioridade_id,
+        responsavel_id: item.responsavel_id,
+        titulo: `${item.titulo} (copia)`,
+        descricao: item.descricao,
+        observacoes: item.observacoes,
+        data_retorno: item.data_retorno,
+      }),
+    onSuccess: async () => {
+      setActionError(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.all });
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao duplicar ocorrencia.")),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: ({ ids, justification }: { ids: string[]; justification: string }) =>
+      runBatch(
+        ids,
+        (id) => service.remove(id, justification),
+        (failed, total) =>
+          `Falha ao remover ${failed} de ${total} ocorrência(s); as demais foram removidas.`,
+      ),
+    onSuccess: () => {
+      setRemoveTarget(null);
+      setSelectedIds(new Set());
+      setActionError(null);
+    },
+    onError: (cause) =>
+      setActionError(cause instanceof Error ? cause : new Error("Falha ao remover ocorrencia.")),
+    onSettled: async () => {
+      // Invalida mesmo em falha parcial: itens já removidos saem da lista.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.all });
+    },
+  });
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllVisible() {
+    setSelectedIds((current) => {
+      const visibleIds = visible.map((item) => item.id);
+      const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => current.has(id));
+      const next = new Set(current);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  function applyFilters(next: OccurrenceFilters) {
+    setFilters(next);
+    const nextVisibleIds = new Set(
+      items.filter((item) => occurrenceMatchesFilters(item, next)).map((item) => item.id),
+    );
+    pruneSelection(nextVisibleIds);
+  }
 
   function setFilter<K extends keyof OccurrenceFilters>(key: K, value: OccurrenceFilters[K]) {
-    setFilters((current) => ({ ...current, [key]: value }));
+    applyFilters({ ...filters, [key]: value });
   }
   const advancedKeys: Array<keyof OccurrenceFilters> = [
     "posto_id",
@@ -104,30 +257,28 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           placeholder="Buscar ocorrência…"
           onChange={(busca) => setFilter("busca", busca)}
         />
-        <Select
+        <FormSelect
           className="doka-list-toolbar__select"
+          fullWidth={false}
           aria-label="Status"
           value={filters.status ?? ""}
-          onChange={(event) => setFilter("status", event.target.value as OccurrenceStatus | "")}
-        >
-          <option value="">Todos os status</option>
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
+          onChange={(next) => setFilter("status", next as OccurrenceStatus | "")}
+          options={[
+            { value: "", label: "Todos os status" },
+            ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
+          ]}
+        />
         <Button variant="outline" onClick={() => setFiltersOpen(true)}>
           Filtros{advancedCount ? ` (${advancedCount})` : ""}
         </Button>
         <span className="doka-list-toolbar__spacer" />
-        <ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>
+        <Button onClick={openCreate}>Nova ocorrência</Button>
       </div>
       <FilterChips
         items={chips}
         onRemove={(id) => setFilter(id as keyof OccurrenceFilters, undefined)}
         onClear={() =>
-          setFilters({ tab: filters.tab, busca: filters.busca, status: filters.status })
+          applyFilters({ tab: filters.tab, busca: filters.busca, status: filters.status })
         }
       />
       <Drawer
@@ -136,7 +287,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
         onClose={() => setFiltersOpen(false)}
         footer={
           <>
-            <Button variant="outline" onClick={() => setFilters({ tab: filters.tab })}>
+            <Button variant="outline" onClick={() => applyFilters({ tab: filters.tab })}>
               Limpar
             </Button>
             <Button onClick={() => setFiltersOpen(false)}>Aplicar filtros</Button>
@@ -144,82 +295,68 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
         }
       >
         <div className="occurrence-filters">
-          <Select
+          <FormSelect
             label="Posto"
             value={filters.posto_id ?? ""}
-            onChange={(event) => setFilter("posto_id", event.target.value)}
-          >
-            <option value="">Todos</option>
-            {catalogs.postos.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("posto_id", next)}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.postos.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Responsável"
             value={filters.responsavel_id ?? ""}
-            onChange={(event) => setFilter("responsavel_id", event.target.value)}
-          >
-            <option value="">Todos</option>
-            {catalogs.usuarios.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("responsavel_id", next)}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.usuarios.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Tipo"
             value={filters.tipo_ocorrencia_id ?? ""}
-            onChange={(event) => setFilter("tipo_ocorrencia_id", event.target.value)}
-          >
-            <option value="">Todos</option>
-            {catalogs.tipos.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("tipo_ocorrencia_id", next)}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.tipos.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Prioridade"
             value={filters.prioridade_id ?? ""}
-            onChange={(event) => setFilter("prioridade_id", event.target.value)}
-          >
-            <option value="">Todas</option>
-            {catalogs.prioridades.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select
+            onChange={(next) => setFilter("prioridade_id", next)}
+            options={[
+              { value: "", label: "Todas" },
+              ...catalogs.prioridades.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
             label="Assistência"
             value={filters.assistencia_id ?? ""}
-            onChange={(event) => setFilter("assistencia_id", event.target.value)}
-          >
-            <option value="">Todas</option>
-            {catalogs.assistencias.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.numero_assistencia}
-              </option>
-            ))}
-          </Select>
+            onChange={(next) => setFilter("assistencia_id", next)}
+            options={[
+              { value: "", label: "Todas" },
+              ...catalogs.assistencias.map((item) => ({
+                value: item.id,
+                label: item.numero_assistencia,
+              })),
+            ]}
+          />
           <Input
             label="Montador / recurso"
             value={filters.montador ?? ""}
             onChange={(event) => setFilter("montador", event.target.value)}
           />
-          <Input
+          <DatePickerField
             label="Registrada de"
-            type="date"
             value={filters.data_de ?? ""}
-            onChange={(event) => setFilter("data_de", event.target.value)}
+            onChange={(next) => setFilter("data_de", next)}
           />
-          <Input
+          <DatePickerField
             label="Registrada até"
-            type="date"
             value={filters.data_ate ?? ""}
-            onChange={(event) => setFilter("data_ate", event.target.value)}
+            onChange={(next) => setFilter("data_ate", next)}
           />
         </div>
       </Drawer>
@@ -230,7 +367,14 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           tone="error"
           title="Falha ao carregar ocorrências"
           description={error.message}
-          actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+          actions={<Button onClick={reload}>Tentar novamente</Button>}
+        />
+      ) : null}
+      {actionError ? (
+        <FeedbackState
+          tone="error"
+          title="A acao nao foi concluida"
+          description={actionError.message}
         />
       ) : null}
       {!loading && !error && visible.length === 0 ? (
@@ -238,14 +382,78 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
           tone="empty"
           title="Nenhuma ocorrência neste recorte"
           description="Altere os filtros ou registre uma nova ocorrência."
-          actions={<ButtonLink to="/app/ocorrencias/nova">Nova ocorrência</ButtonLink>}
+          actions={<Button onClick={openCreate}>Nova ocorrência</Button>}
         />
       ) : null}
       {!loading && !error && visible.length > 0 ? (
         <>
-          <OccurrenceTable items={visible} />
+          <OccurrenceTable
+            items={visible}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelected}
+            onToggleAll={toggleAllVisible}
+            onEdit={openEdit}
+            onDuplicate={(item) => duplicateMutation.mutate(item)}
+            onRemove={(id) => setRemoveTarget([id])}
+            sort={sort}
+            onSort={handleSort}
+          />
         </>
       ) : null}
+      {selectedItems.length > 0 ? (
+        <SidebarActionList
+          summary={
+            <>
+              <span>Selecionadas</span>
+              <strong>{selectedItems.length}</strong>
+              <span>{selectedItems.filter((item) => item.status !== "encerrada").length} ativas</span>
+            </>
+          }
+          onClear={() => setSelectedIds(new Set())}
+          items={[
+            {
+              label: "Editar primeira",
+              icon: <Edit3 size={15} aria-hidden="true" />,
+              disabled: !firstSelected,
+              onClick: () => firstSelected && openEdit(firstSelected.id),
+            },
+            {
+              label: "Duplicar primeira",
+              icon: <Copy size={15} aria-hidden="true" />,
+              disabled: !firstSelected || duplicateMutation.isPending,
+              onClick: () => firstSelected && duplicateMutation.mutate(firstSelected),
+            },
+            {
+              label: "Excluir selecionadas",
+              icon: <Trash2 size={15} aria-hidden="true" />,
+              variant: "destructive",
+              disabled: removeMutation.isPending,
+              onClick: () => setRemoveTarget(selectedItems.map((item) => item.id)),
+            },
+          ]}
+        />
+      ) : null}
+
+      {creating || editingId ? (
+        <OccurrenceFormModal
+          ocorrenciaId={editingId ?? undefined}
+          onClose={closeFormModal}
+          service={injected}
+        />
+      ) : null}
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover ocorrencia"
+        description="Esta acao remove logicamente a ocorrencia e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={(justification) => {
+          if (removeTarget) removeMutation.mutate({ ids: removeTarget, justification });
+        }}
+      />
     </Page>
   );
 }

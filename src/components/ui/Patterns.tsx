@@ -1,4 +1,5 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { ComponentType, HTMLAttributes, ReactNode } from "react";
+import type { LucideProps } from "lucide-react";
 import "./Patterns.css";
 
 export function FilterBar(props: HTMLAttributes<HTMLDivElement>) {
@@ -33,16 +34,24 @@ export function FormGrid(props: HTMLAttributes<HTMLDivElement>) {
 export function MetricCard({
   label,
   value,
+  detail,
   tone = "neutral",
+  icon: Icon,
 }: {
   label: string;
   value: ReactNode;
+  detail?: ReactNode;
   tone?: "neutral" | "brand" | "attention";
+  icon?: ComponentType<LucideProps>;
 }) {
   return (
     <article className={`doka-metric-card doka-metric-card--${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
+      <span className="doka-metric-card__label">{label}</span>
+      <strong className="doka-metric-card__value">
+        {Icon ? <Icon className="doka-metric-card__icon" aria-hidden="true" /> : null}
+        {value}
+      </strong>
+      {detail ? <small className="doka-metric-card__detail">{detail}</small> : null}
     </article>
   );
 }

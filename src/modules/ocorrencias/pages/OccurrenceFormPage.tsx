@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -6,7 +8,7 @@ import { Button } from "../../../components/ui/Button";
 import { Drawer } from "../../../components/ui/Drawer";
 import { OccurrenceForm } from "../components/OccurrenceForm";
 import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
-import type { OccurrenceCatalogs, OccurrenceInput } from "../types";
+import type { OccurrenceInput } from "../types";
 import "./Occurrences.css";
 
 export function OccurrenceFormPage({ service: injected }: { service?: OccurrenceService }) {
@@ -14,48 +16,37 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
   const navigate = useNavigate();
   const { ocorrenciaId } = useParams();
   const editing = Boolean(ocorrenciaId);
-  const [catalogs, setCatalogs] = useState<OccurrenceCatalogs | null>(null);
-  const [initial, setInitial] = useState<OccurrenceInput | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const [formError, setFormError] = useState<Error | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [options, occurrence] = await Promise.all([
-        service.catalogs(),
-        ocorrenciaId ? service.detail(ocorrenciaId) : Promise.resolve(null),
-      ]);
-      setCatalogs(options);
-      if (occurrence) {
-        setInitial({
-          assistencia_id: occurrence.assistencia_id,
-          posto_id: occurrence.posto_id,
-          tipo_ocorrencia_id: occurrence.tipo_ocorrencia_id,
-          prioridade_id: occurrence.prioridade_id,
-          responsavel_id: occurrence.responsavel_id,
-          titulo: occurrence.titulo,
-          descricao: occurrence.descricao,
-          observacoes: occurrence.observacoes,
-          data_retorno: occurrence.data_retorno,
-        });
+  const catalogsQuery = useQuery({
+    queryKey: queryKeys.occurrences.catalogs(),
+    queryFn: () => service.catalogs(),
+  });
+  const detailQuery = useQuery({
+    queryKey: queryKeys.occurrences.detail(ocorrenciaId ?? "novo"),
+    queryFn: () => service.detail(ocorrenciaId ?? ""),
+    enabled: Boolean(ocorrenciaId),
+  });
+  const catalogs = catalogsQuery.data ?? null;
+  const occurrence = detailQuery.data ?? null;
+  const initial = occurrence
+    ? {
+        assistencia_id: occurrence.assistencia_id,
+        posto_id: occurrence.posto_id,
+        tipo_ocorrencia_id: occurrence.tipo_ocorrencia_id,
+        prioridade_id: occurrence.prioridade_id,
+        responsavel_id: occurrence.responsavel_id,
+        titulo: occurrence.titulo,
+        descricao: occurrence.descricao,
+        observacoes: occurrence.observacoes,
+        data_retorno: occurrence.data_retorno,
       }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao carregar o formulário."));
-    } finally {
-      setLoading(false);
-    }
-  }, [ocorrenciaId, service]);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
-
-  async function submit(input: OccurrenceInput) {
-    setSaving(true);
-    setError(null);
-    try {
+    : undefined;
+  const loading = catalogsQuery.isPending || (Boolean(ocorrenciaId) && detailQuery.isPending);
+  const loadError = catalogsQuery.error ?? detailQuery.error;
+  const saveMutation = useMutation({
+    mutationFn: async (input: OccurrenceInput) => {
       if (ocorrenciaId) {
         const editable = {
           tipo_ocorrencia_id: input.tipo_ocorrencia_id,
@@ -67,16 +58,22 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
           data_retorno: input.data_retorno,
         };
         await service.update(ocorrenciaId, editable);
-        navigate(`/app/ocorrencias/${ocorrenciaId}`);
-      } else {
-        const created = await service.create(input);
-        navigate(`/app/ocorrencias/${created.id}`);
+        return { id: ocorrenciaId };
       }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao salvar a ocorrência."));
-    } finally {
-      setSaving(false);
-    }
+      return service.create(input);
+    },
+    onSuccess: async (saved) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.all });
+      navigate(`/app/ocorrencias/${saved.id}`);
+    },
+    onError: (cause) => {
+      setFormError(cause instanceof Error ? cause : new Error("Falha ao salvar a ocorrencia."));
+    },
+  });
+
+  function submit(input: OccurrenceInput) {
+    setFormError(null);
+    saveMutation.mutate(input);
   }
 
   const closeTarget = ocorrenciaId ? `/app/ocorrencias/${ocorrenciaId}` : "/app/ocorrencias";
@@ -89,13 +86,13 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
       onClose={() => navigate(closeTarget)}
     >
       {loading ? <LoadingState message="Carregando formulário..." /> : null}
-      {error ? (
+      {(formError ?? loadError) ? (
         <FeedbackState
           tone="error"
           title={editing ? "Não foi possível carregar ou salvar" : "Não foi possível salvar"}
-          description={error.message}
+          description={(formError ?? loadError)?.message}
           actions={
-            !catalogs ? <Button onClick={() => void load()}>Tentar novamente</Button> : undefined
+            !catalogs ? <Button onClick={() => void catalogsQuery.refetch()}>Tentar novamente</Button> : undefined
           }
         />
       ) : null}
@@ -104,7 +101,7 @@ export function OccurrenceFormPage({ service: injected }: { service?: Occurrence
           catalogs={catalogs}
           initial={initial}
           editing={editing}
-          saving={saving}
+          saving={saveMutation.isPending}
           onSubmit={submit}
           onCancel={() => navigate(closeTarget)}
         />

@@ -89,6 +89,7 @@
 
 .dashboard-alerts {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-3);
   padding: 0;
   list-style: none;
@@ -96,9 +97,32 @@
 
 .dashboard-alert {
   padding: var(--space-4);
-  border-left: 4px solid var(--brand-primary);
+  border: 1px solid var(--status-pending-soft);
   border-radius: var(--radius-card);
-  background: var(--surface-card);
+  background: var(--status-pending-soft);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.dashboard-alert--eficiencia {
+  border-color: var(--status-delayed-soft);
+  background: var(--status-delayed-soft);
+}
+
+.dashboard-alert--ocorrencia {
+  border-color: var(--status-exception-soft);
+  background: var(--status-exception-soft);
+}
+
+.dashboard-alert--tarefa {
+  border-color: var(--status-exception-soft);
+  background: var(--status-exception-soft);
+}
+
+.dashboard-alert--lancamento {
+  border-color: var(--status-transit-soft);
+  background: var(--status-transit-soft);
 }
 
 @media (max-width: 1100px) {

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -12,7 +14,7 @@ import {
 import { AssistanceHistory } from "../components/AssistanceHistory";
 import { AssistanceParts } from "../components/AssistanceParts";
 import { AssistanceSummary } from "../components/AssistanceSummary";
-import type { AssistanceDetail, AssistancePart, CorrectableField, EffectiveValue } from "../types";
+import type { AssistancePart, CorrectableField, EffectiveValue } from "../types";
 import "./AssistanceDetailPage.css";
 
 type PageError = Error & { code?: string };
@@ -21,31 +23,21 @@ export function AssistanceDetailPage({ service: injected }: { service?: Assistan
   const { assistenciaId = "" } = useParams();
   const location = useLocation();
   const service = useMemo(() => injected ?? createAssistanceService(), [injected]);
-  const [assistance, setAssistance] = useState<AssistanceDetail | null>(null);
+  const queryClient = useQueryClient();
   const [includeRemoved, setIncludeRemoved] = useState(false);
   const [target, setTarget] = useState<CorrectionTarget | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<PageError | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setAssistance(await service.detail(assistenciaId, includeRemoved));
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? (cause as PageError)
-          : new Error("Não foi possível carregar a assistência."),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [assistenciaId, includeRemoved, service]);
-
-  // Initial/toggle RPC load is the external synchronization performed here.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
+  const detailQuery = useQuery({
+    queryKey: queryKeys.assistencias.detail(assistenciaId, includeRemoved),
+    queryFn: () => service.detail(assistenciaId, includeRemoved),
+    enabled: Boolean(assistenciaId),
+  });
+  const assistance = detailQuery.data ?? null;
+  const loading = detailQuery.isPending;
+  const error = detailQuery.error as PageError | null;
+  const invalidateAssistance = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.assistencias.all });
+  };
 
   function editAssistance(field: CorrectableField, label: string, value: EffectiveValue) {
     if (!assistance) return;
@@ -119,7 +111,7 @@ export function AssistanceDetailPage({ service: injected }: { service?: Assistan
           onClose={() => setTarget(null)}
           onSaved={() => {
             setTarget(null);
-            void load();
+            void invalidateAssistance();
           }}
         />
       ) : null}

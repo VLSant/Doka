@@ -1,15 +1,14 @@
 .doka-status-badge {
-  /* inline-block (not flex) so ::first-letter can normalize raw domain
-     labels such as "pendente" to "Pendente". */
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   width: fit-content;
-  min-height: 24px;
-  line-height: 24px;
+  min-height: 22px;
+  line-height: 1;
   padding: 0 var(--space-2);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--status-pending-soft);
   color: var(--text-body);
-  font-size: var(--text-xs);
+  font-size: var(--text-2xs);
   font-weight: var(--fw-semibold);
   white-space: nowrap;
 }
@@ -39,6 +38,13 @@
 }
 
 .doka-status-badge--brand {
-  background: var(--surface-purple-soft);
-  color: var(--brand-secondary);
+  border: 1px solid var(--border-brand);
+  background: var(--surface-card);
+  color: var(--orange-700);
+}
+
+.doka-status-badge--category {
+  border: 1px solid var(--border-brand);
+  background: var(--surface-card);
+  color: var(--orange-700);
 }

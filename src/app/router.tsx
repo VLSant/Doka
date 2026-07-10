@@ -2,26 +2,16 @@
  * Data Router tree.
  *
  * Establishes public/protected branches with pending/error boundaries.
- * Protected content (`ProtectedRoute`) only ever renders its children when
- * the route guard's outcome is exactly `autorizado` (`protected-loader.ts`,
- * `route-guard.ts`); every other outcome redirects to a safe public/neutral
- * destination, shows a neutral unavailable state, or shows a loading state,
- * so no protected UI/module data can flash before authorization exists.
- *
- * Every `/app/*` destination from `ROUTE_DEFINITIONS` is registered here and
- * passes through the same `ProtectedRoute` gate, including an optional
- * `posto_id` query parameter validated by the route guard
- * (`route-navigation-contract.md` Evaluation Order).
+ * Protected content (`ProtectedRoute`) only renders after the route guard
+ * outcome is exactly `autorizado`.
  */
-import {
-  createBrowserRouter,
-  Navigate,
-  Outlet,
-  useNavigation,
-} from "react-router-dom";
-import { lazy, Suspense } from "react";
-import { LoadingState } from "../components/feedback/LoadingState";
+import { lazy, Suspense, type ReactNode } from "react";
+import { createBrowserRouter, Navigate, Outlet, useParams } from "react-router-dom";
 import { FeedbackState } from "../components/feedback/FeedbackState";
+import { AppShell } from "../components/layout/AppShell";
+import { Skeleton } from "../components/ui/Skeleton";
+import { AccessDeniedPage } from "../modules/access/AccessDeniedPage";
+import { OperationalConfigurationPage } from "../modules/access/OperationalConfigurationPage";
 import { AuthProvider } from "../modules/auth/AuthProvider";
 import { ProtectedRoute } from "../modules/auth/ProtectedRoute";
 import { LoginPage } from "../modules/auth/pages/LoginPage";
@@ -29,41 +19,52 @@ import { RecoverPasswordPage } from "../modules/auth/pages/RecoverPasswordPage";
 import { ResetPasswordPage } from "../modules/auth/pages/ResetPasswordPage";
 import { SessionExpiredPage } from "../modules/auth/pages/SessionExpiredPage";
 import { TemporaryFailurePage } from "../modules/auth/pages/TemporaryFailurePage";
-import { AccessDeniedPage } from "../modules/access/AccessDeniedPage";
-import { OperationalConfigurationPage } from "../modules/access/OperationalConfigurationPage";
 import { DashboardPage } from "../modules/navigation/pages/DashboardPage";
 import { ModuleUnavailablePage } from "../modules/navigation/pages/ModuleUnavailablePage";
 import { NotFoundPage } from "../modules/navigation/pages/NotFoundPage";
-import { AppShell } from "../components/layout/AppShell";
-import { ROUTE_DEFINITIONS } from "./routes";
+import { lazyLoaders } from "./route-prefetch";
+import { ROUTE_DEFINITIONS, type RouteId } from "./routes";
 
-const NewImportPage = lazy(() => import("../modules/importacoes-mms/pages/NewImportPage"));
-const ImportListPage = lazy(() => import("../modules/importacoes-mms/pages/ImportListPage"));
-const ImportDetailPage = lazy(() => import("../modules/importacoes-mms/pages/ImportDetailPage"));
-const ImportTreatmentPage = lazy(() => import("../modules/importacoes-mms/pages/ImportTreatmentPage"));
-const AssistanceListPage = lazy(() => import("../modules/assistencias-mms/pages/AssistanceListPage"));
-const AssistanceDetailPage = lazy(() => import("../modules/assistencias-mms/pages/AssistanceDetailPage"));
-const TaskCenterPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskCenterPage"));
-const TaskFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskFormPage"));
-const TaskDetailPage = lazy(() => import("../modules/tarefas-rotinas/pages/TaskDetailPage"));
-const RoutineListPage = lazy(() => import("../modules/tarefas-rotinas/pages/RoutineListPage"));
-const RoutineFormPage = lazy(() => import("../modules/tarefas-rotinas/pages/RoutineFormPage"));
-const OccurrenceListPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceListPage"));
-const OccurrenceFormPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceFormPage"));
-const OccurrenceDetailPage = lazy(() => import("../modules/ocorrencias/pages/OccurrenceDetailPage"));
-const LancamentoListPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoListPage"));
-const LancamentoFormPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoFormPage"));
-const LancamentoDetailPage = lazy(() => import("../modules/lancamentos-operacionais/pages/LancamentoDetailPage"));
-const AdministrationPage = lazy(() => import("../modules/administracao/pages/AdministrationPage").then((module) => ({ default: module.AdministrationPage })));
-const AuditHistoryPage = lazy(() => import("../modules/auditoria/pages/AuditHistoryPage"));
+const NewImportPage = lazy(lazyLoaders.newImport);
+const ImportListPage = lazy(lazyLoaders.importList);
+const ImportDetailPage = lazy(lazyLoaders.importDetail);
+const ImportTreatmentPage = lazy(lazyLoaders.importTreatment);
+const AssistanceListPage = lazy(lazyLoaders.assistanceList);
+const AssistanceDetailPage = lazy(lazyLoaders.assistanceDetail);
+const TaskCenterPage = lazy(lazyLoaders.taskCenter);
+const TaskDetailPage = lazy(lazyLoaders.taskDetail);
+const RoutineListPage = lazy(lazyLoaders.routineList);
+const OccurrenceListPage = lazy(lazyLoaders.occurrenceList);
+const OccurrenceDetailPage = lazy(lazyLoaders.occurrenceDetail);
+
+/** Deep-links antigos de formulário viram lista com o modal aberto (plano 4.1). */
+function RedirectOccurrenceEdit() {
+  const { ocorrenciaId } = useParams();
+  return <Navigate to={`/app/ocorrencias?editar=${ocorrenciaId}`} replace />;
+}
+function RedirectTaskEdit() {
+  const { tarefaId } = useParams();
+  return <Navigate to={`/app/tarefas-rotinas?editar=${tarefaId}`} replace />;
+}
+function RedirectRoutineEdit() {
+  const { rotinaId } = useParams();
+  return <Navigate to={`/app/tarefas-rotinas/rotinas?editar=${rotinaId}`} replace />;
+}
+function RedirectLancamentoEdit() {
+  const { lancamentoId } = useParams();
+  return <Navigate to={`/app/custos-extras?editar=${lancamentoId}`} replace />;
+}
+const LancamentoListPage = lazy(lazyLoaders.lancamentoList);
+const LancamentoDetailPage = lazy(lazyLoaders.lancamentoDetail);
+const AdministrationPage = lazy(lazyLoaders.administration);
+const AuditHistoryPage = lazy(lazyLoaders.auditHistory);
+const ShadcnDesignSystemPage = lazy(lazyLoaders.designSystem);
+
+function RouteFallback({ message }: { message: string }) {
+  return <Skeleton message={message} />;
+}
 
 function RootLayout() {
-  const navigation = useNavigation();
-
-  if (navigation.state === "loading") {
-    return <LoadingState message="Carregando..." />;
-  }
-
   return (
     <AuthProvider>
       <Outlet />
@@ -76,8 +77,70 @@ function RootErrorBoundary() {
     <FeedbackState
       tone="error"
       title="Algo deu errado"
-      description="Não foi possível carregar esta página. Tente novamente em alguns instantes."
+      description="Nao foi possivel carregar esta pagina. Tente novamente em alguns instantes."
     />
+  );
+}
+
+function moduleElement(routeId: RouteId, label: string) {
+  if (routeId === "dashboard") return <DashboardPage />;
+  if (routeId === "ocorrencias") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando ocorrencias..." />}>
+        <OccurrenceListPage />
+      </Suspense>
+    );
+  }
+  if (routeId === "tarefas-rotinas") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando tarefas..." />}>
+        <TaskCenterPage />
+      </Suspense>
+    );
+  }
+  if (routeId === "assistencias-mms") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando assistencias..." />}>
+        <AssistanceListPage />
+      </Suspense>
+    );
+  }
+  if (routeId === "importacoes-mms") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando importacao..." />}>
+        <ImportListPage />
+      </Suspense>
+    );
+  }
+  if (routeId === "custos-extras") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando lancamentos..." />}>
+        <LancamentoListPage />
+      </Suspense>
+    );
+  }
+  if (routeId === "cadastros") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando cadastros..." />}>
+        <AdministrationPage />
+      </Suspense>
+    );
+  }
+  if (routeId === "historico-auditoria") {
+    return (
+      <Suspense fallback={<RouteFallback message="Carregando historico..." />}>
+        <AuditHistoryPage />
+      </Suspense>
+    );
+  }
+  return <ModuleUnavailablePage moduleLabel={label} />;
+}
+
+function protectedLazy(routeId: RouteId, message: string, element: ReactNode) {
+  return (
+    <ProtectedRoute routeId={routeId}>
+      <Suspense fallback={<RouteFallback message={message} />}>{element}</Suspense>
+    </ProtectedRoute>
   );
 }
 
@@ -87,165 +150,97 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <RootErrorBoundary />,
     children: [
-      {
-        index: true,
-        element: <Navigate to="/login" replace />,
-      },
-      {
-        path: "login",
-        element: <LoginPage />,
-      },
-      {
-        // Public: accepts any e-mail and always returns the same neutral
-        // confirmation (`auth-session-contract.md` Password Recovery
-        // Request), so no Auth/context check gates this route.
-        path: "recuperar-senha",
-        element: <RecoverPasswordPage />,
-      },
-      {
-        // Guarded by `recoveryState` inside `ResetPasswordPage` itself
-        // (read from `AuthProvider`, derived only from a `PASSWORD_RECOVERY`
-        // Auth event): an invalid/expired/reused link renders a safe failure
-        // with a "Solicitar novo link" exit instead of the form
-        // (`auth-session-contract.md` Password Recovery Completion).
-        path: "redefinir-senha",
-        element: <ResetPasswordPage />,
-      },
-      {
-        path: "sessao-expirada",
-        element: <SessionExpiredPage />,
-      },
-      {
-        path: "falha-temporaria",
-        element: <TemporaryFailurePage />,
-      },
-      {
-        // Reached only through `ProtectedRoute`'s `acesso_negado` redirect;
-        // never exposes resource/permission detail (`AccessDeniedPage.tsx`).
-        path: "acesso-negado",
-        element: <AccessDeniedPage />,
-      },
-      {
-        // Reached only through `ProtectedRoute`'s `contexto_invalido`
-        // redirect; groups every sensitive blocked reason into one neutral
-        // message (`OperationalConfigurationPage.tsx`).
-        path: "configuracao-operacional",
-        element: <OperationalConfigurationPage />,
-      },
+      { index: true, element: <Navigate to="/login" replace /> },
+      { path: "login", element: <LoginPage /> },
+      { path: "recuperar-senha", element: <RecoverPasswordPage /> },
+      { path: "redefinir-senha", element: <ResetPasswordPage /> },
+      { path: "sessao-expirada", element: <SessionExpiredPage /> },
+      { path: "falha-temporaria", element: <TemporaryFailurePage /> },
+      { path: "acesso-negado", element: <AccessDeniedPage /> },
+      { path: "configuracao-operacional", element: <OperationalConfigurationPage /> },
       {
         path: "app",
         element: <AppShell />,
         children: [
           ...ROUTE_DEFINITIONS.map((route) => ({
-          path: route.path.replace(/^\/app\//, ""),
-          element: (
-            <ProtectedRoute routeId={route.id}>
-              {route.id === "dashboard" ? (
-                <DashboardPage />
-              ) : route.id === "ocorrencias" ? (
-                <Suspense fallback={<LoadingState message="Carregando ocorrências..." />}>
-                  <OccurrenceListPage />
-                </Suspense>
-              ) : route.id === "tarefas-rotinas" ? (
-                <Suspense fallback={<LoadingState message="Carregando tarefas..." />}>
-                  <TaskCenterPage />
-                </Suspense>
-              ) : route.id === "assistencias-mms" ? (
-                <Suspense fallback={<LoadingState message="Carregando assistências..." />}>
-                  <AssistanceListPage />
-                </Suspense>
-              ) : route.id === "importacoes-mms" ? (
-                <Suspense fallback={<LoadingState message="Carregando importação..." />}>
-                  <ImportListPage />
-                </Suspense>
-              ) : route.id === "custos-extras" ? (
-                <Suspense fallback={<LoadingState message="Carregando lançamentos..." />}>
-                  <LancamentoListPage />
-                </Suspense>
-              ) : route.id === "cadastros" ? (
-                <Suspense fallback={<LoadingState message="Carregando cadastros..." />}>
-                  <AdministrationPage />
-                </Suspense>
-              ) : route.id === "historico-auditoria" ? (
-                <Suspense fallback={<LoadingState message="Carregando histórico..." />}>
-                  <AuditHistoryPage />
-                </Suspense>
-              ) : (
-                <ModuleUnavailablePage moduleLabel={route.label} />
-              )}
-            </ProtectedRoute>
-          ),
+            path: route.path.replace(/^\/app\//, ""),
+            element: (
+              <ProtectedRoute routeId={route.id}>
+                {moduleElement(route.id, route.label)}
+              </ProtectedRoute>
+            ),
           })),
           {
             path: "ocorrencias/nova",
-            element: <ProtectedRoute routeId="ocorrencias"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><OccurrenceFormPage /></Suspense></ProtectedRoute>,
+            element: <Navigate to="/app/ocorrencias?novo=1" replace />,
           },
           {
             path: "ocorrencias/:ocorrenciaId/editar",
-            element: <ProtectedRoute routeId="ocorrencias"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><OccurrenceFormPage /></Suspense></ProtectedRoute>,
+            element: <RedirectOccurrenceEdit />,
           },
           {
             path: "ocorrencias/:ocorrenciaId",
-            element: <ProtectedRoute routeId="ocorrencias"><Suspense fallback={<LoadingState message="Carregando ocorrência..." />}><OccurrenceDetailPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("ocorrencias", "Carregando ocorrencia...", <OccurrenceDetailPage />),
           },
           {
             path: "tarefas-rotinas/rotinas",
-            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando rotinas..." />}><RoutineListPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("tarefas-rotinas", "Carregando rotinas...", <RoutineListPage />),
           },
           {
             path: "tarefas-rotinas/rotinas/nova",
-            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><RoutineFormPage /></Suspense></ProtectedRoute>,
+            element: <Navigate to="/app/tarefas-rotinas/rotinas?nova=1" replace />,
           },
           {
             path: "tarefas-rotinas/rotinas/:rotinaId/editar",
-            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><RoutineFormPage /></Suspense></ProtectedRoute>,
+            element: <RedirectRoutineEdit />,
           },
           {
             path: "tarefas-rotinas/nova",
-            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><TaskFormPage /></Suspense></ProtectedRoute>,
+            element: <Navigate to="/app/tarefas-rotinas?novo=1" replace />,
           },
           {
             path: "tarefas-rotinas/:tarefaId/editar",
-            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><TaskFormPage /></Suspense></ProtectedRoute>,
+            element: <RedirectTaskEdit />,
           },
           {
             path: "tarefas-rotinas/:tarefaId",
-            element: <ProtectedRoute routeId="tarefas-rotinas"><Suspense fallback={<LoadingState message="Carregando tarefa..." />}><TaskDetailPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("tarefas-rotinas", "Carregando tarefa...", <TaskDetailPage />),
           },
           {
             path: "custos-extras/novo",
-            element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><LancamentoFormPage /></Suspense></ProtectedRoute>,
+            element: <Navigate to="/app/custos-extras?novo=1" replace />,
           },
           {
             path: "custos-extras/:lancamentoId/editar",
-            element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando formulário..." />}><LancamentoFormPage /></Suspense></ProtectedRoute>,
+            element: <RedirectLancamentoEdit />,
           },
           {
             path: "custos-extras/:lancamentoId",
-            element: <ProtectedRoute routeId="custos-extras"><Suspense fallback={<LoadingState message="Carregando lançamento..." />}><LancamentoDetailPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("custos-extras", "Carregando lancamento...", <LancamentoDetailPage />),
           },
           {
             path: "assistencias-mms/:assistenciaId",
-            element: <ProtectedRoute routeId="assistencias-mms"><Suspense fallback={<LoadingState message="Carregando assistência..." />}><AssistanceDetailPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("assistencias-mms", "Carregando assistencia...", <AssistanceDetailPage />),
           },
           {
             path: "importacoes-mms/nova",
-            element: <ProtectedRoute routeId="importacoes-mms"><Suspense fallback={<LoadingState message="Carregando importação..." />}><NewImportPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("importacoes-mms", "Carregando importacao...", <NewImportPage />),
           },
           {
             path: "importacoes-mms/:loteId",
-            element: <ProtectedRoute routeId="importacoes-mms"><Suspense fallback={<LoadingState message="Carregando lote..." />}><ImportDetailPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("importacoes-mms", "Carregando lote...", <ImportDetailPage />),
           },
           {
             path: "importacoes-mms/:loteId/tratamento",
-            element: <ProtectedRoute routeId="importacoes-mms"><Suspense fallback={<LoadingState message="Carregando tratamento..." />}><ImportTreatmentPage /></Suspense></ProtectedRoute>,
+            element: protectedLazy("importacoes-mms", "Carregando tratamento...", <ImportTreatmentPage />),
+          },
+          {
+            path: "design-system",
+            element: protectedLazy("dashboard", "Carregando design system...", <ShadcnDesignSystemPage />),
           },
         ],
       },
-      {
-        path: "*",
-        element: <NotFoundPage />,
-      },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

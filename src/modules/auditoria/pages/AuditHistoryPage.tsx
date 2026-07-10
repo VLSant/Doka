@@ -1,72 +1,63 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
-import { Input } from "../../../components/ui/Input";
 import { SearchInput } from "../../../components/ui/SearchInput";
-import { Select } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { AuditEventList } from "../AuditEventList";
 import { createAuditHistoryService, type AuditService } from "../audit-service";
-import type { AuditCatalogs, AuditEvent, AuditFilters } from "../types";
+import type { AuditCatalogs, AuditFilters } from "../types";
 import "../auditoria.css";
 
 const EMPTY_CATALOGS: AuditCatalogs = { usuarios: [], postos: [] };
 
 export function AuditHistoryPage({ service: injected }: { service?: AuditService }) {
   const service = useMemo(() => injected ?? createAuditHistoryService(), [injected]);
-  const [events, setEvents] = useState<AuditEvent[]>([]);
-  const [catalogs, setCatalogs] = useState(EMPTY_CATALOGS);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [filters, setFilters] = useState<AuditFilters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [draft, setDraft] = useState<AuditFilters>({});
 
-  const load = useCallback(
-    async (next: AuditFilters) => {
-      setLoading(true);
-      setError("");
-      try {
-        const [rows, options] = await Promise.all([service.list(next), service.catalogs()]);
-        setEvents(rows);
-        setCatalogs(options);
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Histórico indisponível.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [service],
-  );
-
-  // Initial Data API synchronization.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load({});
-  }, [load]);
+  const eventsQuery = useQuery({
+    queryKey: queryKeys.audit.history(filters),
+    queryFn: () => service.list(filters),
+  });
+  const catalogsQuery = useQuery({
+    queryKey: queryKeys.audit.catalogs(),
+    queryFn: () => service.catalogs(),
+  });
+  const events = eventsQuery.data ?? [];
+  const catalogs = catalogsQuery.data ?? EMPTY_CATALOGS;
+  const loading = eventsQuery.isPending || catalogsQuery.isPending;
+  const error = eventsQuery.error?.message ?? catalogsQuery.error?.message ?? "";
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const value = (name: string) => String(data.get(name) ?? "").trim() || undefined;
+    const trimmed = (value: string | undefined) => value?.trim() || undefined;
     const next: AuditFilters = {
-      usuarioId: value("usuarioId"),
-      entidadeTipo: value("entidadeTipo"),
-      acao: value("acao"),
-      postoId: value("postoId"),
-      dataDe: value("dataDe"),
-      dataAte: value("dataAte"),
+      usuarioId: trimmed(draft.usuarioId),
+      entidadeTipo: trimmed(draft.entidadeTipo),
+      acao: filters.acao,
+      postoId: trimmed(draft.postoId),
+      dataDe: trimmed(draft.dataDe),
+      dataAte: trimmed(draft.dataAte),
     };
     setFilters(next);
-    void load(next);
   }
 
   function updateSearch(acao: string) {
     const next = { ...filters, acao: acao || undefined };
     setFilters(next);
-    void load(next);
+  }
+
+  function openFilters() {
+    setDraft(filters);
+    setFiltersOpen(true);
   }
 
   return (
@@ -82,7 +73,7 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
           placeholder="Buscar evento…"
           onChange={updateSearch}
         />
-        <Button variant="outline" onClick={() => setFiltersOpen(true)}>
+        <Button variant="outline" onClick={openFilters}>
           Filtros
           {Object.values(filters).filter(Boolean).length
             ? ` (${Object.values(filters).filter(Boolean).length})`
@@ -96,52 +87,61 @@ export function AuditHistoryPage({ service: injected }: { service?: AuditService
         onRemove={(id) => {
           const next = { ...filters, [id]: undefined };
           setFilters(next);
-          void load(next);
         }}
         onClear={() => {
           const next = { acao: filters.acao };
           setFilters(next);
-          void load(next);
         }}
       />
       <Drawer open={filtersOpen} title="Filtros de auditoria" onClose={() => setFiltersOpen(false)}>
         <form className="audit-filters" onSubmit={submit}>
-          <Select label="Usuário" name="usuarioId" defaultValue={filters.usuarioId ?? ""}>
-            <option value="">Todos</option>
-            {catalogs.usuarios.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Select label="Módulo" name="entidadeTipo" defaultValue={filters.entidadeTipo ?? ""}>
-            <option value="">Todos</option>
-            {[
-              "tarefas",
-              "rotinas",
-              "ocorrencias",
-              "lancamentos_operacionais",
-              "mms_assistencias",
-              "mms_lotes_importacao",
-              "usuarios",
-              "postos",
-              "metas_eficiencia",
-            ].map((item) => (
-              <option key={item} value={item}>
-                {item.replaceAll("_", " ")}
-              </option>
-            ))}
-          </Select>
-          <Select label="Posto" name="postoId" defaultValue={filters.postoId ?? ""}>
-            <option value="">Todos</option>
-            {catalogs.postos.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </Select>
-          <Input label="De" name="dataDe" type="date" defaultValue={filters.dataDe} />
-          <Input label="Até" name="dataAte" type="date" defaultValue={filters.dataAte} />
+          <FormSelect
+            label="Usuário"
+            value={draft.usuarioId ?? ""}
+            onChange={(next) => setDraft({ ...draft, usuarioId: next || undefined })}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.usuarios.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <FormSelect
+            label="Módulo"
+            value={draft.entidadeTipo ?? ""}
+            onChange={(next) => setDraft({ ...draft, entidadeTipo: next || undefined })}
+            options={[
+              { value: "", label: "Todos" },
+              ...[
+                "tarefas",
+                "rotinas",
+                "ocorrencias",
+                "lancamentos_operacionais",
+                "mms_assistencias",
+                "mms_lotes_importacao",
+                "usuarios",
+                "postos",
+                "metas_eficiencia",
+              ].map((item) => ({ value: item, label: item.replaceAll("_", " ") })),
+            ]}
+          />
+          <FormSelect
+            label="Posto"
+            value={draft.postoId ?? ""}
+            onChange={(next) => setDraft({ ...draft, postoId: next || undefined })}
+            options={[
+              { value: "", label: "Todos" },
+              ...catalogs.postos.map((item) => ({ value: item.id, label: item.nome })),
+            ]}
+          />
+          <DatePickerField
+            label="De"
+            value={draft.dataDe ?? ""}
+            onChange={(next) => setDraft({ ...draft, dataDe: next || undefined })}
+          />
+          <DatePickerField
+            label="Até"
+            value={draft.dataAte ?? ""}
+            onChange={(next) => setDraft({ ...draft, dataAte: next || undefined })}
+          />
           <Button type="submit" disabled={loading} onClick={() => setFiltersOpen(false)}>
             Aplicar filtros
           </Button>

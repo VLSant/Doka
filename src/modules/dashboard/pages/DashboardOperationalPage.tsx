@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { Drawer } from "../../../components/ui/Drawer";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { createDashboardService, todayInBahia, type DashboardService } from "../dashboard-service";
 import { DashboardCards } from "../components/DashboardCards";
 import { DashboardFiltersForm } from "../components/DashboardFiltersForm";
 import { DashboardProductivity } from "../components/DashboardProductivity";
-import type { DashboardData, DashboardError, DashboardFilters, DashboardPosto } from "../types";
+import type { DashboardData, DashboardError, DashboardFilters } from "../types";
 import "./DashboardOperationalPage.css";
 
 function initialFilters(): DashboardFilters {
@@ -32,52 +35,46 @@ function hasOperationalData(data: DashboardData): boolean {
 export function DashboardOperationalPage({ service: injected }: { service?: DashboardService }) {
   const service = useMemo(() => injected ?? createDashboardService(), [injected]);
   const [filters, setFilters] = useState<DashboardFilters>(initialFilters);
-  const [postos, setPostos] = useState<DashboardPosto[]>([]);
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<DashboardError | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  const load = useCallback(
-    async (nextFilters: DashboardFilters) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [nextData, nextPostos] = await Promise.all([
-          service.load(nextFilters),
-          service.listPostos(),
-        ]);
-        setData(nextData);
-        setPostos(nextPostos);
-      } catch (cause) {
-        const nextError =
-          cause instanceof Error
-            ? (cause as DashboardError)
-            : (Object.assign(new Error("Não foi possível carregar o Dashboard."), {
-                code: "falha_temporaria",
-                retryable: true,
-              }) as DashboardError);
-        setData(null);
-        setError(nextError);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [service],
+  // Enquanto o usuário não escolher um posto explicitamente no drawer local,
+  // o filtro global de posto (topbar) fornece o default/estreitamento.
+  const [postoTouchedLocally, setPostoTouchedLocally] = useState(false);
+  const { postoId: globalPostoId } = usePostoFilter();
+  // Sem toque local, o posto efetivo ESPELHA o global (inclusive null =
+  // "Todos os postos") — nunca cai de volta em filters.postoId, que pode
+  // reter um posto stale injetado pelo drawer numa edição só de período.
+  const effectiveFilters = useMemo<DashboardFilters>(
+    () => ({ ...filters, postoId: postoTouchedLocally ? filters.postoId : globalPostoId }),
+    [filters, postoTouchedLocally, globalPostoId],
   );
 
-  useEffect(() => {
-    // This effect synchronizes the selected filters with the remote RLS-backed data source.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load(filters);
-  }, [filters, load]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const dataQuery = useQuery({
+    queryKey: queryKeys.dashboard.data(effectiveFilters),
+    queryFn: () => service.load(effectiveFilters),
+  });
+  const postosQuery = useQuery({
+    queryKey: queryKeys.dashboard.postos(),
+    queryFn: () => service.listPostos(),
+  });
+  const postos = postosQuery.data ?? [];
+  const data = dataQuery.data ?? null;
+  const loading = dataQuery.isPending || postosQuery.isPending;
+  const rawError = dataQuery.error ?? postosQuery.error;
+  // Erros fora do contrato DashboardError entram como retryable para não
+  // esconder o botão "Tentar novamente".
+  const error: DashboardError | null = rawError
+    ? "code" in rawError
+      ? (rawError as DashboardError)
+      : Object.assign(rawError, { code: "falha_temporaria", retryable: true } as const)
+    : null;
 
   return (
     <Page className="dashboard-operational">
       <PageHeader
         eyebrow="Visão geral"
         title="Dashboard operacional"
-        description={`Exibindo ${filters.inicio === filters.fim ? formatDay(filters.inicio) : `${formatDay(filters.inicio)} a ${formatDay(filters.fim)}`} · ${filters.postoId ? (postos.find((posto) => posto.id === filters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
+        description={`Exibindo ${filters.inicio === filters.fim ? formatDay(filters.inicio) : `${formatDay(filters.inicio)} a ${formatDay(filters.fim)}`} · ${effectiveFilters.postoId ? (postos.find((posto) => posto.id === effectiveFilters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
         actions={
           <Button variant="outline" onClick={() => setFiltersOpen(true)}>
             Período e posto
@@ -87,12 +84,17 @@ export function DashboardOperationalPage({ service: injected }: { service?: Dash
 
       <Drawer open={filtersOpen} title="Filtros do dashboard" onClose={() => setFiltersOpen(false)}>
         <DashboardFiltersForm
-          key={`${filters.inicio}:${filters.fim}:${filters.postoId ?? ""}`}
-          value={filters}
+          key={`${effectiveFilters.inicio}:${effectiveFilters.fim}:${effectiveFilters.postoId ?? ""}`}
+          value={effectiveFilters}
           postos={postos}
           disabled={loading}
           onChange={(next) => {
             setFilters(next);
+            // Só desliga o default global quando o POSTO mudou de fato —
+            // mexer apenas no período mantém o pill da topbar valendo.
+            if (next.postoId !== effectiveFilters.postoId) {
+              setPostoTouchedLocally(true);
+            }
             setFiltersOpen(false);
           }}
         />
@@ -107,7 +109,7 @@ export function DashboardOperationalPage({ service: injected }: { service?: Dash
           description={error.message}
           actions={
             error.retryable ? (
-              <Button onClick={() => void load(filters)}>Tentar novamente</Button>
+              <Button onClick={() => void dataQuery.refetch()}>Tentar novamente</Button>
             ) : undefined
           }
         />

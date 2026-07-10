@@ -1,7 +1,9 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
-import { Select, Textarea } from "../../../components/ui/FormControls";
+import { Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { validateOccurrenceInput } from "../occurrence-state";
 import type { OccurrenceCatalogs, OccurrenceInput } from "../types";
 
@@ -58,28 +60,28 @@ export function OccurrenceForm({
   return (
     <form className="occurrence-form" onSubmit={(event) => void submit(event)} noValidate>
       <div className="occurrence-form__grid">
-        <Select
+        <FormSelect
           label="Assistência *"
           value={input.assistencia_id}
           disabled={editing || saving}
           error={errors.assistencia_id}
-          onChange={(event) => {
-            const assistance = catalogs.assistencias.find((item) => item.id === event.target.value);
+          onChange={(next) => {
+            const assistance = catalogs.assistencias.find((item) => item.id === next);
             setInput((current) => ({
               ...current,
-              assistencia_id: event.target.value,
+              assistencia_id: next,
               posto_id: assistance?.posto_id ?? "",
             }));
             setErrors((current) => ({ ...current, assistencia_id: "" }));
           }}
-        >
-          <option value="">Selecione</option>
-          {catalogs.assistencias.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.numero_assistencia} · {item.data_atividade}
-            </option>
-          ))}
-        </Select>
+          options={[
+            { value: "", label: "Selecione" },
+            ...catalogs.assistencias.map((item) => ({
+              value: item.id,
+              label: `${item.numero_assistencia} · ${item.data_atividade}`,
+            })),
+          ]}
+        />
         <Input
           label="Posto"
           value={
@@ -88,55 +90,45 @@ export function OccurrenceForm({
           disabled
           placeholder="Definido pela assistência"
         />
-        <Select
+        <FormSelect
           label="Tipo *"
           value={input.tipo_ocorrencia_id}
           disabled={saving}
           error={errors.tipo_ocorrencia_id}
-          onChange={(event) => change("tipo_ocorrencia_id", event.target.value)}
-        >
-          <option value="">Selecione</option>
-          {catalogs.tipos.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nome}
-            </option>
-          ))}
-        </Select>
-        <Select
+          onChange={(next) => change("tipo_ocorrencia_id", next)}
+          options={[
+            { value: "", label: "Selecione" },
+            ...catalogs.tipos.map((item) => ({ value: item.id, label: item.nome })),
+          ]}
+        />
+        <FormSelect
           label="Prioridade *"
           value={input.prioridade_id ?? ""}
           disabled={saving}
           error={errors.prioridade_id}
-          onChange={(event) => change("prioridade_id", event.target.value || null)}
-        >
-          <option value="">Sem prioridade</option>
-          {catalogs.prioridades.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nome}
-            </option>
-          ))}
-        </Select>
-        <Select
+          onChange={(next) => change("prioridade_id", next || null)}
+          options={[
+            { value: "", label: "Sem prioridade" },
+            ...catalogs.prioridades.map((item) => ({ value: item.id, label: item.nome })),
+          ]}
+        />
+        <FormSelect
           label="Responsável *"
           value={input.responsavel_id ?? ""}
           disabled={saving}
           error={errors.responsavel_id}
-          onChange={(event) => change("responsavel_id", event.target.value || null)}
-        >
-          <option value="">Não definido</option>
-          {catalogs.usuarios.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nome}
-            </option>
-          ))}
-        </Select>
-        <Input
+          onChange={(next) => change("responsavel_id", next || null)}
+          options={[
+            { value: "", label: "Não definido" },
+            ...catalogs.usuarios.map((item) => ({ value: item.id, label: item.nome })),
+          ]}
+        />
+        <DatePickerField
           label="Data de retorno *"
-          type="date"
           value={input.data_retorno ?? ""}
           disabled={saving}
           error={errors.data_retorno}
-          onChange={(event) => change("data_retorno", event.target.value || null)}
+          onChange={(next) => change("data_retorno", next || null)}
         />
       </div>
       <Input

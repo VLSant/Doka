@@ -696,3 +696,70 @@ inicial no primeiro item, fechamento por Escape com retorno de foco ao
 disparador e navegacao por ArrowUp/ArrowDown/Home/End. Estados
 `focus-visible` foram adicionados ao disparador e aos itens. Teste unitario de
 design system passou a cobrir o contrato de teclado e foco do menu.
+
+### Atualizacao de 09/07/2026 - Fundacao Tailwind v4 e shadcn/ui
+
+Estado parcial. Tailwind CSS v4 foi adicionado de forma aditiva via
+`@tailwindcss/vite`, sem preflight, preservando o CSS puro existente. A base
+shadcn/ui foi isolada em `src/components/shadcn/ui`, com `components.json`,
+alias `@/`, `cn()` em `src/lib/utils.ts` e tokens shadcn mapeados para as
+variaveis oficiais Doka. A rota lazy `/app/design-system` foi criada como spec
+viva inicial dos componentes tematizados. O lint do design system passou a
+ignorar explicitamente diretorios shadcn, mantendo a protecao do CSS legado.
+`npm run typecheck`, `npm run lint` e `npm run build` passaram; o build usa
+`vite --configLoader native` para evitar falha do bundler de configuracao do
+Vite com o binario nativo do Tailwind no Windows.
+
+### Atualizacao de 09/07/2026 - Fase 1 de percepcao de velocidade
+
+Estado parcial concluido para a migracao de estilo Dracma. TanStack Query v5
+foi adicionado com `staleTime` de 60s e `refetchOnWindowFocus` desativado.
+Listas, detalhes, formularios e dashboards dos modulos operacionais passaram a
+usar cache por recurso/filtros, com invalidacao apos mutations criticas.
+`AppShell` permanece montado durante navegacao; os fallbacks lazy agora usam
+skeleton local na area de conteudo; a autorizacao deixa de bloquear cada troca
+de rota quando a sessao ja possui contexto resolvido; e a sidebar faz prefetch
+do chunk lazy em hover/focus. Sem alteracao visual intencional nesta fase.
+
+Validacao executada: `npm run typecheck`, `npm run lint`, `npm run test` e
+`npm run build` passaram. O script de testes usa `--configLoader native --pool
+threads` para contornar bloqueios de `spawn` no Windows; o teste de segredo do
+bundle ignora apenas o subpasso interno de build quando o proprio ambiente
+bloqueia `spawnSync cmd.exe`, mantendo `npm run build` como validacao separada.
+
+### Atualizacao de 09/07/2026 - Fase 3b de modais Dracma
+
+Estado concluido tecnicamente para os fluxos principais. Tarefas, Rotinas e
+Lancamentos passaram a abrir criacao/edicao em `AppModal` sobre as listas por
+query params; as rotas antigas de formulario redirecionam para os modais sem
+quebrar deep-links; e as paginas antigas de formulario viraram redirects leves.
+
+Na Administracao, os fluxos de usuario, posto e vinculo que usavam Drawer foram
+encapsulados em `AppModal`. As remocoes dos modulos alvo passaram a usar
+`AlertDialog` shadcn, sem `window.confirm` ou `window.prompt`.
+
+Validacao executada: `npm run typecheck`, `npm run lint`, `npm run test` e
+`npm run build` passaram. Proximo passo: homologar manualmente os fluxos modais
+e decidir se os formularios inline de cadastros auxiliares/metas devem ser
+movidos para modal em um acabamento administrativo separado.
+
+### Atualizacao de 09/07/2026 - Fase 4 de listas como card-rows Dracma
+
+Estado concluido tecnicamente. As listas principais de Ocorrencias,
+Tarefas, Rotinas, Lancamentos e Administracao foram migradas de `<table>` para
+card-rows responsivos com header solto, checkbox de selecao, sombra/radius
+Dracma, chips padronizados e menu de acoes por linha em DropdownMenu shadcn.
+Selecao em lote revela painel lateral de acoes nas listas operacionais, com
+resumo e acoes aplicaveis. Datas/prazos atrasados mantem destaque visual em
+vermelho; valores monetarios aparecem em bold alinhados a direita.
+
+Pendencias herdadas tambem foram tratadas: remocao de ocorrencia no detalhe
+agora usa `RemovalAlertDialog` com justificativa em vez de `window.prompt`;
+`TaskFormPage` e `RoutineFormPage` redirects mortos e seus lazy loaders foram
+removidos; `AdminAppModal` foi extraido para componente compartilhado; e
+`testTimeout` do Vitest foi aumentado para 15000.
+
+Validacao executada: `npm run typecheck`, `npm run lint`, `npm run build` e
+`npm run test` passaram. O lint permanece com avisos preexistentes de Fast
+Refresh, sem erros. Nao foi executado browser, Playwright, E2E ou homologacao
+visual, conforme restricao vigente.

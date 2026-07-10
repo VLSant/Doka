@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
-import { Checkbox, Select, Textarea } from "../../../components/ui/FormControls";
+import { Checkbox, Textarea } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import type { CatalogItem, PrioridadeItem, UsuarioItem } from "../../../services/catalog-service";
 import type { Task, TaskInput, TaskViewer } from "../types";
 
@@ -93,29 +95,27 @@ export function TaskForm({
         error={touched && !titulo.trim() ? "Informe o título." : undefined}
         onChange={(event) => setTitulo(event.target.value)}
       />
-      <Select
+      <FormSelect
         label="Tipo"
         value={tipo}
         disabled={saving || Boolean(initial?.rotina_id)}
-        onChange={(event) => setTipo(event.target.value as TaskInput["tipo"])}
-      >
-        <option value="avulsa">Avulsa</option>
-        <option value="estrategia">Estratégia</option>
-      </Select>
-      <Select
+        onChange={(next) => setTipo(next as TaskInput["tipo"])}
+        options={[
+          { value: "avulsa", label: "Avulsa" },
+          { value: "estrategia", label: "Estratégia" },
+        ]}
+      />
+      <FormSelect
         label="Posto"
         value={postoId}
         disabled={saving}
         error={touched && !postoId ? "Selecione o posto." : undefined}
-        onChange={(event) => setPostoId(event.target.value)}
-      >
-        <option value="">Selecione</option>
-        {postos.map((posto) => (
-          <option key={posto.id} value={posto.id}>
-            {posto.nome}
-          </option>
-        ))}
-      </Select>
+        onChange={(next) => setPostoId(next)}
+        options={[
+          { value: "", label: "Selecione" },
+          ...postos.map((posto) => ({ value: posto.id, label: posto.nome })),
+        ]}
+      />
       <Textarea
         className="tasks-form__wide"
         label="Descrição *"
@@ -125,40 +125,33 @@ export function TaskForm({
         error={touched && !descricao.trim() ? "Informe a descrição." : undefined}
         onChange={(event) => setDescricao(event.target.value)}
       />
-      <Select
+      <FormSelect
         label="Prioridade *"
         value={prioridadeId}
         disabled={saving}
         error={touched && !prioridadeId ? "Selecione a prioridade." : undefined}
-        onChange={(event) => setPrioridadeId(event.target.value)}
-      >
-        <option value="">Selecione</option>
-        {prioridades.map((prioridade) => (
-          <option key={prioridade.id} value={prioridade.id}>
-            {prioridade.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => setPrioridadeId(next)}
+        options={[
+          { value: "", label: "Selecione" },
+          ...prioridades.map((prioridade) => ({ value: prioridade.id, label: prioridade.nome })),
+        ]}
+      />
+      <FormSelect
         label="Cargo / função"
         value={cargoFuncaoId}
         disabled={saving}
-        onChange={(event) => setCargoFuncaoId(event.target.value)}
-      >
-        <option value="">Todos / não aplicável</option>
-        {cargos.map((cargo) => (
-          <option key={cargo.id} value={cargo.id}>
-            {cargo.nome}
-          </option>
-        ))}
-      </Select>
-      <Input
+        onChange={(next) => setCargoFuncaoId(next)}
+        options={[
+          { value: "", label: "Todos / não aplicável" },
+          ...cargos.map((cargo) => ({ value: cargo.id, label: cargo.nome })),
+        ]}
+      />
+      <DatePickerField
         label="Prazo *"
-        type="date"
         value={prazoData}
         disabled={saving}
         error={touched && !prazoData ? "Informe o prazo." : undefined}
-        onChange={(event) => setPrazoData(event.target.value)}
+        onChange={(next) => setPrazoData(next)}
       />
       <Input
         label="Horário limite"

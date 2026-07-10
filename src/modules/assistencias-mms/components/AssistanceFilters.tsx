@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
-import { Select } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import type { AssistanceFilters } from "../types";
 
 export function AssistanceFiltersForm({
@@ -47,19 +48,17 @@ export function AssistanceFiltersForm({
         onChange={(event) => update("posto_id", event.target.value)}
         placeholder="Identificador do posto"
       />
-      <Input
+      <DatePickerField
         label="Data inicial"
         name="data_de"
-        type="date"
         value={draft.data_de ?? ""}
-        onChange={(event) => update("data_de", event.target.value)}
+        onChange={(next) => update("data_de", next)}
       />
-      <Input
+      <DatePickerField
         label="Data final"
         name="data_ate"
-        type="date"
         value={draft.data_ate ?? ""}
-        onChange={(event) => update("data_ate", event.target.value)}
+        onChange={(next) => update("data_ate", next)}
       />
       <Input
         label="Status"
@@ -73,16 +72,17 @@ export function AssistanceFiltersForm({
         value={draft.tipo ?? ""}
         onChange={(event) => update("tipo", event.target.value)}
       />
-      <Select
+      <FormSelect
         label="Situação interna"
         name="situacao"
         value={draft.situacao ?? "ativo"}
-        onChange={(event) => update("situacao", event.target.value)}
-      >
-        <option value="ativo">Ativas</option>
-        <option value="removido">Removidas</option>
-        <option value="todos">Ativas e removidas</option>
-      </Select>
+        onChange={(next) => update("situacao", next)}
+        options={[
+          { value: "ativo", label: "Ativas" },
+          { value: "removido", label: "Removidas" },
+          { value: "todos", label: "Ativas e removidas" },
+        ]}
+      />
       <div className="assistance-filters__actions">
         <Button type="submit" disabled={disabled}>
           Aplicar filtros

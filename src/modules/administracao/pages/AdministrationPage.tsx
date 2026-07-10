@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Page, PageHeader } from "../../../components/layout/Page";
 import { Tabs } from "../../../components/ui/Tabs";
-import { useToast } from "../../../components/ui/Toast";
+import { toast } from "sonner";
 import { useAuth } from "../../auth/AuthProvider";
 import {
   AdministrationError,
@@ -15,7 +17,6 @@ import { PostsSection } from "../components/PostsSection";
 import { RegistriesSection } from "../components/RegistriesSection";
 import { UsersSection } from "../components/UsersSection";
 import { EfficiencyTargetsSection } from "../components/EfficiencyTargetsSection";
-import type { AdministrationSnapshot } from "../types";
 import "./AdministrationPage.css";
 
 type Section = "usuarios" | "postos" | "cadastros" | "metas";
@@ -31,40 +32,15 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
     [serviceOverride],
   );
   const [section, setSection] = useState<Section>("usuarios");
-  const [data, setData] = useState<AdministrationSnapshot | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const toast = useToast();
+  const queryClient = useQueryClient();
+  const snapshotQuery = useQuery({
+    queryKey: queryKeys.administration.snapshot(),
+    queryFn: () => service.load(),
+  });
+  const data = snapshotQuery.data ?? null;
+  const loading = snapshotQuery.isPending;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      setData(await service.load());
-    } catch {
-      setError("Não foi possível carregar os cadastros administrativos.");
-    } finally {
-      setLoading(false);
-    }
-  }, [service]);
-
-  useEffect(() => {
-    let active = true;
-    void service
-      .load()
-      .then((snapshot) => {
-        if (active) setData(snapshot);
-      })
-      .catch(() => {
-        if (active) setError("Não foi possível carregar os cadastros administrativos.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [service]);
 
   const onError = useCallback(
     (cause: unknown) => {
@@ -73,18 +49,18 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
           ? cause.message
           : "Não foi possível concluir a operação.";
       setError(message);
-      toast(message, "error");
+      toast.error(message);
     },
-    [toast],
+    [],
   );
 
   const onChanged = useCallback(
     async (message: string) => {
       setError("");
-      toast(message, "success");
-      await load();
+      toast.success(message);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.administration.all });
     },
-    [load, toast],
+    [queryClient],
   );
 
   if (state.name !== "autorizado") {
@@ -101,8 +77,8 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
       <FeedbackState
         tone="error"
         title="Administração indisponível"
-        description={error}
-        actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+        description={error || snapshotQuery.error?.message}
+        actions={<Button onClick={() => void snapshotQuery.refetch()}>Tentar novamente</Button>}
       />
     );
   }
@@ -118,7 +94,7 @@ export function AdministrationPage({ service: serviceOverride }: AdministrationP
             : "Consulta dos cadastros autorizados para o seu escopo."
         }
         actions={
-          <Button variant="outline" loading={loading} onClick={() => void load()}>
+          <Button variant="outline" loading={loading} onClick={() => void snapshotQuery.refetch()}>
             Atualizar
           </Button>
         }

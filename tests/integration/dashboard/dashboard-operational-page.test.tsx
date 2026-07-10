@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { DashboardService } from "../../../src/modules/dashboard/dashboard-service";
 import { DashboardOperationalPage } from "../../../src/modules/dashboard/pages/DashboardOperationalPage";
 import type { DashboardCounters } from "../../../src/modules/dashboard/types";
+import { pickCalendarDate, selectRadixOption } from "../../helpers/radix-select";
 
 const emptyCounters: DashboardCounters = {
   assistenciasTotal: 0,
@@ -78,15 +79,14 @@ describe("DashboardOperationalPage", () => {
     const mock = service({ ...emptyCounters, tarefasPendentes: 3 });
     render(<DashboardOperationalPage service={mock} />);
     await screen.findByRole("region", { name: "Resumo operacional" });
-    await userEvent.click(screen.getByRole("button", { name: "Período e posto" }));
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Período e posto" }));
     await screen.findByText("SSA — Salvador");
 
-    await userEvent.selectOptions(screen.getByLabelText("Posto"), "posto-1");
-    await userEvent.clear(screen.getByLabelText("Data inicial"));
-    await userEvent.type(screen.getByLabelText("Data inicial"), "2026-07-01");
-    await userEvent.clear(screen.getByLabelText("Data final"));
-    await userEvent.type(screen.getByLabelText("Data final"), "2026-07-03");
-    await userEvent.click(screen.getByRole("button", { name: "Aplicar filtros" }));
+    await selectRadixOption(user, "Posto", "SSA — Salvador");
+    await pickCalendarDate(user, "Data inicial *", "2026-07-01");
+    await pickCalendarDate(user, "Data final *", "2026-07-03");
+    await user.click(screen.getByRole("button", { name: "Aplicar filtros" }));
 
     expect(mock.load).toHaveBeenLastCalledWith({
       inicio: "2026-07-01",

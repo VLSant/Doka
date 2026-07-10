@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { useNavigate, useParams } from "react-router-dom";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
 import { LoadingState } from "../../../components/feedback/LoadingState";
@@ -6,13 +8,15 @@ import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { Card } from "../../../components/ui/Card";
-import { Select, Textarea } from "../../../components/ui/FormControls";
-import { Input } from "../../../components/ui/Input";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
+import { Textarea } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
 import { EntityHistory } from "../../auditoria/EntityHistory";
 import { isOccurrenceOverdue, nextStatuses, STATUS_LABELS } from "../occurrence-state";
 import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
-import type { OccurrenceDetail, OccurrenceStatus } from "../types";
+import type { OccurrenceStatus } from "../types";
 import "./Occurrences.css";
 
 const STATUS_TONE: Record<OccurrenceStatus, StatusTone> = {
@@ -28,78 +32,73 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
   const service = useMemo(() => injected ?? createOccurrenceService(), [injected]);
   const navigate = useNavigate();
   const { ocorrenciaId = "" } = useParams();
-  const [occurrence, setOccurrence] = useState<OccurrenceDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [acting, setActing] = useState(false);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<Error | null>(null);
   const [comment, setComment] = useState("");
   const [nextStatus, setNextStatus] = useState<OccurrenceStatus | "">("");
   const [justification, setJustification] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [removeOpen, setRemoveOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setOccurrence(await service.detail(ocorrenciaId));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao carregar a ocorrência."));
-    } finally {
-      setLoading(false);
-    }
-  }, [ocorrenciaId, service]);
+  const detailQuery = useQuery({
+    queryKey: queryKeys.occurrences.detail(ocorrenciaId),
+    queryFn: () => service.detail(ocorrenciaId),
+    enabled: Boolean(ocorrenciaId),
+  });
+  const occurrence = detailQuery.data ?? null;
+  const loading = detailQuery.isPending;
+  const reloadOccurrence = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.detail(ocorrenciaId) });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.list() });
+  };
+  const commentMutation = useMutation({
+    mutationFn: (value: string) => service.addComment(ocorrenciaId, value),
+    onSuccess: async () => {
+      setComment("");
+      await reloadOccurrence();
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause : new Error("Falha ao adicionar comentario.")),
+  });
+  const transitionMutation = useMutation({
+    mutationFn: (input: { status: OccurrenceStatus; justification: string; returnDate: string }) =>
+      service.transition(ocorrenciaId, input.status, input.justification, input.returnDate || null),
+    onSuccess: async () => {
+      setNextStatus("");
+      setJustification("");
+      await reloadOccurrence();
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause : new Error("Falha ao alterar o status.")),
+  });
+  const removeMutation = useMutation({
+    mutationFn: (reason: string) => service.remove(ocorrenciaId, reason),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.occurrences.all });
+      navigate("/app/ocorrencias");
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause : new Error("Falha ao remover a ocorrencia.")),
+  });
+  const isActing = commentMutation.isPending || transitionMutation.isPending || removeMutation.isPending;
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => void load(), [load]);
-
-  async function addComment(event: FormEvent) {
+  function addComment(event: FormEvent) {
     event.preventDefault();
     if (!comment.trim()) return;
-    setActing(true);
     setError(null);
-    try {
-      await service.addComment(ocorrenciaId, comment);
-      setComment("");
-      await load();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao adicionar comentário."));
-    } finally {
-      setActing(false);
-    }
+    commentMutation.mutate(comment);
   }
 
-  async function transition() {
+  function transition() {
     if (!nextStatus) return;
     if (nextStatus === "reaberta" && !justification.trim()) {
       setError(new Error("Informe a justificativa para reabrir."));
       return;
     }
-    setActing(true);
     setError(null);
-    try {
-      await service.transition(ocorrenciaId, nextStatus, justification, returnDate || null);
-      setNextStatus("");
-      setJustification("");
-      await load();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao alterar o status."));
-    } finally {
-      setActing(false);
-    }
+    transitionMutation.mutate({ status: nextStatus, justification, returnDate });
   }
 
-  async function remove() {
-    const reason = window.prompt("Justificativa para remover a ocorrência:");
-    if (!reason?.trim()) return;
-    setActing(true);
+  function remove(reason: string) {
     setError(null);
-    try {
-      await service.remove(ocorrenciaId, reason);
-      navigate("/app/ocorrencias");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error("Falha ao remover a ocorrência."));
-      setActing(false);
-    }
+    removeMutation.mutate(reason);
   }
 
   if (loading && !occurrence) return <LoadingState message="Carregando ocorrência..." />;
@@ -109,7 +108,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
         tone="error"
         title="Ocorrência indisponível"
         description={error?.message ?? "O registro não foi encontrado."}
-        actions={<Button onClick={() => void load()}>Tentar novamente</Button>}
+        actions={<Button onClick={() => void detailQuery.refetch()}>Tentar novamente</Button>}
       />
     );
   }
@@ -125,7 +124,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
             <ButtonLink variant="outline" to={`/app/ocorrencias/${occurrence.id}/editar`}>
               Editar
             </ButtonLink>
-            <Button variant="danger" disabled={acting} onClick={() => void remove()}>
+            <Button variant="danger" disabled={isActing} onClick={() => setRemoveOpen(true)}>
               Remover
             </Button>
           </div>
@@ -184,25 +183,24 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
 
         <Card padding="lg">
           <h2>Alterar status</h2>
-          <Select
+          <FormSelect
             label="Novo status"
             value={nextStatus}
-            disabled={acting}
-            onChange={(event) => setNextStatus(event.target.value as OccurrenceStatus | "")}
-          >
-            <option value="">Selecione</option>
-            {nextStatuses(occurrence.status).map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status]}
-              </option>
-            ))}
-          </Select>
+            disabled={isActing}
+            onChange={(next) => setNextStatus(next as OccurrenceStatus | "")}
+            options={[
+              { value: "", label: "Selecione" },
+              ...nextStatuses(occurrence.status).map((status) => ({
+                value: status,
+                label: STATUS_LABELS[status],
+              })),
+            ]}
+          />
           {nextStatus === "aguardando_retorno" || nextStatus === "reaberta" ? (
-            <Input
+            <DatePickerField
               label="Data de retorno"
-              type="date"
               value={returnDate}
-              onChange={(event) => setReturnDate(event.target.value)}
+              onChange={(next) => setReturnDate(next)}
             />
           ) : null}
           {nextStatus === "reaberta" ? (
@@ -213,7 +211,7 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
               onChange={(event) => setJustification(event.target.value)}
             />
           ) : null}
-          <Button disabled={!nextStatus} loading={acting} onClick={() => void transition()}>
+          <Button disabled={!nextStatus} loading={isActing} onClick={() => void transition()}>
             Confirmar mudança
           </Button>
         </Card>
@@ -226,10 +224,10 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
             label="Novo comentário"
             rows={3}
             value={comment}
-            disabled={acting}
+            disabled={isActing}
             onChange={(event) => setComment(event.target.value)}
           />
-          <Button type="submit" disabled={!comment.trim()} loading={acting}>
+          <Button type="submit" disabled={!comment.trim()} loading={isActing}>
             Adicionar
           </Button>
         </form>
@@ -250,6 +248,15 @@ export function OccurrenceDetailPage({ service: injected }: { service?: Occurren
         )}
       </Card>
       <EntityHistory entityType="ocorrencias" entityId={occurrence.id} />
+      <RemovalAlertDialog
+        open={removeOpen}
+        title="Remover ocorrencia"
+        description="Esta acao remove logicamente a ocorrencia e exige justificativa para auditoria."
+        requireJustification
+        loading={removeMutation.isPending}
+        onOpenChange={setRemoveOpen}
+        onConfirm={(reason) => void remove(reason)}
+      />
     </Page>
   );
 }

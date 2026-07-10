@@ -102,30 +102,41 @@
 
 .doka-metric-card {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   padding: var(--space-5);
   border: var(--border-card);
-  border-left: 4px solid var(--border-strong);
   border-radius: var(--radius-card);
   background: var(--surface-card);
   box-shadow: var(--shadow-xs);
 }
 
-.doka-metric-card--brand {
-  border-left-color: var(--brand-secondary);
-}
-
-.doka-metric-card--attention {
-  border-left-color: var(--brand-primary);
-}
-
-.doka-metric-card span {
+.doka-metric-card__label {
   color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-semibold);
+  font-size: 12px;
+  font-weight: var(--fw-medium);
 }
 
-.doka-metric-card strong {
+.doka-metric-card__value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--text-strong);
   font-size: var(--text-2xl);
+  font-weight: var(--fw-bold);
+}
+
+.doka-metric-card__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--brand-secondary);
+}
+
+.doka-metric-card--attention .doka-metric-card__icon {
+  color: var(--brand-primary);
+}
+
+.doka-metric-card__detail {
+  color: var(--text-subtle);
+  font-size: 12px;
 }

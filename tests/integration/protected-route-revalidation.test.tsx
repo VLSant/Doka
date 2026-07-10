@@ -23,8 +23,8 @@ function Dashboard() {
   );
 }
 
-describe("ProtectedRoute revalidation", () => {
-  it("reloads profile/posto context before rendering each protected location", async () => {
+describe("ProtectedRoute cached authorization", () => {
+  it("uses the resolved session context without blocking every navigation", async () => {
     const user = buildMockAuthUser();
     const mock = createMockSupabaseClient({ initialUser: user, initialSession: buildMockSession({ user }) });
     const resolveInitialContext = vi
@@ -66,8 +66,8 @@ describe("ProtectedRoute revalidation", () => {
     await waitFor(() => expect(screen.getByRole("heading", { name: "Dashboard protegido" })).toBeVisible());
     fireEvent.click(screen.getByRole("button", { name: "Abrir cadastros" }));
 
-    await waitFor(() => expect(resolveInitialContext).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.getByText("Conteúdo final não deveria existir")).toBeVisible());
-    expect(screen.queryByText("Acesso negado")).not.toBeInTheDocument();
+    await waitFor(() => expect(resolveInitialContext).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByText("Acesso negado")).toBeVisible());
+    expect(screen.queryByText("Conteudo final nao deveria existir")).not.toBeInTheDocument();
   });
 });

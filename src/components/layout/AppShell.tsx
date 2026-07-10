@@ -9,10 +9,14 @@
  */
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { UserContextPanel } from "./UserContextPanel";
+import { PostoFilterPill } from "./PostoFilterPill";
 import { useAuth } from "../../modules/auth/AuthProvider";
-import { ToastProvider } from "../ui/Toast";
+import { Toaster } from "../shadcn/ui/sonner";
+import { GlobalSearchDialog, useGlobalSearchShortcut } from "../shadcn/GlobalSearchDialog";
+import { PostoFilterProvider } from "../../app/posto-filter";
 import "./AppShell.css";
 
 export function AppShell() {
@@ -22,6 +26,8 @@ export function AppShell() {
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("doka.sidebar.collapsed") === "true",
   );
+  const [searchOpen, setSearchOpen] = useState(false);
+  useGlobalSearchShortcut(() => setSearchOpen(true));
 
   const context = state.name === "autorizado" ? state.context : null;
 
@@ -61,8 +67,9 @@ export function AppShell() {
           ? "Detalhe"
           : null;
 
-  return (
-    <ToastProvider>
+  const shellBody = (
+    <>
+      <Toaster position="bottom-right" richColors />
       <div className={`doka-app-shell${collapsed ? " doka-app-shell--collapsed" : ""}`}>
         {context ? (
           <Sidebar
@@ -84,7 +91,20 @@ export function AppShell() {
                   </>
                 ) : null}
               </div>
-              <UserContextPanel context={context} onLogout={handleLogout} />
+              <div className="doka-app-shell__header-actions">
+                <PostoFilterPill />
+                <button
+                  type="button"
+                  className="doka-app-shell__search-trigger"
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Busca global"
+                >
+                  <Search size={16} aria-hidden="true" />
+                  <span>Buscar</span>
+                  <kbd>Ctrl K</kbd>
+                </button>
+                <UserContextPanel context={context} onLogout={handleLogout} />
+              </div>
             </header>
           ) : null}
           <main className="doka-app-shell__main">
@@ -92,6 +112,15 @@ export function AppShell() {
           </main>
         </div>
       </div>
-    </ToastProvider>
+      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+    </>
+  );
+
+  if (!context) return shellBody;
+
+  return (
+    <PostoFilterProvider postos={context.postos} escopoGlobal={context.escopoGlobal}>
+      {shellBody}
+    </PostoFilterProvider>
   );
 }

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Button } from "../../../components/ui/Button";
 import { ButtonLink } from "../../../components/ui/ButtonLink";
 import { FeedbackState } from "../../../components/feedback/FeedbackState";
@@ -10,44 +12,27 @@ import { Skeleton } from "../../../components/ui/Skeleton";
 import { LotFilters } from "../components/LotFilters";
 import { LotsTable } from "../components/LotsTable";
 import { createLotService, type LotService } from "../lot-service";
-import type { LotFilters as Filters, LotSummary, ManagementCursor } from "../types";
+import type { LotFilters as Filters, ManagementCursor } from "../types";
 import "./ImportListPage.css";
 
 export function ImportListPage({ service: injected }: { service?: LotService }) {
   const service = useMemo(() => injected ?? createLotService(), [injected]);
   const [filters, setFilters] = useState<Filters>({});
-  const [lots, setLots] = useState<LotSummary[]>([]);
-  const [cursor, setCursor] = useState<ManagementCursor | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const load = useCallback(
-    async (nextFilters: Filters, nextCursor: ManagementCursor | null, append = false) => {
-      setLoading(true);
-      setError("");
-      try {
-        const page = await service.list(nextFilters, nextCursor);
-        setLots((current) => (append ? [...current, ...page.itens] : page.itens));
-        setCursor(page.proximo_cursor);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Não foi possível carregar os lotes.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [service],
-  );
-
-  // Initial RPC load is the external synchronization performed by this effect.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load({}, null);
-  }, [load]);
+  const lotsQuery = useInfiniteQuery({
+    queryKey: queryKeys.importacoes.lots(filters),
+    queryFn: ({ pageParam }) => service.list(filters, pageParam),
+    initialPageParam: null as ManagementCursor | null,
+    getNextPageParam: (lastPage) => lastPage.proximo_cursor,
+  });
+  const lots = lotsQuery.data?.pages.flatMap((page) => page.itens) ?? [];
+  const cursor = lotsQuery.hasNextPage ? lotsQuery.data?.pages.at(-1)?.proximo_cursor ?? null : null;
+  const loading = lotsQuery.isPending || lotsQuery.isFetchingNextPage;
+  const error = lotsQuery.error?.message ?? "";
   function apply(next: Filters) {
     setFilters(next);
-    void load(next, null);
   }
   const visibleLots = lots.filter((lot) =>
     `${lot.arquivo ?? ""} ${lot.postos.map((posto) => posto.nome).join(" ")}`
@@ -100,7 +85,7 @@ export function ImportListPage({ service: injected }: { service?: LotService }) 
           tone="error"
           title="Falha ao carregar importações"
           description={error}
-          actions={<Button onClick={() => void load(filters, null)}>Tentar novamente</Button>}
+          actions={<Button onClick={() => void lotsQuery.refetch()}>Tentar novamente</Button>}
         />
       ) : null}
       {!loading && !error && lots.length === 0 ? (
@@ -130,7 +115,7 @@ export function ImportListPage({ service: injected }: { service?: LotService }) 
             <Button
               variant="outline"
               loading={loading}
-              onClick={() => void load(filters, cursor, true)}
+              onClick={() => void lotsQuery.fetchNextPage()}
             >
               Carregar mais
             </Button>

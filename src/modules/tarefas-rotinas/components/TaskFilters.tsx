@@ -1,6 +1,6 @@
 import type { CatalogItem, UsuarioItem } from "../../../services/catalog-service";
-import { Input } from "../../../components/ui/Input";
-import { Select } from "../../../components/ui/FormControls";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
+import { FormSelect } from "../../../components/shadcn/FormSelect";
 import type { TaskFilters } from "../types";
 
 export function TaskFiltersForm({
@@ -20,71 +20,61 @@ export function TaskFiltersForm({
 }) {
   return (
     <div className="tasks-filters" aria-label="Filtros de tarefas">
-      <Select
+      <FormSelect
         label="Posto"
         value={value.postoId ?? ""}
         disabled={disabled}
-        onChange={(event) => onChange({ ...value, postoId: event.target.value })}
-      >
-        <option value="">Todos</option>
-        {postos.map((posto) => (
-          <option key={posto.id} value={posto.id}>
-            {posto.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => onChange({ ...value, postoId: next })}
+        options={[
+          { value: "", label: "Todos" },
+          ...postos.map((posto) => ({ value: posto.id, label: posto.nome })),
+        ]}
+      />
+      <FormSelect
         label="Responsável"
         value={value.responsavelId ?? ""}
         disabled={disabled}
-        onChange={(event) => onChange({ ...value, responsavelId: event.target.value })}
-      >
-        <option value="">Todos</option>
-        {usuarios.map((usuario) => (
-          <option key={usuario.id} value={usuario.id}>
-            {usuario.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => onChange({ ...value, responsavelId: next })}
+        options={[
+          { value: "", label: "Todos" },
+          ...usuarios.map((usuario) => ({ value: usuario.id, label: usuario.nome })),
+        ]}
+      />
+      <FormSelect
         label="Prioridade"
         value={value.prioridadeId ?? ""}
         disabled={disabled}
-        onChange={(event) => onChange({ ...value, prioridadeId: event.target.value })}
-      >
-        <option value="">Todas</option>
-        {prioridades.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.nome}
-          </option>
-        ))}
-      </Select>
-      <Select
+        onChange={(next) => onChange({ ...value, prioridadeId: next })}
+        options={[
+          { value: "", label: "Todas" },
+          ...prioridades.map((item) => ({ value: item.id, label: item.nome })),
+        ]}
+      />
+      <FormSelect
         label="Tipo"
         value={value.tipo ?? ""}
         disabled={disabled}
-        onChange={(event) =>
-          onChange({ ...value, tipo: event.target.value as TaskFilters["tipo"] })
+        onChange={(next) =>
+          onChange({ ...value, tipo: next as TaskFilters["tipo"] })
         }
-      >
-        <option value="">Todos</option>
-        <option value="avulsa">Avulsa</option>
-        <option value="estrategia">Estratégia</option>
-        <option value="rotina">Rotina</option>
-      </Select>
-      <Input
+        options={[
+          { value: "", label: "Todos" },
+          { value: "avulsa", label: "Avulsa" },
+          { value: "estrategia", label: "Estratégia" },
+          { value: "rotina", label: "Rotina" },
+        ]}
+      />
+      <DatePickerField
         label="Prazo de"
-        type="date"
         value={value.prazoDe ?? ""}
         disabled={disabled}
-        onChange={(event) => onChange({ ...value, prazoDe: event.target.value })}
+        onChange={(next) => onChange({ ...value, prazoDe: next })}
       />
-      <Input
+      <DatePickerField
         label="Prazo até"
-        type="date"
         value={value.prazoAte ?? ""}
         disabled={disabled}
-        onChange={(event) => onChange({ ...value, prazoAte: event.target.value })}
+        onChange={(next) => onChange({ ...value, prazoAte: next })}
       />
     </div>
   );

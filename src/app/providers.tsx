@@ -8,9 +8,11 @@
  * stories (US1+).
  */
 import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "../lib/supabase";
 import { createAuditService, type AuditService } from "../services/audit-service";
+import { createAppQueryClient } from "./query-client";
 
 export interface AppServices {
   supabase: SupabaseClient;
@@ -37,8 +39,13 @@ function buildServices(overrides?: Partial<AppServices>): AppServices {
  */
 export function AppProviders({ children, services }: AppProvidersProps) {
   const value = useMemo(() => buildServices(services), [services]);
+  const queryClient = useMemo(() => createAppQueryClient(), []);
 
-  return <AppServicesContext.Provider value={value}>{children}</AppServicesContext.Provider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppServicesContext.Provider value={value}>{children}</AppServicesContext.Provider>
+    </QueryClientProvider>
+  );
 }
 
 /** Accesses the injected application service boundary. */

@@ -2,8 +2,10 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Checkbox } from "../../../components/ui/FormControls";
 import { Input } from "../../../components/ui/Input";
-import { DropdownMenu, DropdownMenuItem } from "../../../components/ui/DropdownMenu";
-import { TableFrame } from "../../../components/ui/Patterns";
+import { RowActionsMenu } from "../../../components/ui/RowActionsMenu";
+import { TableCardHeader, TableCardList, TableCardRow } from "../../../components/ui/TableCardRow";
+import { RemovalAlertDialog } from "../../../components/shadcn/RemovalAlertDialog";
+import { DatePickerField } from "../../../components/shadcn/DatePickerField";
 import type { AdministrationService } from "../administration-service";
 import type { AdministrationSnapshot, MetaEficiencia } from "../types";
 import { SelectField, StatusBadge } from "./AdminFields";
@@ -34,6 +36,7 @@ export function EfficiencyTargetsSection({
   onError: (error: unknown) => void;
 }) {
   const [form, setForm] = useState(empty);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -54,7 +57,7 @@ export function EfficiencyTargetsSection({
         actorId,
       );
       setForm(empty);
-      await onChanged("Meta de eficiência salva.");
+      await onChanged("Meta de eficiencia salva.");
     } catch (error) {
       onError(error);
     }
@@ -73,9 +76,9 @@ export function EfficiencyTargetsSection({
   }
 
   async function remove(id: string) {
-    if (!window.confirm("Confirma a remoção lógica desta meta?")) return;
     try {
       await service.removeEfficiencyTarget(id, actorId);
+      setRemoveTarget(null);
       await onChanged("Meta removida.");
     } catch (error) {
       onError(error);
@@ -86,8 +89,8 @@ export function EfficiencyTargetsSection({
     <section className="admin-section" aria-labelledby="admin-targets-title">
       <div className="admin-section__header">
         <div>
-          <h2 id="admin-targets-title">Metas e parâmetros de eficiência</h2>
-          <p>Meta por posto e tipo de atividade usada no Dashboard e na margem de frustração.</p>
+          <h2 id="admin-targets-title">Metas e parametros de eficiencia</h2>
+          <p>Meta por posto e tipo de atividade usada no Dashboard e na margem de frustracao.</p>
         </div>
       </div>
       {canEdit && (
@@ -95,7 +98,7 @@ export function EfficiencyTargetsSection({
           <SelectField
             label="Posto"
             value={form.posto_id}
-            onChange={(event) => setForm({ ...form, posto_id: event.target.value })}
+            onChange={(next) => setForm({ ...form, posto_id: next })}
             required
           >
             <option value="">Selecione</option>
@@ -125,19 +128,17 @@ export function EfficiencyTargetsSection({
             onChange={(event) => setForm({ ...form, meta_percentual: Number(event.target.value) })}
             required
           />
-          <Input
-            label="Vigência inicial"
-            type="date"
+          <DatePickerField
+            label="Vigencia inicial"
             value={form.vigencia_inicio}
-            onChange={(event) => setForm({ ...form, vigencia_inicio: event.target.value })}
+            onChange={(next) => setForm({ ...form, vigencia_inicio: next })}
             required
           />
-          <Input
-            label="Vigência final"
-            type="date"
+          <DatePickerField
+            label="Vigencia final"
             min={form.vigencia_inicio}
             value={form.vigencia_fim}
-            onChange={(event) => setForm({ ...form, vigencia_fim: event.target.value })}
+            onChange={(next) => setForm({ ...form, vigencia_fim: next })}
           />
           <Checkbox
             label="Meta ativa"
@@ -154,45 +155,65 @@ export function EfficiencyTargetsSection({
           </div>
         </form>
       )}
-      <TableFrame>
-        <table>
-          <thead>
-            <tr>
-              <th>Posto</th>
-              <th>Tipo</th>
-              <th>Meta</th>
-              <th>Vigência</th>
-              <th>Estado</th>
-              {canEdit && <th>Ações</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {data.metasEficiencia.map((item) => (
-              <tr key={item.id}>
-                <td>{data.postos.find((posto) => posto.id === item.posto_id)?.nome ?? "—"}</td>
-                <td>{item.tipo_atividade_normalizado}</td>
-                <td>{item.meta_percentual}%</td>
-                <td>
-                  {item.vigencia_inicio} a {item.vigencia_fim ?? "sem término"}
-                </td>
-                <td>
-                  <StatusBadge active={item.ativo} />
-                </td>
-                {canEdit && (
-                  <td className="admin-actions">
-                    <DropdownMenu>
-                      <DropdownMenuItem onClick={() => edit(item)}>Editar</DropdownMenuItem>
-                      <DropdownMenuItem danger onClick={() => void remove(item.id)}>
-                        Remover
-                      </DropdownMenuItem>
-                    </DropdownMenu>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </TableFrame>
+      <TableCardList>
+        <TableCardHeader
+          selectable={false}
+          actions={canEdit}
+          columns={[
+            { key: "posto", label: "Posto", width: "minmax(160px, 1fr)" },
+            { key: "tipo", label: "Tipo", width: "150px" },
+            { key: "meta", label: "Meta", width: "90px", align: "right" },
+            { key: "vigencia", label: "Vigencia", width: "190px" },
+            { key: "estado", label: "Estado", width: "90px" },
+          ]}
+        />
+        {data.metasEficiencia.map((item) => (
+          <TableCardRow
+            key={item.id}
+            id={item.id}
+            selectable={false}
+            columns={[
+              {
+                key: "posto",
+                label: "Posto",
+                width: "minmax(160px, 1fr)",
+                value: <strong>{data.postos.find((posto) => posto.id === item.posto_id)?.nome ?? "-"}</strong>,
+              },
+              { key: "tipo", label: "Tipo", width: "150px", value: item.tipo_atividade_normalizado },
+              {
+                key: "meta",
+                label: "Meta",
+                width: "90px",
+                align: "right",
+                value: <span className="doka-card-row__value">{item.meta_percentual}%</span>,
+              },
+              {
+                key: "vigencia",
+                label: "Vigencia",
+                width: "190px",
+                value: `${item.vigencia_inicio} a ${item.vigencia_fim ?? "sem termino"}`,
+              },
+              { key: "estado", label: "Estado", width: "90px", value: <StatusBadge active={item.ativo} /> },
+            ]}
+            actions={
+              canEdit ? (
+                <RowActionsMenu onEdit={() => edit(item)} onRemove={() => setRemoveTarget(item.id)} />
+              ) : undefined
+            }
+          />
+        ))}
+      </TableCardList>
+      <RemovalAlertDialog
+        open={Boolean(removeTarget)}
+        title="Remover meta"
+        description="Esta acao remove logicamente a meta de eficiencia selecionada."
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        onConfirm={() => {
+          if (removeTarget) void remove(removeTarget);
+        }}
+      />
     </section>
   );
 }

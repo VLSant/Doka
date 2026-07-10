@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
@@ -7,7 +9,7 @@ import { CorrectionEditor } from "../components/CorrectionEditor";
 import { ReprocessDialog } from "../components/ReprocessDialog";
 import { createLotService, type LotService } from "../lot-service";
 import { createTreatmentService, type TreatmentService } from "../treatment-service";
-import type { JsonSafeValue, LotDetail, LotItem } from "../types";
+import type { JsonSafeValue } from "../types";
 import { canonicalCorrectionField } from "../correction-fields";
 import "./ImportListPage.css";
 
@@ -17,22 +19,32 @@ export function ImportTreatmentPage({ lotService: injectedLot, treatmentService:
   const { loteId = "" } = useParams();
   const lotService = useMemo(() => injectedLot ?? createLotService(), [injectedLot]);
   const treatment = useMemo(() => injectedTreatment ?? createTreatmentService(), [injectedTreatment]);
-  const [lot, setLot] = useState<LotDetail | null>(null);
-  const [errors, setErrors] = useState<LotItem[]>([]);
+  const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
-  const load = useCallback(async () => {
-    try {
-      const [detail, page] = await Promise.all([lotService.detail(loteId), lotService.items(loteId, "erros")]);
-      setLot(detail); setErrors(page.itens); setMessage("");
-    } catch (e) { setMessage(e instanceof Error ? e.message : "Tratamento indisponível."); }
-  }, [lotService, loteId]);
-  // Initial RPC load is the external synchronization performed by this effect.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void load(); }, [load]);
-  async function conclude() {
+  const lotQuery = useQuery({
+    queryKey: queryKeys.importacoes.lot(loteId),
+    queryFn: () => lotService.detail(loteId),
+    enabled: Boolean(loteId),
+  });
+  const errorsQuery = useQuery({
+    queryKey: queryKeys.importacoes.lotItems(loteId, "erros"),
+    queryFn: () => lotService.items(loteId, "erros"),
+    enabled: Boolean(loteId),
+  });
+  const lot = lotQuery.data ?? null;
+  const errors = errorsQuery.data?.itens ?? [];
+  const reload = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.importacoes.all });
+  };
+  const concludeMutation = useMutation({
+    mutationFn: () => treatment.conclude(lot!.lote_id, lot!.versao_tratamento),
+    onSuccess: reload,
+    onError: (e) => setMessage(e instanceof Error ? e.message : "Não foi possível concluir."),
+  });
+  function conclude() {
     if (!lot) return;
-    try { await treatment.conclude(lot.lote_id, lot.versao_tratamento); await load(); }
-    catch (e) { setMessage(e instanceof Error ? e.message : "Não foi possível concluir."); }
+    setMessage("");
+    concludeMutation.mutate();
   }
   if (message && !lot) return <FeedbackState tone="error" title="Tratamento indisponível" description={message} />;
   if (!lot) return <p role="status">Carregando tratamento...</p>;
@@ -57,14 +69,14 @@ export function ImportTreatmentPage({ lotService: injectedLot, treatmentService:
               current={(error.valor_efetivo ?? "") as JsonSafeValue}
               version={Number(error.versao_correcao ?? 0)}
               service={treatment}
-              onSaved={load}
+              onSaved={reload}
             /> : null}
           </section>;
         })}
       </div>}
     </Card>
     <div>{lot.capacidades.concluir_tratamento ? <Button onClick={conclude}>Concluir tratamento</Button> : null}
-      {lot.capacidades.reprocessar ? <ReprocessDialog lotId={lot.lote_id} version={lot.versao_tratamento} service={treatment} onComplete={load} /> : null}</div>
+      {lot.capacidades.reprocessar ? <ReprocessDialog lotId={lot.lote_id} version={lot.versao_tratamento} service={treatment} onComplete={reload} /> : null}</div>
   </main>;
 }
 export default ImportTreatmentPage;

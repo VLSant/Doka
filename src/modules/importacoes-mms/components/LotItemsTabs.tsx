@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../app/query-keys";
 import { LoadingState } from "../../../components/feedback/LoadingState";
 import { Tabs } from "../../../components/ui/Tabs";
 import type { LotService } from "../lot-service";
-import type { LotCollection, LotItem } from "../types";
+import type { LotCollection } from "../types";
 
 const COLLECTIONS: Array<{ id: LotCollection; label: string }> = [
   { id: "linhas", label: "Linhas" }, { id: "erros", label: "Erros" },
@@ -12,24 +14,13 @@ const COLLECTIONS: Array<{ id: LotCollection; label: string }> = [
 
 export function LotItemsTabs({ lotId, service }: { lotId: string; service: LotService }) {
   const [active, setActive] = useState<LotCollection>("linhas");
-  const [items, setItems] = useState<LotItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let live = true;
-    // Reset the tab state before starting the external RPC subscription.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true); setError("");
-    void service.items(lotId, active).then((page) => {
-      if (live) setItems(page.itens);
-    }).catch(() => {
-      if (live) setError("Não foi possível carregar esta coleção.");
-    }).finally(() => {
-      if (live) setLoading(false);
-    });
-    return () => { live = false; };
-  }, [active, lotId, service]);
+  const itemsQuery = useQuery({
+    queryKey: queryKeys.importacoes.lotItems(lotId, active),
+    queryFn: () => service.items(lotId, active),
+  });
+  const items = itemsQuery.data?.itens ?? [];
+  const loading = itemsQuery.isPending;
+  const error = itemsQuery.error ? "Não foi possível carregar esta coleção." : "";
 
   return (
     <section className="mms-lot-tabs">
