@@ -17,15 +17,17 @@ import { Skeleton } from "../../../components/ui/Skeleton";
 import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
 import type { CatalogService } from "../../../services/catalog-service";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { useAuth } from "../../auth/AuthProvider";
 import { useSearchParams } from "react-router-dom";
 import { TaskFiltersForm } from "../components/TaskFilters";
 import { TaskFormModal } from "../components/TaskFormModal";
-import { TaskList } from "../components/TaskList";
+import { TaskList, type TaskSortKey } from "../components/TaskList";
 import { createTaskService, type TaskService } from "../task-service";
 import { taskMatchesSlice } from "../task-state";
 import type { TaskFilters, TaskViewer } from "../types";
 import { useTaskCatalogs } from "../use-task-catalogs";
+import { applySort, toggleSort, type SortState } from "../../../lib/sorting";
 import "../tasks.css";
 
 const SLICES: { id: TaskFilters["slice"]; label: string }[] = [
@@ -63,6 +65,7 @@ export function TaskCenterPage({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
   const [actionError, setActionError] = useState<Error | null>(null);
+  const [sort, setSort] = useState<SortState<TaskSortKey>>({ key: null, direction: "asc" });
   const [page, setPage] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const creating = searchParams.get("novo") === "1";
@@ -96,11 +99,66 @@ export function TaskCenterPage({
   const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
   const loading = tasksQuery.isPending;
   const error = tasksQuery.error;
+  // O filtro global de posto (topbar) atua como default/estreitamento: só
+  // entra em jogo quando a página não tem um filtro local de posto explícito
+  // (`filters.postoId`), que sempre tem precedência.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo<TaskFilters>(
+    () => ({ ...filters, postoId: filters.postoId ?? globalPostoId ?? undefined }),
+    [filters, globalPostoId],
+  );
+  const filtered = useMemo(
+    () => tasks.filter((task) => taskMatchesSlice(task, effectiveFilters)),
+    [effectiveFilters, tasks],
+  );
   const visible = useMemo(
-    () => tasks.filter((task) => taskMatchesSlice(task, filters)),
-    [filters, tasks],
+    () =>
+      applySort(filtered, sort, (task, key) => {
+        if (key === "tarefa") return task.titulo;
+        return task.prazo_data;
+      }),
+    [filtered, sort],
   );
   const paged = visible.slice((page - 1) * pageSize, page * pageSize);
+
+  // Poda a seleção para a interseção com os ids da página informada,
+  // evitando que seleções ocultas por filtro/aba/página "reapareçam" depois.
+  function pruneSelectionToPage(pageIds: Set<string>) {
+    setSelectedIds((current) => {
+      if (current.size === 0) return current;
+      let changed = false;
+      const next = new Set<string>();
+      current.forEach((id) => {
+        if (pageIds.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : current;
+    });
+  }
+
+  function pageIdsFor(nextFilters: TaskFilters, nextPage: number, nextSort: SortState<TaskSortKey>) {
+    const nextEffectiveFilters: TaskFilters = {
+      ...nextFilters,
+      postoId: nextFilters.postoId ?? globalPostoId ?? undefined,
+    };
+    const nextFiltered = tasks.filter((task) => taskMatchesSlice(task, nextEffectiveFilters));
+    const nextVisible = applySort(nextFiltered, nextSort, (task, key) =>
+      key === "tarefa" ? task.titulo : task.prazo_data,
+    );
+    return new Set(nextVisible.slice((nextPage - 1) * pageSize, nextPage * pageSize).map((t) => t.id));
+  }
+
+  function handleSort(key: TaskSortKey) {
+    const nextSort = toggleSort(sort, key);
+    setSort(nextSort);
+    setPage(1);
+    pruneSelectionToPage(pageIdsFor(filters, 1, nextSort));
+  }
+
+  function changePage(nextPage: number) {
+    setPage(nextPage);
+    pruneSelectionToPage(pageIdsFor(filters, nextPage, sort));
+  }
   const advancedCount = [
     filters.postoId,
     filters.responsavelId,
@@ -130,10 +188,15 @@ export function TaskCenterPage({
     if (filters.prazoAte) result.push({ id: "prazoAte", label: `Prazo até ${filters.prazoAte}` });
     return result;
   }, [catalogs, filters]);
-  const updateFilters = useCallback((next: TaskFilters) => {
-    setFilters(next);
-    setPage(1);
-  }, []);
+  const updateFilters = useCallback(
+    (next: TaskFilters) => {
+      setFilters(next);
+      setPage(1);
+      pruneSelectionToPage(pageIdsFor(next, 1, sort));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tasks, sort, globalPostoId],
+  );
 
   function openCreate() {
     setSearchParams(
@@ -246,7 +309,7 @@ export function TaskCenterPage({
         label="Recortes de tarefas"
         value={filters.slice}
         items={SLICES}
-        onChange={(slice) => setFilters((current) => ({ ...current, slice }))}
+        onChange={(slice) => updateFilters({ ...filters, slice })}
       />
       <div className="doka-list-toolbar">
         <SearchInput
@@ -346,8 +409,10 @@ export function TaskCenterPage({
             onEdit={openEdit}
             onDuplicate={(task) => duplicateMutation.mutate(task)}
             onRemove={(id) => setRemoveTarget([id])}
+            sort={sort}
+            onSort={handleSort}
           />
-          <Pagination page={page} pageSize={pageSize} total={visible.length} onChange={setPage} />
+          <Pagination page={page} pageSize={pageSize} total={visible.length} onChange={changePage} />
         </>
       ) : null}
       {selectedItems.length > 0 ? (

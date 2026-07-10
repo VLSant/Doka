@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import { useEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 import "./TableCardRow.css";
 
@@ -59,14 +59,24 @@ export function TableCardHeader({
   selectable = true,
   actions = true,
   allSelected = false,
+  someSelected = false,
   onToggleAll,
 }: {
   columns: TableCardHeaderColumn[];
   selectable?: boolean;
   actions?: boolean;
   allSelected?: boolean;
+  someSelected?: boolean;
   onToggleAll?: () => void;
 }) {
+  const checkboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = !allSelected && someSelected;
+    }
+  }, [allSelected, someSelected]);
+
   return (
     <div
       className="doka-card-list__header"
@@ -74,6 +84,7 @@ export function TableCardHeader({
     >
       {selectable ? (
         <input
+          ref={checkboxRef}
           type="checkbox"
           aria-label="Selecionar todas as linhas"
           checked={allSelected}
@@ -89,6 +100,15 @@ export function TableCardHeader({
           ]
             .filter(Boolean)
             .join(" ")}
+          aria-sort={
+            column.sortable
+              ? column.active
+                ? column.direction === "asc"
+                  ? "ascending"
+                  : "descending"
+                : "none"
+              : undefined
+          }
         >
           {column.sortable && column.onSort ? (
             <SortableHeaderButton

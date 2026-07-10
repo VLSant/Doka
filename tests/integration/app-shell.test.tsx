@@ -21,6 +21,54 @@ import { AuthProvider } from "../../src/modules/auth/AuthProvider";
 import type { AccessService } from "../../src/modules/access/access-service";
 import { AppShell } from "../../src/components/layout/AppShell";
 
+vi.mock("../../src/modules/ocorrencias/occurrence-service", () => ({
+  createOccurrenceService: () => ({
+    list: vi.fn().mockResolvedValue([]),
+    catalogs: vi.fn(),
+    detail: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    addComment: vi.fn(),
+    transition: vi.fn(),
+    remove: vi.fn(),
+  }),
+}));
+vi.mock("../../src/modules/tarefas-rotinas/task-service", () => ({
+  createTaskService: () => ({
+    listTasks: vi.fn().mockResolvedValue([]),
+    listRoutines: vi.fn().mockResolvedValue([]),
+    getTask: vi.fn(),
+    createTask: vi.fn(),
+    updateTask: vi.fn(),
+    transitionTask: vi.fn(),
+    removeTask: vi.fn(),
+    getRoutine: vi.fn(),
+    createRoutine: vi.fn(),
+    updateRoutine: vi.fn(),
+    removeRoutine: vi.fn(),
+    generateRoutineTasks: vi.fn(),
+  }),
+}));
+vi.mock("../../src/modules/lancamentos-operacionais/lancamento-service", () => ({
+  createLancamentoService: () => ({
+    list: vi.fn().mockResolvedValue([]),
+    detail: vi.fn(),
+    formOptions: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    validate: vi.fn(),
+    remove: vi.fn(),
+  }),
+}));
+vi.mock("../../src/modules/assistencias-mms/assistance-service", () => ({
+  createAssistanceService: () => ({
+    list: vi.fn().mockResolvedValue({ itens: [], proximo_cursor: null }),
+    detail: vi.fn(),
+    correctField: vi.fn(),
+    history: vi.fn(),
+  }),
+}));
+
 function asClient(mock: ReturnType<typeof createMockSupabaseClient>): SupabaseClient {
   return mock as unknown as SupabaseClient;
 }
@@ -139,5 +187,38 @@ describe("AppShell", () => {
     await userEventSession.click(screen.getByRole("button", { name: /sair/i }));
 
     await waitFor(() => expect(screen.queryByTestId("dashboard-outlet")).not.toBeInTheDocument());
+  });
+
+  it("opens the global search dialog from the topbar search trigger", async () => {
+    const user = userEvent.setup();
+    renderShellAt("/app/dashboard", operadorResult);
+    await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
+
+    expect(screen.queryByPlaceholderText(/buscar ocorrências/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /busca global/i }));
+    expect(await screen.findByPlaceholderText(/buscar ocorrências/i)).toBeInTheDocument();
+  });
+
+  it("opens the global search dialog with Ctrl+K", async () => {
+    const user = userEvent.setup();
+    renderShellAt("/app/dashboard", operadorResult);
+    await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(await screen.findByPlaceholderText(/buscar ocorrências/i)).toBeInTheDocument();
+  });
+
+  it("shows a static posto pill for a single-posto profile (Operador)", async () => {
+    renderShellAt("/app/dashboard", operadorResult);
+    await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
+    const pill = screen.getByTitle("Seu acesso está limitado a este posto.");
+    expect(pill).toHaveTextContent("Posto A");
+    expect(pill).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("shows a real posto selector defaulting to 'Todos os postos' for Direcao/Administracao", async () => {
+    renderShellAt("/app/dashboard", { status: "autorizado", context: direcaoAdminContext });
+    await waitFor(() => expect(screen.getByTestId("dashboard-outlet")).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /todos os postos/i })).toBeInTheDocument();
   });
 });

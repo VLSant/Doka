@@ -7,20 +7,45 @@ import {
   TableCardRow,
   type TableCardHeaderColumn,
 } from "../../../components/ui/TableCardRow";
+import type { SortState } from "../../../lib/sorting";
 import type { Lancamento } from "../types";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const date = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
 
-const COLUMNS: TableCardHeaderColumn[] = [
-  { key: "data", label: "Data", width: "110px", sortable: true },
-  { key: "tipo", label: "Tipo", width: "130px" },
-  { key: "posto", label: "Posto", width: "130px" },
-  { key: "assistencia", label: "Assistencia", width: "130px" },
-  { key: "responsavel", label: "Responsavel", width: "minmax(150px, 1fr)" },
-  { key: "status", label: "Status", width: "110px" },
-  { key: "valor", label: "Valor", width: "120px", align: "right", sortable: true },
-];
+export type LancamentoSortKey = "data" | "valor";
+
+function getColumns(
+  sort: SortState<LancamentoSortKey>,
+  onSort: (key: LancamentoSortKey) => void,
+): TableCardHeaderColumn[] {
+  return [
+    {
+      key: "data",
+      label: "Data",
+      width: "110px",
+      sortable: true,
+      active: sort.key === "data",
+      direction: sort.direction,
+      onSort: () => onSort("data"),
+    },
+    { key: "tipo", label: "Tipo", width: "130px" },
+    { key: "posto", label: "Posto", width: "130px" },
+    { key: "assistencia", label: "Assistencia", width: "130px" },
+    { key: "responsavel", label: "Responsavel", width: "minmax(150px, 1fr)" },
+    { key: "status", label: "Status", width: "110px" },
+    {
+      key: "valor",
+      label: "Valor",
+      width: "120px",
+      align: "right",
+      sortable: true,
+      active: sort.key === "valor",
+      direction: sort.direction,
+      onSort: () => onSort("valor"),
+    },
+  ];
+}
 
 export function LancamentoTable({
   items,
@@ -30,6 +55,8 @@ export function LancamentoTable({
   onEdit,
   onDuplicate,
   onRemove,
+  sort,
+  onSort,
 }: {
   items: Lancamento[];
   selectedIds: Set<string>;
@@ -38,12 +65,17 @@ export function LancamentoTable({
   onEdit: (id: string) => void;
   onDuplicate: (item: Lancamento) => void;
   onRemove: (id: string) => void;
+  sort: SortState<LancamentoSortKey>;
+  onSort: (key: LancamentoSortKey) => void;
 }) {
+  const allSelected = items.length > 0 && items.every((item) => selectedIds.has(item.id));
+  const someSelected = items.some((item) => selectedIds.has(item.id));
   return (
     <TableCardList role="table" aria-label="Deslocamentos e custos extras">
       <TableCardHeader
-        columns={COLUMNS}
-        allSelected={items.length > 0 && items.every((item) => selectedIds.has(item.id))}
+        columns={getColumns(sort, onSort)}
+        allSelected={allSelected}
+        someSelected={someSelected}
         onToggleAll={onToggleAll}
       />
       {items.map((item) => (

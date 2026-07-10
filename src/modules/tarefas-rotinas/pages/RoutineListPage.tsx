@@ -19,9 +19,11 @@ import {
   type TableCardHeaderColumn,
 } from "../../../components/ui/TableCardRow";
 import { useAuth } from "../../auth/AuthProvider";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { RoutineFormModal } from "../components/RoutineFormModal";
 import { createTaskService, type TaskService } from "../task-service";
 import type { Routine, TaskViewer } from "../types";
+import { applySort, toggleSort, type SortState } from "../../../lib/sorting";
 import "../tasks.css";
 
 const RECURRENCE = {
@@ -43,13 +45,28 @@ const STATUS_TONE: Record<Routine["status"], StatusTone> = {
   inativa: "neutral",
 };
 
-const COLUMNS: TableCardHeaderColumn[] = [
-  { key: "rotina", label: "Rotina", width: "minmax(220px, 1.6fr)", sortable: true },
-  { key: "frequencia", label: "Frequencia", width: "130px" },
-  { key: "responsaveis", label: "Responsaveis", width: "minmax(160px, 1fr)" },
-  { key: "posto", label: "Posto", width: "130px" },
-  { key: "status", label: "Status", width: "120px" },
-];
+type RoutineSortKey = "rotina";
+
+function getColumns(
+  sort: SortState<RoutineSortKey>,
+  onSort: (key: RoutineSortKey) => void,
+): TableCardHeaderColumn[] {
+  return [
+    {
+      key: "rotina",
+      label: "Rotina",
+      width: "minmax(220px, 1.6fr)",
+      sortable: true,
+      active: sort.key === "rotina",
+      direction: sort.direction,
+      onSort: () => onSort("rotina"),
+    },
+    { key: "frequencia", label: "Frequencia", width: "130px" },
+    { key: "responsaveis", label: "Responsaveis", width: "minmax(160px, 1fr)" },
+    { key: "posto", label: "Posto", width: "130px" },
+    { key: "status", label: "Status", width: "120px" },
+  ];
+}
 
 export function RoutineListPage({
   service: injected,
@@ -63,6 +80,7 @@ export function RoutineListPage({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
   const [actionError, setActionError] = useState<Error | null>(null);
+  const [sort, setSort] = useState<SortState<RoutineSortKey>>({ key: null, direction: "asc" });
   const creating = searchParams.get("nova") === "1";
   const editingId = searchParams.get("editar");
   const viewer =
@@ -80,11 +98,23 @@ export function RoutineListPage({
     queryKey: queryKeys.routines.list(),
     queryFn: () => service.listRoutines(),
   });
-  const routines = routinesQuery.data ?? [];
+  // A pagina de rotinas nao tem filtro local de posto; o filtro global da
+  // topbar entao se aplica diretamente como unico recorte por posto.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const routines = useMemo(() => {
+    const scoped = globalPostoId
+      ? (routinesQuery.data ?? []).filter((routine) => routine.posto_id === globalPostoId)
+      : (routinesQuery.data ?? []);
+    return applySort(scoped, sort, (routine) => routine.nome);
+  }, [routinesQuery.data, sort, globalPostoId]);
   const loading = routinesQuery.isPending;
   const error = routinesQuery.error?.message;
   const selectedItems = routines.filter((routine) => selectedIds.has(routine.id));
   const firstSelected = selectedItems[0];
+
+  function handleSort(key: RoutineSortKey) {
+    setSort((current) => toggleSort(current, key));
+  }
 
   function openCreate() {
     setSearchParams(
@@ -230,8 +260,9 @@ export function RoutineListPage({
       {routines.length ? (
         <TableCardList>
           <TableCardHeader
-            columns={COLUMNS}
+            columns={getColumns(sort, handleSort)}
             allSelected={routines.length > 0 && routines.every((routine) => selectedIds.has(routine.id))}
+            someSelected={routines.some((routine) => selectedIds.has(routine.id))}
             onToggleAll={toggleAll}
           />
           {routines.map((routine) => (

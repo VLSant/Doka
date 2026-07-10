@@ -7,6 +7,7 @@ import {
   type TableCardHeaderColumn,
 } from "../../../components/ui/TableCardRow";
 import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
+import type { SortState } from "../../../lib/sorting";
 import { isOccurrenceOverdue, STATUS_LABELS } from "../occurrence-state";
 import type { OccurrenceListItem } from "../types";
 
@@ -19,15 +20,47 @@ const TONE: Record<OccurrenceListItem["status"], StatusTone> = {
   reaberta: "warning",
 };
 
-const COLUMNS: TableCardHeaderColumn[] = [
-  { key: "assistencia", label: "Assistencia", width: "118px", sortable: true },
-  { key: "ocorrencia", label: "Ocorrencia", width: "minmax(190px, 1.5fr)", sortable: true },
-  { key: "tipo", label: "Tipo", width: "130px" },
-  { key: "status", label: "Status", width: "150px" },
-  { key: "posto", label: "Posto", width: "130px" },
-  { key: "responsavel", label: "Responsavel", width: "150px" },
-  { key: "retorno", label: "Retorno", width: "110px", align: "right", sortable: true },
-];
+export type OccurrenceSortKey = "assistencia" | "ocorrencia" | "retorno";
+
+function getColumns(
+  sort: SortState<OccurrenceSortKey>,
+  onSort: (key: OccurrenceSortKey) => void,
+): TableCardHeaderColumn[] {
+  return [
+    {
+      key: "assistencia",
+      label: "Assistencia",
+      width: "118px",
+      sortable: true,
+      active: sort.key === "assistencia",
+      direction: sort.direction,
+      onSort: () => onSort("assistencia"),
+    },
+    {
+      key: "ocorrencia",
+      label: "Ocorrencia",
+      width: "minmax(190px, 1.5fr)",
+      sortable: true,
+      active: sort.key === "ocorrencia",
+      direction: sort.direction,
+      onSort: () => onSort("ocorrencia"),
+    },
+    { key: "tipo", label: "Tipo", width: "130px" },
+    { key: "status", label: "Status", width: "150px" },
+    { key: "posto", label: "Posto", width: "130px" },
+    { key: "responsavel", label: "Responsavel", width: "150px" },
+    {
+      key: "retorno",
+      label: "Retorno",
+      width: "110px",
+      align: "right",
+      sortable: true,
+      active: sort.key === "retorno",
+      direction: sort.direction,
+      onSort: () => onSort("retorno"),
+    },
+  ];
+}
 
 export function OccurrenceTable({
   items,
@@ -37,6 +70,8 @@ export function OccurrenceTable({
   onEdit,
   onDuplicate,
   onRemove,
+  sort,
+  onSort,
 }: {
   items: OccurrenceListItem[];
   selectedIds: Set<string>;
@@ -45,12 +80,17 @@ export function OccurrenceTable({
   onEdit: (id: string) => void;
   onDuplicate: (item: OccurrenceListItem) => void;
   onRemove: (id: string) => void;
+  sort: SortState<OccurrenceSortKey>;
+  onSort: (key: OccurrenceSortKey) => void;
 }) {
+  const allSelected = items.length > 0 && items.every((item) => selectedIds.has(item.id));
+  const someSelected = items.some((item) => selectedIds.has(item.id));
   return (
     <TableCardList>
       <TableCardHeader
-        columns={COLUMNS}
-        allSelected={items.length > 0 && items.every((item) => selectedIds.has(item.id))}
+        columns={getColumns(sort, onSort)}
+        allSelected={allSelected}
+        someSelected={someSelected}
         onToggleAll={onToggleAll}
       />
       {items.map((item) => {

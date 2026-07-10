@@ -18,9 +18,11 @@ import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Tabs } from "../../../components/ui/Tabs";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { occurrenceMatchesFilters, STATUS_LABELS } from "../occurrence-state";
 import { createOccurrenceService, type OccurrenceService } from "../occurrence-service";
-import { OccurrenceTable } from "../components/OccurrenceTable";
+import { OccurrenceTable, type OccurrenceSortKey } from "../components/OccurrenceTable";
+import { applySort, toggleSort, type SortState } from "../../../lib/sorting";
 import type {
   OccurrenceCatalogs,
   OccurrenceFilters,
@@ -45,6 +47,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
   const [actionError, setActionError] = useState<Error | null>(null);
+  const [sort, setSort] = useState<SortState<OccurrenceSortKey>>({ key: null, direction: "asc" });
   const [searchParams, setSearchParams] = useSearchParams();
   const creating = searchParams.get("novo") === "1";
   const editingId = searchParams.get("editar");
@@ -99,12 +102,48 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
     void catalogsQuery.refetch();
   };
 
+  // O filtro global de posto (topbar) atua como default/estreitamento: só
+  // entra em jogo quando a página não tem um filtro local de posto explícito
+  // (`filters.posto_id`), que sempre tem precedência.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo<OccurrenceFilters>(
+    () => ({ ...filters, posto_id: filters.posto_id ?? globalPostoId ?? undefined }),
+    [filters, globalPostoId],
+  );
+  const filtered = useMemo(
+    () => items.filter((item) => occurrenceMatchesFilters(item, effectiveFilters)),
+    [effectiveFilters, items],
+  );
   const visible = useMemo(
-    () => items.filter((item) => occurrenceMatchesFilters(item, filters)),
-    [filters, items],
+    () =>
+      applySort(filtered, sort, (item, key) => {
+        if (key === "assistencia") return item.assistencia?.numero_assistencia ?? "";
+        if (key === "ocorrencia") return item.titulo;
+        return item.data_retorno;
+      }),
+    [filtered, sort],
   );
   const selectedItems = visible.filter((item) => selectedIds.has(item.id));
   const firstSelected = selectedItems[0];
+
+  // Poda a seleção para a interseção com os itens visíveis, evitando que
+  // seleções ocultas por um filtro/aba "reapareçam" depois.
+  function pruneSelection(nextVisibleIds: Set<string>) {
+    setSelectedIds((current) => {
+      if (current.size === 0) return current;
+      let changed = false;
+      const next = new Set<string>();
+      current.forEach((id) => {
+        if (nextVisibleIds.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : current;
+    });
+  }
+
+  function handleSort(key: OccurrenceSortKey) {
+    setSort((current) => toggleSort(current, key));
+  }
 
   const duplicateMutation = useMutation({
     mutationFn: (item: (typeof visible)[number]) =>
@@ -168,8 +207,16 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
     });
   }
 
+  function applyFilters(next: OccurrenceFilters) {
+    setFilters(next);
+    const nextVisibleIds = new Set(
+      items.filter((item) => occurrenceMatchesFilters(item, next)).map((item) => item.id),
+    );
+    pruneSelection(nextVisibleIds);
+  }
+
   function setFilter<K extends keyof OccurrenceFilters>(key: K, value: OccurrenceFilters[K]) {
-    setFilters((current) => ({ ...current, [key]: value }));
+    applyFilters({ ...filters, [key]: value });
   }
   const advancedKeys: Array<keyof OccurrenceFilters> = [
     "posto_id",
@@ -231,7 +278,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
         items={chips}
         onRemove={(id) => setFilter(id as keyof OccurrenceFilters, undefined)}
         onClear={() =>
-          setFilters({ tab: filters.tab, busca: filters.busca, status: filters.status })
+          applyFilters({ tab: filters.tab, busca: filters.busca, status: filters.status })
         }
       />
       <Drawer
@@ -240,7 +287,7 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
         onClose={() => setFiltersOpen(false)}
         footer={
           <>
-            <Button variant="outline" onClick={() => setFilters({ tab: filters.tab })}>
+            <Button variant="outline" onClick={() => applyFilters({ tab: filters.tab })}>
               Limpar
             </Button>
             <Button onClick={() => setFiltersOpen(false)}>Aplicar filtros</Button>
@@ -348,6 +395,8 @@ export function OccurrenceListPage({ service: injected }: { service?: Occurrence
             onEdit={openEdit}
             onDuplicate={(item) => duplicateMutation.mutate(item)}
             onRemove={(id) => setRemoveTarget([id])}
+            sort={sort}
+            onSort={handleSort}
           />
         </>
       ) : null}

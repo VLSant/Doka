@@ -21,6 +21,18 @@ if (typeof Element !== "undefined") {
   }
 }
 
+// jsdom does not implement ResizeObserver, but cmdk (used by the shadcn
+// Command/GlobalSearchDialog) observes list size on mount.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class NoopResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).ResizeObserver = NoopResizeObserver;
+}
+
 vi.mock("@testing-library/react", async () => {
   const actual = await vi.importActual<typeof import("@testing-library/react")>(
     "@testing-library/react",

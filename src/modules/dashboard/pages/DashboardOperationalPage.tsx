@@ -6,6 +6,7 @@ import { Page, PageHeader } from "../../../components/layout/Page";
 import { Button } from "../../../components/ui/Button";
 import { Drawer } from "../../../components/ui/Drawer";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { createDashboardService, todayInBahia, type DashboardService } from "../dashboard-service";
 import { DashboardCards } from "../components/DashboardCards";
 import { DashboardFiltersForm } from "../components/DashboardFiltersForm";
@@ -34,12 +35,20 @@ function hasOperationalData(data: DashboardData): boolean {
 export function DashboardOperationalPage({ service: injected }: { service?: DashboardService }) {
   const service = useMemo(() => injected ?? createDashboardService(), [injected]);
   const [filters, setFilters] = useState<DashboardFilters>(initialFilters);
+  // Enquanto o usuário não escolher um posto explicitamente no drawer local,
+  // o filtro global de posto (topbar) fornece o default/estreitamento.
+  const [postoTouchedLocally, setPostoTouchedLocally] = useState(false);
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo<DashboardFilters>(
+    () => ({ ...filters, postoId: postoTouchedLocally ? filters.postoId : (globalPostoId ?? filters.postoId) }),
+    [filters, postoTouchedLocally, globalPostoId],
+  );
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const dataQuery = useQuery({
-    queryKey: queryKeys.dashboard.data(filters),
-    queryFn: () => service.load(filters),
+    queryKey: queryKeys.dashboard.data(effectiveFilters),
+    queryFn: () => service.load(effectiveFilters),
   });
   const postosQuery = useQuery({
     queryKey: queryKeys.dashboard.postos(),
@@ -62,7 +71,7 @@ export function DashboardOperationalPage({ service: injected }: { service?: Dash
       <PageHeader
         eyebrow="Visão geral"
         title="Dashboard operacional"
-        description={`Exibindo ${filters.inicio === filters.fim ? formatDay(filters.inicio) : `${formatDay(filters.inicio)} a ${formatDay(filters.fim)}`} · ${filters.postoId ? (postos.find((posto) => posto.id === filters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
+        description={`Exibindo ${filters.inicio === filters.fim ? formatDay(filters.inicio) : `${formatDay(filters.inicio)} a ${formatDay(filters.fim)}`} · ${effectiveFilters.postoId ? (postos.find((posto) => posto.id === effectiveFilters.postoId)?.nome ?? "Posto selecionado") : "Todos os postos"}`}
         actions={
           <Button variant="outline" onClick={() => setFiltersOpen(true)}>
             Período e posto
@@ -72,12 +81,17 @@ export function DashboardOperationalPage({ service: injected }: { service?: Dash
 
       <Drawer open={filtersOpen} title="Filtros do dashboard" onClose={() => setFiltersOpen(false)}>
         <DashboardFiltersForm
-          key={`${filters.inicio}:${filters.fim}:${filters.postoId ?? ""}`}
-          value={filters}
+          key={`${effectiveFilters.inicio}:${effectiveFilters.fim}:${effectiveFilters.postoId ?? ""}`}
+          value={effectiveFilters}
           postos={postos}
           disabled={loading}
           onChange={(next) => {
             setFilters(next);
+            // Só desliga o default global quando o POSTO mudou de fato —
+            // mexer apenas no período mantém o pill da topbar valendo.
+            if (next.postoId !== effectiveFilters.postoId) {
+              setPostoTouchedLocally(true);
+            }
             setFiltersOpen(false);
           }}
         />

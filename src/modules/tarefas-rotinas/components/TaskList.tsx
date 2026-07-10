@@ -7,6 +7,7 @@ import {
   type TableCardHeaderColumn,
 } from "../../../components/ui/TableCardRow";
 import { StatusBadge, type StatusTone } from "../../../components/ui/StatusBadge";
+import type { SortState } from "../../../lib/sorting";
 import { isTaskLate } from "../task-state";
 import type { Task } from "../types";
 
@@ -26,13 +27,37 @@ const STATUS_TONE: Record<Task["status"], StatusTone> = {
   reaberta: "warning",
 };
 
-const COLUMNS: TableCardHeaderColumn[] = [
-  { key: "tarefa", label: "Tarefa", width: "minmax(220px, 1.7fr)", sortable: true },
-  { key: "responsavel", label: "Responsavel", width: "minmax(150px, 1fr)" },
-  { key: "posto", label: "Posto", width: "130px" },
-  { key: "prazo", label: "Prazo", width: "120px", align: "right", sortable: true },
-  { key: "status", label: "Status", width: "130px" },
-];
+export type TaskSortKey = "tarefa" | "prazo";
+
+function getColumns(
+  sort: SortState<TaskSortKey>,
+  onSort: (key: TaskSortKey) => void,
+): TableCardHeaderColumn[] {
+  return [
+    {
+      key: "tarefa",
+      label: "Tarefa",
+      width: "minmax(220px, 1.7fr)",
+      sortable: true,
+      active: sort.key === "tarefa",
+      direction: sort.direction,
+      onSort: () => onSort("tarefa"),
+    },
+    { key: "responsavel", label: "Responsavel", width: "minmax(150px, 1fr)" },
+    { key: "posto", label: "Posto", width: "130px" },
+    {
+      key: "prazo",
+      label: "Prazo",
+      width: "120px",
+      align: "right",
+      sortable: true,
+      active: sort.key === "prazo",
+      direction: sort.direction,
+      onSort: () => onSort("prazo"),
+    },
+    { key: "status", label: "Status", width: "130px" },
+  ];
+}
 
 function dateLabel(value: string | null) {
   if (!value) return "Sem prazo";
@@ -49,6 +74,8 @@ export function TaskList({
   onEdit,
   onDuplicate,
   onRemove,
+  sort,
+  onSort,
 }: {
   tasks: Task[];
   selectedIds: Set<string>;
@@ -57,12 +84,17 @@ export function TaskList({
   onEdit: (id: string) => void;
   onDuplicate: (task: Task) => void;
   onRemove: (id: string) => void;
+  sort: SortState<TaskSortKey>;
+  onSort: (key: TaskSortKey) => void;
 }) {
+  const allSelected = tasks.length > 0 && tasks.every((task) => selectedIds.has(task.id));
+  const someSelected = tasks.some((task) => selectedIds.has(task.id));
   return (
     <TableCardList>
       <TableCardHeader
-        columns={COLUMNS}
-        allSelected={tasks.length > 0 && tasks.every((task) => selectedIds.has(task.id))}
+        columns={getColumns(sort, onSort)}
+        allSelected={allSelected}
+        someSelected={someSelected}
         onToggleAll={onToggleAll}
       />
       {tasks.map((task) => {

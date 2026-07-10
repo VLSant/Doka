@@ -15,11 +15,13 @@ import { SearchInput } from "../../../components/ui/SearchInput";
 import { FormSelect } from "../../../components/shadcn/FormSelect";
 import { SidebarActionList } from "../../../components/ui/SidebarActionList";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { createLancamentoService, type LancamentoService } from "../lancamento-service";
 import { LancamentoFiltersForm } from "../components/LancamentoFilters";
 import { LancamentoFormModal } from "../components/LancamentoFormModal";
-import { LancamentoTable } from "../components/LancamentoTable";
+import { LancamentoTable, type LancamentoSortKey } from "../components/LancamentoTable";
 import type { LancamentoFilters } from "../types";
+import { applySort, toggleSort, type SortState } from "../../../lib/sorting";
 import "../lancamentos-operacionais.css";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -32,19 +34,36 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [removeTarget, setRemoveTarget] = useState<string[] | null>(null);
   const [actionError, setActionError] = useState<Error | null>(null);
+  const [sort, setSort] = useState<SortState<LancamentoSortKey>>({ key: null, direction: "asc" });
   const [searchParams, setSearchParams] = useSearchParams();
   const creating = searchParams.get("novo") === "1";
   const editingId = searchParams.get("editar");
 
+  // O filtro global de posto (topbar) atua como default/estreitamento: só
+  // entra em jogo quando a página não tem um filtro local de posto explícito
+  // (`filters.posto_id`), que sempre tem precedência. Como esta lista filtra
+  // no servidor, o posto efetivo entra na query key/queryFn.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo<LancamentoFilters>(
+    () => ({ ...filters, posto_id: filters.posto_id ?? globalPostoId ?? undefined }),
+    [filters, globalPostoId],
+  );
+
   const listQuery = useQuery({
-    queryKey: queryKeys.lancamentos.list(filters),
-    queryFn: () => service.list(filters),
+    queryKey: queryKeys.lancamentos.list(effectiveFilters),
+    queryFn: () => service.list(effectiveFilters),
   });
   const optionsQuery = useQuery({
     queryKey: queryKeys.lancamentos.options(),
     queryFn: () => service.formOptions(),
   });
-  const items = listQuery.data ?? [];
+  const items = useMemo(
+    () =>
+      applySort(listQuery.data ?? [], sort, (item, key) =>
+        key === "data" ? item.data_lancamento : item.valor,
+      ),
+    [listQuery.data, sort],
+  );
   const options = optionsQuery.data ?? { postos: [], assistencias: [] };
   const loading = listQuery.isPending || optionsQuery.isPending;
   const error = listQuery.error ?? optionsQuery.error;
@@ -174,6 +193,19 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
     });
   }
 
+  function handleSort(key: LancamentoSortKey) {
+    setSort((current) => toggleSort(current, key));
+  }
+
+  // Poda a seleção para a interseção com os ids atualmente visíveis, evitando
+  // que seleções ocultas por um filtro anterior "reapareçam" depois. Como a
+  // filtragem ocorre no servidor, a poda reage à lista de itens já carregada
+  // (não é possível calcular de forma síncrona ao trocar o filtro).
+  function applyFilters(next: LancamentoFilters) {
+    setFilters(next);
+    setSelectedIds(new Set());
+  }
+
   return (
     <Page className="lancamentos-page">
       <PageHeader
@@ -187,7 +219,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           value={filters.recurso ?? ""}
           placeholder="Buscar responsável ou recurso..."
           onChange={(recurso) =>
-            setFilters((current) => ({ ...current, recurso: recurso || undefined }))
+            applyFilters({ ...filters, recurso: recurso || undefined })
           }
         />
         <FormSelect
@@ -196,10 +228,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           aria-label="Status"
           value={filters.status ?? ""}
           onChange={(next) =>
-            setFilters((current) => ({
-              ...current,
-              status: next as LancamentoFilters["status"],
-            }))
+            applyFilters({ ...filters, status: next as LancamentoFilters["status"] })
           }
           options={[
             { value: "", label: "Todos os status" },
@@ -217,8 +246,8 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
         items={Object.entries(filters)
           .filter(([key, value]) => !["recurso", "status"].includes(key) && value)
           .map(([id, value]) => ({ id, label: `${id.replaceAll("_", " ")}: ${value}` }))}
-        onRemove={(id) => setFilters((current) => ({ ...current, [id]: undefined }))}
-        onClear={() => setFilters({ recurso: filters.recurso, status: filters.status })}
+        onRemove={(id) => applyFilters({ ...filters, [id]: undefined })}
+        onClear={() => applyFilters({ recurso: filters.recurso, status: filters.status })}
       />
       <Drawer
         open={filtersOpen}
@@ -230,7 +259,7 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
           postos={options.postos}
           assistencias={options.assistencias}
           disabled={loading}
-          onChange={setFilters}
+          onChange={applyFilters}
         />
       </Drawer>
 
@@ -285,6 +314,8 @@ export function LancamentoListPage({ service: injected }: { service?: Lancamento
             onEdit={openEdit}
             onDuplicate={(item) => duplicateMutation.mutate(item)}
             onRemove={(id) => setRemoveTarget([id])}
+            sort={sort}
+            onSort={handleSort}
           />
         </>
       ) : null}

@@ -9,6 +9,7 @@ import { Drawer } from "../../../components/ui/Drawer";
 import { FilterChips } from "../../../components/ui/FilterChips";
 import { SearchInput } from "../../../components/ui/SearchInput";
 import { Skeleton } from "../../../components/ui/Skeleton";
+import { usePostoFilter } from "../../../app/posto-filter";
 import { createAssistanceService, type AssistanceService } from "../assistance-service";
 import { AssistanceFiltersForm } from "../components/AssistanceFilters";
 import { AssistanceTable } from "../components/AssistanceTable";
@@ -28,9 +29,18 @@ export function AssistanceListPage({ service: injected }: { service?: Assistance
   const filters = useMemo(() => parseAssistanceFilters(searchParams), [searchParams]);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // O filtro global de posto (topbar) atua como default/estreitamento: só
+  // entra em jogo quando a URL não tem um filtro local de posto explícito
+  // (`filters.posto_id`), que sempre tem precedência.
+  const { postoId: globalPostoId } = usePostoFilter();
+  const effectiveFilters = useMemo(
+    () => ({ ...filters, posto_id: filters.posto_id ?? globalPostoId ?? undefined }),
+    [filters, globalPostoId],
+  );
+
   const listQuery = useInfiniteQuery({
-    queryKey: queryKeys.assistencias.list(filters),
-    queryFn: ({ pageParam }) => service.list(filters, pageParam),
+    queryKey: queryKeys.assistencias.list(effectiveFilters),
+    queryFn: ({ pageParam }) => service.list(effectiveFilters, pageParam),
     initialPageParam: null as AssistanceCursor | null,
     getNextPageParam: (lastPage) => lastPage.proximo_cursor,
   });
