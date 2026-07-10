@@ -39,8 +39,11 @@ export function DashboardOperationalPage({ service: injected }: { service?: Dash
   // o filtro global de posto (topbar) fornece o default/estreitamento.
   const [postoTouchedLocally, setPostoTouchedLocally] = useState(false);
   const { postoId: globalPostoId } = usePostoFilter();
+  // Sem toque local, o posto efetivo ESPELHA o global (inclusive null =
+  // "Todos os postos") — nunca cai de volta em filters.postoId, que pode
+  // reter um posto stale injetado pelo drawer numa edição só de período.
   const effectiveFilters = useMemo<DashboardFilters>(
-    () => ({ ...filters, postoId: postoTouchedLocally ? filters.postoId : (globalPostoId ?? filters.postoId) }),
+    () => ({ ...filters, postoId: postoTouchedLocally ? filters.postoId : globalPostoId }),
     [filters, postoTouchedLocally, globalPostoId],
   );
 
